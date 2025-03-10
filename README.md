@@ -2,7 +2,23 @@
 
 HPC serious game showcasing how collaborative effort between processes and threads can speedup sorting. The game should support Android as a platform first.
 
+## Reqiuirements
+
+- No login required
+- webserver with localhost
+- target webpage and phone
+- cards single rectangle with number inside
+
+### Functionalities
+
+- Select how many cards you want to sort from menu
+- Click two cards and swap them (Possibly to put card in a buffer)
+- Should mimic smart algorythm
+- Big button for start the time and stop the time when he click stop the time (Timer is the most important part)
+- Start the server (maybe start the exe next to godot app and act as a host)
+
 ## Roadmap
+
 
 - [x] Implement a screen with cards that players choses the range of values amount of cards (e.g. 15-1000 with 64 cards to sort)
 - [x] Implement a screen with cards that players can sort

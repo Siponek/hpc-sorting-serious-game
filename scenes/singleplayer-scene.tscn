@@ -1,0 +1,54 @@
+[gd_scene load_steps=5 format=3 uid="uid://nxdomgvrs6j1"]
+
+[ext_resource type="Script" uid="uid://cgm7j0pq254kp" path="res://scenes/CardScene/scripts/card-manager.gd" id="1_cagap"]
+[ext_resource type="PackedScene" uid="uid://dbks3sal7vang" path="res://scenes/CardScene/CardMain.tscn" id="2_jtcy3"]
+[ext_resource type="PackedScene" uid="uid://deusybpy07sll" path="res://scenes/CardScene/CardSlot.tscn" id="3_elcqy"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_elcqy"]
+bg_color = Color(0.890269, 0.686288, 0.203615, 1)
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+
+[node name="SinglePlayerScene" type="Node2D"]
+
+[node name="Header" type="CenterContainer" parent="."]
+offset_top = 20.0
+offset_right = 1152.0
+offset_bottom = 100.0
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Header"]
+custom_minimum_size = Vector2(400, 50)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 24
+text = "Sort the cards in ascending order"
+fit_content = true
+
+[node name="CardManager" type="Node2D" parent="."]
+script = ExtResource("1_cagap")
+card_scene = ExtResource("2_jtcy3")
+slot_scene = ExtResource("3_elcqy")
+num_cards = 8
+
+[node name="CenterContainer" type="CenterContainer" parent="CardManager"]
+offset_top = 400.0
+offset_right = 1152.0
+offset_bottom = 580.0
+
+[node name="PanelContainer" type="PanelContainer" parent="CardManager/CenterContainer"]
+custom_minimum_size = Vector2(200, 180)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_elcqy")
+
+[node name="SlotContainer" type="HBoxContainer" parent="CardManager/CenterContainer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="CardContainer" type="Node2D" parent="CardManager"]
+position = Vector2(50, 200)

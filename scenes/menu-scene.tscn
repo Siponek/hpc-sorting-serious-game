@@ -1,0 +1,47 @@
+[gd_scene load_steps=2 format=3 uid="uid://cuy0nrm8fn7yh"]
+
+[ext_resource type="Script" uid="uid://dgpv8ktgd7p5c" path="res://scenes/scripts/main_menu_options.gd" id="1_iafdm"]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1151.0
+offset_bottom = 649.0
+metadata/_edit_lock_ = true
+
+[node name="MainMenuOptions" type="VBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -136.0
+offset_right = 300.0
+grow_vertical = 0
+script = ExtResource("1_iafdm")
+
+[node name="StartBtn" type="Button" parent="Control/MainMenuOptions"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_vertical = 2
+text = "Singleplayer"
+alignment = 0
+
+[node name="MultiplayerBtn" type="Button" parent="Control/MainMenuOptions"]
+layout_mode = 2
+size_flags_vertical = 2
+text = "Multiplayer"
+alignment = 0
+
+[node name="OptionsBtn" type="Button" parent="Control/MainMenuOptions"]
+layout_mode = 2
+size_flags_vertical = 2
+text = "Options"
+alignment = 0
+
+[node name="ExitBtn" type="Button" parent="Control/MainMenuOptions"]
+layout_mode = 2
+size_flags_vertical = 2
+text = "Exit to desktop"
+alignment = 0

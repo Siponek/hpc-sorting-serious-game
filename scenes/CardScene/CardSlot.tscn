@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3 uid="uid://deusybpy07sll"]
+
+[ext_resource type="Script" uid="uid://xfy6ifu1lgby" path="res://scenes/CardScene/scripts/SlotDragDrop.gd" id="1_6sovq"]
+
+[sub_resource type="Gradient" id="Gradient_6sovq"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_jtw0v"]
+gradient = SubResource("Gradient_6sovq")
+fill = 2
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ef3x2"]
+texture = SubResource("GradientTexture2D_jtw0v")
+
+[node name="CardSlot" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_6sovq")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxTexture_ef3x2")
+
+[node name="CenterContainer" type="CenterContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Panel/CenterContainer"]
+layout_mode = 2
+mouse_filter = 1
+text = "as"
+horizontal_alignment = 1
