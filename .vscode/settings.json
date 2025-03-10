@@ -1,3 +1,12 @@
 {
-    "godotTools.editorPath.godot4": "\"C:\\Users\\szink\\Desktop\\Godot Engine\\4.3\\Godot_v4.3-stable_mono_win64_console.exe\""
+    "godotTools.editorPath.godot4": "\"C:\\Users\\szink\\Desktop\\Godot Engine\\4.4\\Godot_v4.4-stable_mono_win64_console.exe\"",
+    "godotTools.inlayHints.gdscript": true,
+    "gdscript_formatter.line_size": 68,
+    "godotTools.formatter.denseFunctionParameters": true,
+    // The number of spaces a tab is equal to.
+    "editor.tabSize": 4,
+    // Insert spaces when pressing Tab.
+    "editor.insertSpaces": true,
+    // When opening a file, `editor.tabSize` and `editor.insertSpaces` will be detected based on the file contents.
+    "editor.detectIndentation": true
 }
