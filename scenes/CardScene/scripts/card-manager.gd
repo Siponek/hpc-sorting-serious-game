@@ -7,7 +7,7 @@ extends Node2D
 @export var slot_spacing: int = 120
 
 var cards = []
-var slots = []
+var availableSlots = []
 var values = []
 
 func _ready():
@@ -16,7 +16,7 @@ func _ready():
 	for i in range(num_cards):
 		values.append(randi() % 100)
 
-	# Create slots
+	# Create availableSlots
 	create_slots()
 
 	# Create cards
@@ -24,16 +24,23 @@ func _ready():
 
 func create_slots():
 	var slot_container = $CenterContainer/PanelContainer/SlotContainer
+	# var panel = $CenterContainer/PanelContainer
+
 
 	for i in range(num_cards):
 		var slot: Control = slot_scene.instantiate()
-
+		# slot is  2Dnode
 		slot.slot_text = str(i + 1)
-		slot.position.x = i * card_spacing
+		slot.size.y = 160
+		# slot.position.x = i * card_spacing + slot.position.x
 		slot_container.add_child(slot)
-		slots.append(slot)
+		availableSlots.append(slot)
+	# slot_container.rect_min_size = Vector2(num_cards * slot_spacing, slot_container.rect_min_size.y)
 	await get_tree().process_frame
 
+	
+	# Force final update
+	await get_tree().process_frame
 func create_cards():
 	var card_container = $CardContainer
 
@@ -57,7 +64,7 @@ func _on_card_dropped(card, drop_position):
 	var found_slot = false
 
 	# Check if card is over a slot
-	for slot in slots:
+	for slot in availableSlots:
 		var slot_global_rect = Rect2(slot.global_position, slot.size)
 
 		if slot_global_rect.has_point(drop_position):
@@ -80,13 +87,13 @@ func _on_card_dropped(card, drop_position):
 		card.reset_position()
 
 func check_sorting_order():
-	# Check if all cards are in slots and in correct order
+	# Check if all cards are in availableSlots and in correct order
 	var all_cards_in_slots = true
 	var sorted_correctly = true
 
 	var slot_values = []
 
-	for slot in slots:
+	for slot in availableSlots:
 		var found = false
 		for card in cards:
 			if card.current_slot == slot:

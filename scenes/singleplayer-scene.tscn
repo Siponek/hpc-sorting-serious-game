@@ -37,16 +37,14 @@ offset_right = 1152.0
 offset_bottom = 580.0
 
 [node name="PanelContainer" type="PanelContainer" parent="CardManager/CenterContainer"]
-custom_minimum_size = Vector2(200, 180)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_elcqy")
 
 [node name="SlotContainer" type="HBoxContainer" parent="CardManager/CenterContainer/PanelContainer"]
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
 theme_override_constants/separation = 10
 alignment = 1
 

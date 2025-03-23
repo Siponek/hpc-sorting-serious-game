@@ -19,7 +19,6 @@ HPC serious game showcasing how collaborative effort between processes and threa
 
 ## Roadmap
 
-
 - [x] Implement a screen with cards that players choses the range of values amount of cards (e.g. 15-1000 with 64 cards to sort)
 - [x] Implement a screen with cards that players can sort
 
@@ -35,3 +34,9 @@ HPC serious game showcasing how collaborative effort between processes and threa
 ## Using Godot 4 with C# support
 
 With c# it is necessary to export binaries for other platforms to work e.g. android.
+
+## FAQ
+
+Export to windows need to use [rcedit](https://github.com/electron/rcedit/releases) and [for icon](https://docs.godotengine.org/en/stable/tutorials/export/changing_application_icon_for_windows.html)
+[Export from godot](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_android.html)
+

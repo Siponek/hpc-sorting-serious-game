@@ -39,11 +39,9 @@ func clear_slot():
 	occupied_by = null
 func _ready() -> void:
 	# Set the Control node's minimum size (this is the root node)
-	custom_minimum_size = Vector2(110, 160)
 	# original_position = position
 	# Set Z index to ensure it doesn't block slots when dragging
 	# z_index = 10  # Higher value means it renders on top
 	# Also set the panel's minimum size
-	panel.custom_minimum_size = Vector2(110, 160)
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	label.text = slot_text
