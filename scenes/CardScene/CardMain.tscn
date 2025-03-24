@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://o0xvip7mrsr3" path="res://scenes/CardScene/scripts/card.gd" id="1_kd2ju"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kd2ju"]
-bg_color = Color(0.266575, 0.266575, 0.266575, 1)
+bg_color = Color(0.26, 0.26, 0.26, 1)
 
 [node name="Card" type="Control"]
 custom_minimum_size = Vector2(100, 150)

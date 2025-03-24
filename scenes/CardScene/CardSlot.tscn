@@ -83,7 +83,7 @@ layout_mode = 2
 mouse_filter = 1
 theme_override_fonts/font = SubResource("FontFile_6sovq")
 theme_override_font_sizes/font_size = 13
-text = "Switch with next"
+text = "switch placeholder"
 
 [node name="Panel" type="Panel" parent="."]
 custom_minimum_size = Vector2(110, 160)
@@ -102,5 +102,5 @@ grow_vertical = 2
 [node name="Label" type="Label" parent="Panel/CenterContainer"]
 layout_mode = 2
 mouse_filter = 1
-text = "as"
+text = "number"
 horizontal_alignment = 1
