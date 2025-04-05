@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://i5ed2cgaleb"]
+
+[ext_resource type="Script" uid="uid://b0apfif5vhb18" path="res://scenes/MainMenuScene/singleplayer_options.gd" id="1_eleap"]
+
+[node name="SingleplayerOptions" type="Window"]
+title = "Singleplayer Options"
+initial_position = 1
+script = ExtResource("1_eleap")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+
+[node name="BufferLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Player Buffer (slots):"
+
+[node name="BufferSpinBox" type="SpinBox" parent="VBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 20.0
+value = 5.0
+
+[node name="CardCountLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Amount of Cards to Sort:"
+
+[node name="CardCountSpinBox" type="SpinBox" parent="VBoxContainer"]
+layout_mode = 2
+min_value = 2.0
+max_value = 50.0
+value = 9.0
+
+[node name="CardRangeLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Range of Card Values:"
+
+[node name="CardRangeSpinBox" type="SpinBox" parent="VBoxContainer"]
+layout_mode = 2
+min_value = 10.0
+max_value = 200.0
+value = 100.0
+
+[node name="StartButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Start Game"
+
+[connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]

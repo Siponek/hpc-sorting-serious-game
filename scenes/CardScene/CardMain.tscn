@@ -1,9 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dbks3sal7vang"]
 
 [ext_resource type="Script" uid="uid://o0xvip7mrsr3" path="res://scenes/CardScene/scripts/card.gd" id="1_kd2ju"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kd2ju"]
-bg_color = Color(0.26, 0.26, 0.26, 1)
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="2_6f7gc"]
 
 [node name="Card" type="Control"]
 custom_minimum_size = Vector2(100, 150)
@@ -19,7 +17,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_kd2ju")
+theme = ExtResource("2_6f7gc")
 
 [node name="Value" type="Label" parent="."]
 layout_mode = 1
@@ -28,6 +26,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_6f7gc")
 theme_override_font_sizes/font_size = 32
 text = "42"
 horizontal_alignment = 1

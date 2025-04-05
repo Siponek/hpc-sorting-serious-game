@@ -3,13 +3,24 @@ extends Control
 @onready var panel: Panel = $Panel
 @onready var label: Label = $Panel/CenterContainer/Label
 var occupied_by = null
-
+signal card_placed(card, slot)
 # func _gui_input(event):
 # 	if event is InputEventMouseButton:
 # 		print("Slot " + slot_text + " got mouse button event: " + str(event.button_index) + " pressed: " + str(event.pressed))
 # 	elif event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 # 		print("Slot " + slot_text + " got mouse motion while dragging")
-
+func _on_card_placed_in_slot(card, slot):
+	print("Card " + str(card.value) + " placed in slot " + slot.slot_text)
+	
+	# Update the occupied_by property of the slot
+	slot.occupied_by = card
+	
+	# Check if all slots are filled and sorted properly
+	# check_buffer_sort_order()
+	
+	# Optional: Disable the card's dragging after placement
+	if card.has_method("set_can_drag"):
+		card.set_can_drag(false)
 # Debug drag and drop events
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	print("Slot " + slot_text + " _can_drop_data called with: " + str(data))

@@ -19,6 +19,10 @@ config/windows_native_icon="res://icon.ico"
 [autoload]
 
 Constants="*res://scenes/scripts/constants.gd"
+SceneManager="*res://scene_manager.gd"
+Settings="*res://settings.gd"
+ThemeManager="*res://theme_manager.gd"
+ThemeAutoapplier="*res://scenes/scripts/theme_autoapplier.gd"
 
 [dotnet]
 

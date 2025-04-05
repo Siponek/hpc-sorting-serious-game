@@ -1,0 +1,24 @@
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://ciaxuhxqbvvvv"]
+
+[ext_resource type="StyleBox" uid="uid://bpuxi2616bv7h" path="res://res/background_styleblox.tres" id="1_3bfvr"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7wsyb"]
+bg_color = Color(0.94902, 0.917647, 0.894118, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.00392157, 0.0509804, 0, 1)
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_right = 1
+corner_radius_bottom_left = 1
+
+[resource]
+Button/colors/font_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
+Button/styles/normal = SubResource("StyleBoxFlat_7wsyb")
+Label/colors/font_color = Color(0, 0, 0, 1)
+Panel/styles/panel = ExtResource("1_3bfvr")
+PanelContainer/styles/panel = ExtResource("1_3bfvr")
+RichTextLabel/colors/default_color = Color(0, 0, 0, 1)
+TextEdit/colors/background_color = Color(0.754, 0.162, 0.162, 0)
