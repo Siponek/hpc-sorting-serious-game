@@ -24,7 +24,7 @@ grow_vertical = 0
 script = ExtResource("1_iafdm")
 
 [node name="StartBtn" type="Button" parent="Control/MainMenuButtons"]
-custom_minimum_size = Vector2(300, 50)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_vertical = 2
 theme = ExtResource("2_1sv24")
