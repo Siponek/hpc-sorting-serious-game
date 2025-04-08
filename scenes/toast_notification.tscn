@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://cv8glv7ck8xs4"]
+
+[ext_resource type="Script" uid="uid://d3vwvv54kgqjp" path="res://scenes/CardScene/scripts/toast_notification.gd" id="1_cg18w"]
+
+[node name="ToastNotification" type="PanelContainer"]
+offset_right = 400.0
+offset_bottom = 100.0
+script = ExtResource("1_cg18w")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Label" type="Label" parent="MarginContainer"]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+text = "Cards sorted successfully!"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

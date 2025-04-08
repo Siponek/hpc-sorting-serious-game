@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://j3ar4nbltgjb"]
+
+[ext_resource type="Script" uid="uid://dyof1olwh4e8p" path="res://scenes/BackGroundScene/background_theme.gd" id="1_fj7y1"]
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="2_p0f2o"]
+
+[node name="Background" type="CanvasLayer"]
+layer = -1
+script = ExtResource("1_fj7y1")
+
+[node name="ColorRect" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_p0f2o")
