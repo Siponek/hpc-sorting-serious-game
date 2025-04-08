@@ -290,3 +290,23 @@ func check_buffer_sort_order():
 			var toast = toast_notification_scene.instantiate()
 			add_child(toast)
 			toast.popup("Cards sorted correctly in the buffer zone!")
+
+func animate_slot_swap(card_a, card_b, slot_a, slot_b):
+	# Similar to animate_card_swap but for slots
+	var tween = create_tween()
+	tween.set_parallel(true)
+	
+	# Get positions
+	var pos_a = slot_a.global_position + Vector2(5, 5)
+	var pos_b = slot_b.global_position + Vector2(5, 5)
+	
+	# Animate the swap with a small lift
+	tween.tween_property(card_a, "global_position:y", card_a.global_position.y - 20, 0.2)
+	tween.tween_property(card_b, "global_position:y", card_b.global_position.y - 20, 0.2)
+	
+	tween.chain()
+	
+	tween.tween_property(card_a, "global_position", pos_b, 0.3)
+	tween.tween_property(card_b, "global_position", pos_a, 0.3)
+	
+	return tween

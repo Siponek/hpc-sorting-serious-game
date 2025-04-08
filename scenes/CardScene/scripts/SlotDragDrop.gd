@@ -21,30 +21,39 @@ func _on_card_placed_in_slot(card, slot):
 	# Optional: Disable the card's dragging after placement
 	if card.has_method("set_can_drag"):
 		card.set_can_drag(false)
-# Debug drag and drop events
+
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-	print("Slot " + slot_text + " _can_drop_data called with: " + str(data))
-	return data is Control and data.has_method("set_card_value") and occupied_by == null
+	# Accept any card, whether the slot is empty or already occupied
+	return data is Control and data.has_method("set_card_value")
 
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	print("Slot " + slot_text + " _drop_data called with: " + str(data))
 	if data is Control and data.has_method("set_card_value"):
-		# Store reference to the card occupying this slot
-		occupied_by = data
+		var source_slot = data.current_slot
 		
-		# Center the card in the slot
-		data.modulate.a = 1.0
-		data.position = global_position - data.size / 2
-		# small offest
+		# If this slot already has a card, we need to swap
+		if occupied_by != null:
+			var current_card = occupied_by
+			
+			# If the incoming card was in a slot, move our card there
+			if source_slot != null:
+				# Move our current card to the source slot
+				current_card.global_position = source_slot.global_position + Vector2(5, 5)
+				current_card.place_in_slot(source_slot)
+				source_slot.occupied_by = current_card
+			else:
+				# If the incoming card wasn't in a slot, just release our card
+				current_card.remove_from_slot()
+				current_card.reset_position()
+				current_card.set_can_drag(true)
+			
+		# Place the incoming card in this slot
+		occupied_by = data
 		data.global_position = global_position + Vector2(5, 5)
 		data.place_in_slot(self)
 		
-		print("Card with value " + str(data.value) + " placed in slot " + slot_text)
-		
-		# Tell the card manager to check if sorting is complete
-		var card_manager = get_node("/root/SinglePlayerScene/CardManager")
-		if card_manager and card_manager.has_method("check_sorting_order"):
-			card_manager.check_sorting_order()
+		# Emit signal for card placement
+		emit_signal("card_placed", data, self)
 	
 func clear_slot():
 	occupied_by = null

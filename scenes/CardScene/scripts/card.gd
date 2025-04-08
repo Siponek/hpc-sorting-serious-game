@@ -5,6 +5,8 @@ var original_position: Vector2
 var can_drag: bool = true
 var is_dragging: bool = false
 var current_slot = null
+# I want a gradiend color for the card
+
 
 signal card_grabbed(card)
 signal card_dropped(card, drop_position)
@@ -17,7 +19,16 @@ func _ready():
 func set_card_value(new_value: int):
 	value = new_value
 	$Value.text = str(value)
-
+# Add this function to your card.gd script
+func set_can_drag(value: bool):
+	can_drag = value
+	# Optional: Change visual appearance to indicate draggability
+	if value:
+		modulate.a = 1.0 # Full opacity
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	else:
+		modulate.a = 0.8 # Slightly transparent to indicate it can't be dragged
+		mouse_default_cursor_shape = Control.CURSOR_ARROW
 # Use the built-in _gui_input method instead of a separate handler
 func _gui_input(event: InputEvent) -> void:
 	pass
@@ -48,20 +59,40 @@ func _process(_delta):
 
 func reset_position():
 	position = original_position
+	# if get_parent():
+    #     position = Vector2.ZERO  # Or whatever default position should be
 
 func place_in_slot(slot):
+	# Create a stylebox with gradient instead of solid color
 	var new_style = StyleBoxFlat.new()
 	
-	# Set the color (you can adjust this to the color you want)
-	new_style.bg_color = Color(0.4, 0.7, 0.3) # A green color to indicate "placed"
+	# Create a gradient from top to bottom
+	new_style.bg_color = Color(0.4, 0.7, 0.3) # Base color
+	
+	# Add a vertical gradient
+	new_style.set_border_width_all(0)
+	new_style.shadow_color = Color(0.2, 0.5, 0.1, 0.6) # Darker shade of the base color
+	new_style.shadow_size = 8
+	
+	# Enable gradient
+	new_style.set_corner_radius_all(5) # Round corners
+	new_style.border_blend = true
+	
+	
+	# Apply the stylebox to the panel
 	$Panel.add_theme_stylebox_override("panel", new_style)
 	current_slot = slot
 
 func remove_from_slot():
+	# Create a stylebox for cards not in slots
 	var new_style = StyleBoxFlat.new()
 	
-	# Set the color (you can adjust this to the color you want)
-	new_style.bg_color = Color(0.5, 0.5, 0.5) # A green color to indicate "placed"
+	# Either use a different gradient or a solid color
+	new_style.bg_color = Color(0.5, 0.5, 0.5) # Gray background
+	
+	# You could also use a subtle gradient for non-slotted cards
+	new_style.set_corner_radius_all(5) # Round corners
+	
 	$Panel.add_theme_stylebox_override("panel", new_style)
 	current_slot = null
 
