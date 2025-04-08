@@ -1,14 +1,15 @@
 extends Control
 
 # @export var card_scene: PackedScene
-@export_range(1, 20) var num_cards: int = 10
 @export_range(10, 200) var button_spacing: int = 10
 @export_range(10, 200) var card_spacing: int = 10
-@export var buffer_size: int = 5 # Number of buffer slots
 
 var slots = [] # Array to store slot references
 var cards = []
 var values = []
+var sorted_all = []
+var buffer_size: int = Settings.player_buffer
+var num_cards: int = Settings.num_cards
 const CARD_WIDTH = 70
 var start_time: float
 var move_count: int = 0
@@ -26,15 +27,18 @@ const card_slot_scene: PackedScene = preload("res://scenes/CardScene/CardSlot.ts
 
 func _ready():
 	var max_cards = calculate_max_cards()
+	print("Max cards: " + str(max_cards), "Num cards: " + str(num_cards))
 	num_cards = min(num_cards, max_cards)
 	if num_cards < 1:
 		num_cards = 1
 		push_warning("Screen too small - can only fit 1 card")
 	
-	randomize()
+	var rng = RandomNumberGenerator.new()
+	rng.randomize()
 	for i in range(num_cards):
-		values.append(randi() % 100)
-
+		values.append(rng.randi_range(1, Settings.card_value_range))
+	sorted_all = values.duplicate()
+	sorted_all.sort() # ascending order
 	# Update layout in the editor
 	adjust_container_spacing()
 	create_cards()
@@ -118,7 +122,6 @@ func create_buffer_slots():
 		if slot.has_signal("card_placed"):
 			slot.card_placed.connect(_on_card_placed_in_slot)
 
-# Add this function to handle card placement in slots
 func _on_card_placed_in_slot(card, slot):
 	print("Card " + str(card.value) + " placed in slot " + slot.slot_text)
 	
@@ -126,7 +129,29 @@ func _on_card_placed_in_slot(card, slot):
 	slot.occupied_by = card
 	
 	# Check if all slots are filled and sorted properly
-	check_buffer_sort_order()
+	if check_buffer_contiguity():
+		print("Buffer is contiguous!")
+		
+		# Instantiate the toast notification
+		var toast = toast_notification_scene.instantiate()
+		
+		# Set a high z_index so it appears on top
+		toast.z_index = 1000
+		
+		# Make the toast semi-transparent
+		toast.modulate = Color(1, 1, 1, 0.8)
+		
+		# Reparent the toast to the scene root (or a dedicated overlay node)
+		get_tree().get_root().add_child(toast)
+		
+		# Show the toast popup
+		toast.popup("Cards sorted correctly in the buffer zone!")
+		
+		# After 4 seconds, free the toast
+		var timer = get_tree().create_timer(4.0).timeout
+		await timer
+	else:
+		print("Buffer is not contiguous!")
 	
 	# Optional: Disable the card's dragging after placement
 	if card.has_method("set_can_drag"):
@@ -210,27 +235,19 @@ func check_sorting_order():
 		
 		print_rich("[color=green]Congratulations! Cards sorted correctly![/color]")
 
-func check_buffer_sort_order():
-	var all_slots_filled = true
-	var cards_in_slots = []
-	
-	# Check if all slots are filled
+func check_buffer_contiguity() -> bool:
+	# Build a list of all card values from your cards array
+	# Get buffer values in order from slots
+	var buffer_values = []
 	for slot in slots:
 		if slot.occupied_by == null:
-			all_slots_filled = false
-			break
-		cards_in_slots.append(slot.occupied_by)
+			return false # Buffer not full
+		buffer_values.append(slot.occupied_by.value)
 	
-	# If all slots are filled, check if cards are sorted
-	if all_slots_filled:
-		var sorted_correctly = true
-		for i in range(1, cards_in_slots.size()):
-			if cards_in_slots[i].value < cards_in_slots[i - 1].value:
-				sorted_correctly = false
-				break
-		
-		if sorted_correctly:
-			# Show victory notification
-			var toast = toast_notification_scene.instantiate()
-			add_child(toast)
-			toast.popup("Cards sorted correctly in the buffer zone!")
+	# Now check if buffer_values is a contiguous subsequence of sorted_all
+	for i in range(sorted_all.size() - buffer_values.size() + 1):
+		# Get contiguous slice of sorted_all of same length as buffer_values
+		var test_slice = sorted_all.slice(i, buffer_values.size())
+		if test_slice == buffer_values:
+			return true
+	return false

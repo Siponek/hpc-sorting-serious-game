@@ -10,7 +10,7 @@ var button_handlers = {
 var enter_tweens = {}
 var exit_tweens = {}
 var dialog_open = false
-var singleplayer_options_dialog: Window = preload("res://scenes/MainMenuScene/singleplayer_options.tscn").instantiate()
+var singleplayer_options_dialog_scene: Resource = preload("res://scenes/MainMenuScene/singleplayer_options.tscn")
 
 func _ready():
 	for btn in get_children():
@@ -51,6 +51,7 @@ func _on_StartBtn_pressed() -> void:
 		return
 		
 	dialog_open = true
+	var singleplayer_options_dialog = singleplayer_options_dialog_scene.instantiate()
 	add_child(singleplayer_options_dialog)
 	
 	# Setup window properties

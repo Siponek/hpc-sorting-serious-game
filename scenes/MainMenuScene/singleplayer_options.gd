@@ -11,7 +11,9 @@ func _on_start_button_pressed() -> void:
 	var buffer_slots = $VBoxContainer/BufferSpinBox.value
 	var num_cards = $VBoxContainer/CardCountSpinBox.value
 	var card_range = $VBoxContainer/CardRangeSpinBox.value
-	
+	print("Settings -> Buffer slots: " + str(buffer_slots))
+	print("Settings -> Number of cards: " + str(num_cards))
+	print("Settings -> Card value range: " + str(card_range))
 	# Save these options, for example in a global (autoload) settings singleton:
 	Settings.player_buffer = int(buffer_slots)
 	Settings.num_cards = int(num_cards)

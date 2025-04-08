@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://nxdomgvrs6j1"]
 
-[ext_resource type="Script" uid="uid://cgm7j0pq254kp" path="res://scenes/CardScene/scripts/Card-Manager.gd" id="1_cagap"]
+[ext_resource type="Script" uid="uid://cgm7j0pq254kp" path="res://scenes/CardScene/scripts/card-manager.gd" id="1_cagap"]
 [ext_resource type="Theme" uid="uid://vuoefmjxurjo" path="res://res/dark_theme.tres" id="1_elcqy"]
 [ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_flg1c"]
 [ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="4_flg1c"]
@@ -97,7 +97,6 @@ size_flags_vertical = 3
 theme_override_constants/separation = 0
 alignment = 1
 script = ExtResource("1_cagap")
-num_cards = 9
 
 [node name="SwapButtonPanel" type="PanelContainer" parent="VBoxContainer"]
 visible = false

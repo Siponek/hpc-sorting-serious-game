@@ -73,11 +73,10 @@ func place_in_slot(slot):
 	var new_style = StyleBoxFlat.new()
 	
 	# Create a gradient from top to bottom
-	new_style.bg_color = Color(0.4, 0.7, 0.3) # Base color
+	new_style.bg_color = Color(0.4, 0.4, 0.4) # Base color
 	
 	# Add a vertical gradient
 	new_style.set_border_width_all(0)
-	new_style.shadow_color = Color(0.2, 0.5, 0.1, 0.6) # Darker shade of the base color
 	new_style.shadow_size = 8
 	
 	# Enable gradient
