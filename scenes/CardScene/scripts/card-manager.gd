@@ -38,7 +38,6 @@ func _ready():
 	# Update layout in the editor
 	adjust_container_spacing()
 	create_cards()
-	create_swap_buttons()
 	create_buffer_slots()
 	start_time = Time.get_unix_time_from_system()
 
@@ -92,20 +91,12 @@ func create_cards():
 	for i in range(num_cards):
 		var card_instance = card_scene.instantiate()
 		card_instance.set_card_value(values[i])
-		# Let the container handle positioning
+		# Add card to the container
 		card_container.add_child(card_instance)
+		# Save the initial relative position and the child index
+		card_instance.container_relative_position = card_instance.position
+		card_instance.original_index = card_instance.get_index()
 		cards.append(card_instance)
-		# card_instance.owner = get_tree().get_edited_scene_root()
-
-func create_swap_buttons():
-	# Create n-1 swap buttons (one between each pair of cards)
-	for i in range(num_cards - 1):
-		var swap_button = swap_button_scene.instantiate()
-		# Connect button to swap function
-		swap_button.pressed.connect(_on_swap_button_pressed.bind(i))
-		# Add to container (let container handle positioning)
-		button_container.add_child(swap_button)
-		# swap_button.owner = get_tree().get_edited_scene_root()
 
 func create_buffer_slots():
 	# Clear any existing slots
@@ -144,53 +135,6 @@ func _on_card_placed_in_slot(card, slot):
 	# Optional: Play a sound effect
 	# if $PlacementSound:
 	#     $PlacementSound.play()
-func _on_swap_button_pressed(index):
-	# Skip if already animating
-	if is_animating:
-		return
-		
-	# Set animating flag to prevent multiple animations
-	is_animating = true
-		
-	# Swap cards at index and index+1
-	await swap_cards(index, index + 1)
-	move_count += 1
-	# Check if sorting is complete
-	check_sorting_order()
-
-func swap_cards(index_a, index_b):
-	# Disable all swap buttons during animation
-	var buttons = button_container.get_children()
-	for button in buttons: button.disabled = !button.disabled
-	
-	# Disable card interaction
-	for card in cards:
-		if card.has_method("set_can_drag"):
-			card.set_can_drag(false)
-	
-	# Animate the swap
-	var tween = animate_card_swap(cards[index_a], cards[index_b])
-	
-	# Wait for animation to complete
-	await tween.finished
-	
-	# Swap cards in the array
-	var temp_card = cards[index_a]
-	cards[index_a] = cards[index_b]
-	cards[index_b] = temp_card
-	
-	# Re-enable all buttons
-	for button in buttons: button.disabled = !button.disabled
-	
-	# Re-enable card interaction
-	for card in cards:
-		if card.has_method("set_can_drag"):
-			card.set_can_drag(true)
-	
-	# Reset animation flag
-	is_animating = false
-	
-	print("Swapped cards: " + str(cards[index_b].value) + " and " + str(cards[index_a].value))
 
 func animate_card_swap(card_a, card_b):
 	# Kill any existing tweens on these cards
@@ -290,23 +234,3 @@ func check_buffer_sort_order():
 			var toast = toast_notification_scene.instantiate()
 			add_child(toast)
 			toast.popup("Cards sorted correctly in the buffer zone!")
-
-func animate_slot_swap(card_a, card_b, slot_a, slot_b):
-	# Similar to animate_card_swap but for slots
-	var tween = create_tween()
-	tween.set_parallel(true)
-	
-	# Get positions
-	var pos_a = slot_a.global_position + Vector2(5, 5)
-	var pos_b = slot_b.global_position + Vector2(5, 5)
-	
-	# Animate the swap with a small lift
-	tween.tween_property(card_a, "global_position:y", card_a.global_position.y - 20, 0.2)
-	tween.tween_property(card_b, "global_position:y", card_b.global_position.y - 20, 0.2)
-	
-	tween.chain()
-	
-	tween.tween_property(card_a, "global_position", pos_b, 0.3)
-	tween.tween_property(card_b, "global_position", pos_a, 0.3)
-	
-	return tween

@@ -29,13 +29,14 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	print("Slot " + slot_text + " _drop_data called with: " + str(data))
 	if data is Control and data.has_method("set_card_value"):
-		var source_slot = data.current_slot
-		
+		var incoming_card = data
+		var source_slot = incoming_card.current_slot
+
 		# If this slot already has a card, we need to swap
 		if occupied_by != null:
 			var current_card = occupied_by
-			
-			# If the incoming card was in a slot, move our card there
+
+			# Move our current card to the source slot
 			if source_slot != null:
 				# Move our current card to the source slot
 				current_card.global_position = source_slot.global_position + Vector2(5, 5)
@@ -46,22 +47,21 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 				current_card.remove_from_slot()
 				current_card.reset_position()
 				current_card.set_can_drag(true)
-			
+
+			# Update the occupied_by property of the source slot
+			if source_slot != null:
+				source_slot.occupied_by = current_card
+
 		# Place the incoming card in this slot
-		occupied_by = data
-		data.global_position = global_position + Vector2(5, 5)
-		data.place_in_slot(self)
-		
+		occupied_by = incoming_card
+		incoming_card.global_position = global_position + Vector2(5, 5)
+		incoming_card.place_in_slot(self)
+
 		# Emit signal for card placement
-		emit_signal("card_placed", data, self)
+		emit_signal("card_placed", incoming_card, self)
 	
 func clear_slot():
 	occupied_by = null
 func _ready() -> void:
-	# Set the Control node's minimum size (this is the root node)
-	# original_position = position
-	# Set Z index to ensure it doesn't block slots when dragging
-	# z_index = 10  # Higher value means it renders on top
-	# Also set the panel's minimum size
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	label.text = slot_text

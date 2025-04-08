@@ -1,18 +1,20 @@
 extends Control
 
 var value: int = 0
-var original_position: Vector2
 var can_drag: bool = true
 var is_dragging: bool = false
 var current_slot = null
-# I want a gradiend color for the card
-
+var container_relative_position: Vector2 # New variable
+var original_index: int = 0
 
 signal card_grabbed(card)
 signal card_dropped(card, drop_position)
 
 func _ready():
-	original_position = position
+	container_relative_position = position
+	# (Optional:) Save the card's container index
+	if get_parent() != null:
+		original_index = get_parent().get_child_count() - 1
 
 
 ## Set the value of the card and update the label
@@ -58,9 +60,13 @@ func _process(_delta):
 		# global_position = get_global_mouse_position() - size / 2
 
 func reset_position():
-	position = original_position
-	# if get_parent():
-    #     position = Vector2.ZERO  # Or whatever default position should be
+	# Reattach card back to the card container at its original index
+	var card_container = get_tree().get_root().get_node("SinglePlayerScene/VBoxContainer/CardPanel/CenterContainer/CardContainer")
+	assert(card_container != null, "Card container not found in the scene tree.")
+	card_container.add_child(self)
+	# Reorder child to original index (if the container supports it)
+	card_container.move_child(self, original_index)
+	position = container_relative_position
 
 func place_in_slot(slot):
 	# Create a stylebox with gradient instead of solid color
@@ -96,11 +102,7 @@ func remove_from_slot():
 	$Panel.add_theme_stylebox_override("panel", new_style)
 	current_slot = null
 
-# Returns the data to pass from an object when you click and drag away from
-# this object. Also calls `set_drag_preview()` to show the mouse dragging
-# something so the user knows that the operation is working.
 func _get_drag_data(_at_position: Vector2) -> Variant:
-	# print("Card _get_drag_data")
 	if can_drag:
 		# Create a preview for the drag operation
 		var preview = duplicate()
@@ -108,12 +110,16 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 		preview.set_card_value(value)
 		preview.set_script(null)
 		set_drag_preview(preview)
-		# If card is in a slot, remove it when starting to drag
-		if current_slot != null:
-			if current_slot.has_method("clear_slot"):
-				current_slot.clear_slot()
-			remove_from_slot()
-			# Also notify the slot that it's now empty
-		
+		# Save current container position data:
+		if current_slot == null:
+			container_relative_position = position
+			original_index = get_index() # store current index in cardContainer
+		# Detach card from current parent and reparent to drag layer (for example, the scene root)
+		var drag_layer = get_tree().get_root()
+		drag_layer.add_child(self)
+		# If in slot, clear the slot reference
+		if current_slot and current_slot.has_method("clear_slot"):
+			current_slot.clear_slot()
+			current_slot = null
 		return self
 	return null
