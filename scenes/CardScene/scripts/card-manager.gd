@@ -11,9 +11,8 @@ var sorted_all = []
 var buffer_size: int = Settings.player_buffer
 var num_cards: int = Settings.num_cards
 const CARD_WIDTH = 70
-var start_time: float
 var move_count: int = 0
-
+var timer_started: bool = false
 var is_animating = false # Flag to track animation state
 
 const card_scene: PackedScene = preload("res://scenes/CardScene/CardMain.tscn")
@@ -24,6 +23,8 @@ const card_slot_scene: PackedScene = preload("res://scenes/CardScene/CardSlot.ts
 @onready var button_container: HBoxContainer = $SwapButtonPanel/CenterContainer/SwapButtonContainer
 @onready var card_container: HBoxContainer = $CardPanel/CenterContainer/CardContainer
 @onready var slot_container = $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer
+@onready var timer_node: PanelContainer = get_node("./../TopBar/TimerPanel")
+
 
 func _ready():
 	var max_cards = calculate_max_cards()
@@ -43,7 +44,6 @@ func _ready():
 	adjust_container_spacing()
 	create_cards()
 	create_buffer_slots()
-	start_time = Time.get_unix_time_from_system()
 
 func calculate_max_cards():
 	# Get screen width from constants
@@ -124,7 +124,10 @@ func create_buffer_slots():
 
 func _on_card_placed_in_slot(card, slot):
 	print("Card " + str(card.value) + " placed in slot " + slot.slot_text)
-	
+	move_count += 1
+	if not timer_started:
+		timer_node.start_timer()
+		timer_started = true
 	# Update the occupied_by property of the slot
 	slot.occupied_by = card
 	
@@ -134,7 +137,15 @@ func _on_card_placed_in_slot(card, slot):
 		
 		# Instantiate the toast notification
 		var toast = toast_notification_scene.instantiate()
+		var time_taken = timer_node.getCurrentTime()
 		
+		# Format the time taken
+		var minutes = int(time_taken / 60)
+		var seconds = int(time_taken) % 60
+		var time_string = "%02d:%02d" % [minutes, seconds]
+		
+		# Create the toast notification text
+		var toast_text = "Cards sorted successfully in %s minutes with %d moves!" % [time_string, move_count]
 		# Set a high z_index so it appears on top
 		toast.z_index = 1000
 		
@@ -145,7 +156,7 @@ func _on_card_placed_in_slot(card, slot):
 		get_tree().get_root().add_child(toast)
 		
 		# Show the toast popup
-		toast.popup("Cards sorted correctly in the buffer zone!")
+		toast.popup(toast_text)
 		
 		# After 4 seconds, free the toast
 		var timer = get_tree().create_timer(4.0).timeout
@@ -212,14 +223,12 @@ func check_sorting_order():
 	
 	if sorted_correctly:
 		# Calculate the time taken
-		var end_time = Time.get_unix_time_from_system()
-		var time_taken = end_time - start_time
+		var timer_node_time = timer_node.get_time()
 		
 		# Format the time taken
-		var minutes = int(time_taken / 60)
-		var seconds = int(time_taken % 60)
-		# var time_string = "%02d:%02d" % [minutes, seconds]
-		var time_string = "30:30" % [minutes, seconds]
+		var seconds = int(timer_node_time) % 60
+		var minutes = int(timer_node_time / 60)
+		var time_string = "%02d:%02d" % [minutes, seconds]
 		
 		# Create the toast notification text
 		var toast_text = "Cards sorted successfully in %s with %d moves!" % [time_string, move_count]
