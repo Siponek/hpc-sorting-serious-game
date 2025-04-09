@@ -4,55 +4,59 @@ extends Control
 @onready var label: Label = $Panel/CenterContainer/Label
 var occupied_by = null
 signal card_placed(card, slot)
-# func _gui_input(event):
-# 	if event is InputEventMouseButton:
-# 		print("Slot " + slot_text + " got mouse button event: " + str(event.button_index) + " pressed: " + str(event.pressed))
-# 	elif event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-# 		print("Slot " + slot_text + " got mouse motion while dragging")
+
+
 func _on_card_placed_in_slot(card, slot):
 	print("Card " + str(card.value) + " placed in slot " + slot.slot_text)
 	
 	# Update the occupied_by property of the slot
 	slot.occupied_by = card
 	
-	# Check if all slots are filled and sorted properly
-	# check_buffer_sort_order()
 	
 	# Optional: Disable the card's dragging after placement
 	if card.has_method("set_can_drag"):
 		card.set_can_drag(false)
-# Debug drag and drop events
+
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-	print("Slot " + slot_text + " _can_drop_data called with: " + str(data))
-	return data is Control and data.has_method("set_card_value") and occupied_by == null
+	# Accept any card, whether the slot is empty or already occupied
+	return data is Control and data.has_method("set_card_value")
 
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	print("Slot " + slot_text + " _drop_data called with: " + str(data))
 	if data is Control and data.has_method("set_card_value"):
-		# Store reference to the card occupying this slot
-		occupied_by = data
-		
-		# Center the card in the slot
-		data.modulate.a = 1.0
-		data.position = global_position - data.size / 2
-		# small offest
-		data.global_position = global_position + Vector2(5, 5)
-		data.place_in_slot(self)
-		
-		print("Card with value " + str(data.value) + " placed in slot " + slot_text)
-		
-		# Tell the card manager to check if sorting is complete
-		var card_manager = get_node("/root/SinglePlayerScene/CardManager")
-		if card_manager and card_manager.has_method("check_sorting_order"):
-			card_manager.check_sorting_order()
+		var incoming_card = data
+		var source_slot = incoming_card.current_slot
+
+		# If this slot already has a card, we need to swap
+		if occupied_by != null:
+			var current_card = occupied_by
+
+			# Move our current card to the source slot
+			if source_slot != null:
+				# Move our current card to the source slot
+				current_card.global_position = source_slot.global_position + Vector2(5, 5)
+				current_card.place_in_slot(source_slot)
+				source_slot.occupied_by = current_card
+			else:
+				# If the incoming card wasn't in a slot, just release our card
+				current_card.remove_from_slot()
+				current_card.reset_position()
+				current_card.set_can_drag(true)
+
+			# Update the occupied_by property of the source slot
+			if source_slot != null:
+				source_slot.occupied_by = current_card
+
+		# Place the incoming card in this slot
+		occupied_by = incoming_card
+		incoming_card.global_position = global_position + Vector2(5, 5)
+		incoming_card.place_in_slot(self)
+
+		# Emit signal for card placement
+		emit_signal("card_placed", incoming_card, self)
 	
 func clear_slot():
 	occupied_by = null
 func _ready() -> void:
-	# Set the Control node's minimum size (this is the root node)
-	# original_position = position
-	# Set Z index to ensure it doesn't block slots when dragging
-	# z_index = 10  # Higher value means it renders on top
-	# Also set the panel's minimum size
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	label.text = slot_text

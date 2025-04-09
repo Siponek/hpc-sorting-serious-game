@@ -69,6 +69,7 @@ theme_override_constants/separation = 1
 script = ExtResource("1_6sovq")
 
 [node name="SwtichBtn" type="Panel" parent="."]
+visible = false
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_vertical = 3
@@ -100,6 +101,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Label" type="Label" parent="Panel/CenterContainer"]
+visible = false
 layout_mode = 2
 mouse_filter = 1
 text = "number"
