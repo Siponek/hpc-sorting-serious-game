@@ -1,5 +1,7 @@
 extends Control
 
+# var SubarrayUtils = preload("res://res/algorithms/SubarrayUtils.gd")
+
 # @export var card_scene: PackedScene
 @export_range(10, 200) var button_spacing: int = 10
 @export_range(10, 200) var card_spacing: int = 10
@@ -14,6 +16,7 @@ const CARD_WIDTH = 70
 var move_count: int = 0
 var timer_started: bool = false
 var is_animating = false # Flag to track animation state
+var mini_buffer = []
 
 const card_scene: PackedScene = preload("res://scenes/CardScene/CardMain.tscn")
 const swap_button_scene: PackedScene = preload("res://scenes/CardScene/swapBtn.tscn")
@@ -21,15 +24,15 @@ const toast_notification_scene: PackedScene = preload("res://scenes/toast_notifi
 const card_slot_scene: PackedScene = preload("res://scenes/CardScene/CardSlot.tscn")
 
 @onready var button_container: HBoxContainer = $SwapButtonPanel/CenterContainer/SwapButtonContainer
-@onready var card_container: HBoxContainer = $CardPanel/CenterContainer/CardContainer
-@onready var slot_container = $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer
+@onready var card_container: HBoxContainer = $CardPanel/ScrollContainer/MarginContainer/CardContainer
+@onready var slot_container: HBoxContainer = $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer
 @onready var timer_node: PanelContainer = get_node("./../TopBar/TimerPanel")
-
+@onready var mini_buffer_container: HBoxContainer = get_node("./../SortedCardsBufferPanel/HBoxContainer")
 
 func _ready():
 	var max_cards = calculate_max_cards()
 	print("Max cards: " + str(max_cards), "Num cards: " + str(num_cards))
-	num_cards = min(num_cards, max_cards)
+	# num_cards = min(num_cards, max_cards)
 	if num_cards < 1:
 		num_cards = 1
 		push_warning("Screen too small - can only fit 1 card")
@@ -44,6 +47,11 @@ func _ready():
 	adjust_container_spacing()
 	create_cards()
 	create_buffer_slots()
+
+	# wait 1 frame for scaling down
+	await get_tree().process_frame
+	# To make the contents smaller
+	mini_buffer_container.scale = Vector2(0.5, 0.5)
 
 func calculate_max_cards():
 	# Get screen width from constants
@@ -95,6 +103,7 @@ func create_cards():
 	for i in range(num_cards):
 		var card_instance = card_scene.instantiate()
 		card_instance.set_card_value(values[i])
+		card_instance.name = "Card_" + str(values[i])
 		# Add card to the container
 		card_container.add_child(card_instance)
 		# Save the initial relative position and the child index
@@ -132,9 +141,14 @@ func _on_card_placed_in_slot(card, slot):
 	slot.occupied_by = card
 	
 	# Check if all slots are filled and sorted properly
-	if check_buffer_contiguity():
+	if check_player_buffer_contiguity():
 		print("Buffer is contiguous!")
+		store_sorted_chunk()
+		apply_scale_to_mini_buffer_children()
 		
+		# (Optional) Check if all cards are now in the mini_buffer
+		if mini_buffer.size() == cards.size():
+			print("All cards sorted! Game finished.")
 		# Instantiate the toast notification
 		var toast = toast_notification_scene.instantiate()
 		var time_taken = timer_node.getCurrentTime()
@@ -145,7 +159,7 @@ func _on_card_placed_in_slot(card, slot):
 		var time_string = "%02d:%02d" % [minutes, seconds]
 		
 		# Create the toast notification text
-		var toast_text = "Cards sorted successfully in %s minutes with %d moves!" % [time_string, move_count]
+		var toast_text = "Cards sorted successfully in %s seconds with %d moves!" % [time_string, move_count]
 		# Set a high z_index so it appears on top
 		toast.z_index = 1000
 		
@@ -166,7 +180,7 @@ func _on_card_placed_in_slot(card, slot):
 	
 	# Optional: Disable the card's dragging after placement
 	if card.has_method("set_can_drag"):
-		card.set_can_drag(false)
+		card.set_can_drag(true)
 	
 	# Optional: Play a sound effect
 	# if $PlacementSound:
@@ -244,19 +258,44 @@ func check_sorting_order():
 		
 		print_rich("[color=green]Congratulations! Cards sorted correctly![/color]")
 
-func check_buffer_contiguity() -> bool:
+func check_player_buffer_contiguity() -> bool:
 	# Build a list of all card values from your cards array
 	# Get buffer values in order from slots
 	var buffer_values = []
 	for slot in slots:
 		if slot.occupied_by == null:
+			print_debug("Buffer not full")
 			return false # Buffer not full
 		buffer_values.append(slot.occupied_by.value)
 	
 	# Now check if buffer_values is a contiguous subsequence of sorted_all
-	for i in range(sorted_all.size() - buffer_values.size() + 1):
-		# Get contiguous slice of sorted_all of same length as buffer_values
-		var test_slice = sorted_all.slice(i, buffer_values.size())
-		if test_slice == buffer_values:
-			return true
-	return false
+	return SubarrayUtils.is_contiguous_subarray(sorted_all, buffer_values)
+
+func store_sorted_chunk() -> void:
+	# Iterate over buffer slots and reparent their cards to the mini_buffer_container
+	for slot in slots:
+		if slot.occupied_by:
+			var card = slot.occupied_by
+			# Reparent the card to the mini buffer container
+			mini_buffer_container.add_child(card)
+			mini_buffer.append(card)
+			
+			# TODO to be deleted
+			card.reset_position()
+			# Need to detach the card from the current parent and reparent it to the mini buffer
+			card.get_parent().remove_child(card)
+			await get_tree().process_frame
+			# To make the contents smaller
+			card.scale = Vector2(0.5, 0.5)
+			card.set_can_drag(false)
+			mini_buffer_container.add_child(card)
+
+			# Optionally, remove the card from the current slot visually and update its references
+			slot.clear_slot()
+	print_debug("Sorted chunk stored in mini buffer: " + str(mini_buffer))
+	# (Optional) Reset your buffer if needed—for example, clear the slots array or recreate them.
+
+func apply_scale_to_mini_buffer_children() -> void:
+	for child in mini_buffer_container.get_children():
+		if child is Control:
+			child.scale = Vector2(0.5, 0.5)

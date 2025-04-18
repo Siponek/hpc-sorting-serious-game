@@ -4,7 +4,7 @@ var value: int = 0
 var can_drag: bool = true
 var is_dragging: bool = false
 var current_slot = null
-var container_relative_position: Vector2 # New variable
+var container_relative_position: Vector2
 var original_index: int = 0
 
 signal card_grabbed(card)
@@ -22,10 +22,10 @@ func set_card_value(new_value: int):
 	value = new_value
 	$Value.text = str(value)
 # Add this function to your card.gd script
-func set_can_drag(value: bool):
-	can_drag = value
+func set_can_drag(_value: bool):
+	can_drag = _value
 	# Optional: Change visual appearance to indicate draggability
-	if value:
+	if _value:
 		modulate.a = 1.0 # Full opacity
 		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	else:
@@ -33,23 +33,25 @@ func set_can_drag(value: bool):
 		mouse_default_cursor_shape = Control.CURSOR_ARROW
 # Use the built-in _gui_input method instead of a separate handler
 func _gui_input(event: InputEvent) -> void:
-	pass
+	return
 	if can_drag:
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				if event.pressed:
-					print("Card grabbed: " + str(value))
+					print_debug("Card grabbed: " + str(value))
 					is_dragging = true
 					emit_signal("card_grabbed", self)
 				else:
 					print("Card dropped: " + str(value))
 					is_dragging = false
 					emit_signal("card_dropped", self, global_position)
+	else:
+		print_debug("Card cannot be dragged")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			print("Card _unhandled_input")
+			print_debug("Card _unhandled_input")
 	elif event is InputEventMouseMotion:
 		# print("Mouse motion")
 		pass
@@ -59,6 +61,7 @@ func _process(_delta):
 	# if is_dragging:
 		# global_position = get_global_mouse_position() - size / 2
 
+# This function can be called from another script
 func reset_position():
 	# Reattach card back to the card container at its original index
 	var card_container = get_tree().get_root().get_node("SinglePlayerScene/VBoxContainer/CardPanel/CenterContainer/CardContainer")
@@ -69,6 +72,7 @@ func reset_position():
 	position = container_relative_position
 
 func place_in_slot(slot):
+	# TODO make this stylebox a ready resource so no initialization is needed
 	# Create a stylebox with gradient instead of solid color
 	var new_style = StyleBoxFlat.new()
 	
@@ -121,4 +125,6 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 			current_slot.clear_slot()
 			current_slot = null
 		return self
+	else:
+		print_debug("Card cannot be dragged")
 	return null

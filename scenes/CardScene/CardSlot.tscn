@@ -62,7 +62,7 @@ fill_from = Vector2(0.5, 0.5)
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ef3x2"]
 texture = SubResource("GradientTexture2D_jtw0v")
 
-[node name="VBoxContainer" type="VBoxContainer"]
+[node name="CardSlotContainer" type="VBoxContainer"]
 offset_right = 110.0
 offset_bottom = 161.0
 theme_override_constants/separation = 1

@@ -85,6 +85,19 @@ scroll_active = false
 autowrap_mode = 0
 vertical_alignment = 1
 
+[node name="SortedCardsBufferPanel" type="PanelContainer" parent="."]
+clip_contents = true
+layout_mode = 0
+offset_top = 128.0
+offset_right = 3476.0
+offset_bottom = 564.0
+scale = Vector2(0.33, 0.33)
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SortedCardsBufferPanel"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_vertical = 0
+
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 12
@@ -116,7 +129,7 @@ theme = ExtResource("1_elcqy")
 alignment = 1
 
 [node name="CardPanel" type="PanelContainer" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 180)
+custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -125,9 +138,23 @@ theme = ExtResource("1_flg1c")
 [node name="CenterContainer" type="CenterContainer" parent="VBoxContainer/CardPanel"]
 layout_mode = 2
 
-[node name="CardContainer" type="HBoxContainer" parent="VBoxContainer/CardPanel/CenterContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/CardPanel"]
+clip_contents = false
+layout_mode = 2
+draw_focus_border = true
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/CardPanel/ScrollContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 10
+
+[node name="CardContainer" type="HBoxContainer" parent="VBoxContainer/CardPanel/ScrollContainer/MarginContainer"]
 z_index = 10
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 50
 
 [node name="BufferZonePanel" type="PanelContainer" parent="VBoxContainer"]

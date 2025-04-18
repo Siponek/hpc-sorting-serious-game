@@ -5,24 +5,12 @@ extends Control
 var occupied_by = null
 signal card_placed(card, slot)
 
-
-func _on_card_placed_in_slot(card, slot):
-	print("Card " + str(card.value) + " placed in slot " + slot.slot_text)
-	
-	# Update the occupied_by property of the slot
-	slot.occupied_by = card
-	
-	
-	# Optional: Disable the card's dragging after placement
-	if card.has_method("set_can_drag"):
-		card.set_can_drag(false)
-
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	# Accept any card, whether the slot is empty or already occupied
 	return data is Control and data.has_method("set_card_value")
 
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
-	print("Slot " + slot_text + " _drop_data called with: " + str(data))
+	# print_debug("Slot " + slot_text + " _drop_data called with: " + str(data))
 	if data is Control and data.has_method("set_card_value"):
 		var incoming_card = data
 		var source_slot = incoming_card.current_slot
@@ -33,19 +21,18 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 
 			# Move our current card to the source slot
 			if source_slot != null:
+				# TODO make a system that will detach the nodes and connect them to other nodes
+				# Current one only moves them with the global position
 				# Move our current card to the source slot
 				current_card.global_position = source_slot.global_position + Vector2(5, 5)
 				current_card.place_in_slot(source_slot)
+				current_card.z_index = source_slot.z_index + 100
 				source_slot.occupied_by = current_card
 			else:
 				# If the incoming card wasn't in a slot, just release our card
 				current_card.remove_from_slot()
 				current_card.reset_position()
 				current_card.set_can_drag(true)
-
-			# Update the occupied_by property of the source slot
-			if source_slot != null:
-				source_slot.occupied_by = current_card
 
 		# Place the incoming card in this slot
 		occupied_by = incoming_card
