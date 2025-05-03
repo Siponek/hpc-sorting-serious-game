@@ -1,4 +1,6 @@
+class_name Card
 extends Control
+const CARD_CONTINAER_PATH: String = "SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
 
 var value: int = 0
 var can_drag: bool = true
@@ -31,30 +33,6 @@ func set_can_drag(_value: bool):
 	else:
 		modulate.a = 0.8 # Slightly transparent to indicate it can't be dragged
 		mouse_default_cursor_shape = Control.CURSOR_ARROW
-# Use the built-in _gui_input method instead of a separate handler
-func _gui_input(event: InputEvent) -> void:
-	return
-	if can_drag:
-		if event is InputEventMouseButton:
-			if event.button_index == MOUSE_BUTTON_LEFT:
-				if event.pressed:
-					print_debug("Card grabbed: " + str(value))
-					is_dragging = true
-					emit_signal("card_grabbed", self)
-				else:
-					print("Card dropped: " + str(value))
-					is_dragging = false
-					emit_signal("card_dropped", self, global_position)
-	else:
-		print_debug("Card cannot be dragged")
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			print_debug("Card _unhandled_input")
-	elif event is InputEventMouseMotion:
-		# print("Mouse motion")
-		pass
 
 func _process(_delta):
 	pass
@@ -64,7 +42,7 @@ func _process(_delta):
 # This function can be called from another script
 func reset_position():
 	# Reattach card back to the card container at its original index
-	var card_container = get_tree().get_root().get_node("SinglePlayerScene/VBoxContainer/CardPanel/CenterContainer/CardContainer")
+	var card_container = get_tree().get_root().get_node(CARD_CONTINAER_PATH)
 	assert(card_container != null, "Card container not found in the scene tree.")
 	card_container.add_child(self)
 	# Reorder child to original index (if the container supports it)
@@ -90,7 +68,7 @@ func place_in_slot(slot):
 	
 	# Apply the stylebox to the panel
 	$Panel.add_theme_stylebox_override("panel", new_style)
-	current_slot = slot
+	self.current_slot = slot
 
 func remove_from_slot():
 	# Create a stylebox for cards not in slots
@@ -103,28 +81,32 @@ func remove_from_slot():
 	new_style.set_corner_radius_all(5) # Round corners
 	
 	$Panel.add_theme_stylebox_override("panel", new_style)
-	current_slot = null
+	self.current_slot = null
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
-	if can_drag:
-		# Create a preview for the drag operation
-		var preview = duplicate()
-		preview.modulate.a = 0.5
-		preview.set_card_value(value)
-		preview.set_script(null)
-		set_drag_preview(preview)
-		# Save current container position data:
-		if current_slot == null:
-			container_relative_position = position
-			original_index = get_index() # store current index in cardContainer
-		# Detach card from current parent and reparent to drag layer (for example, the scene root)
-		var drag_layer = get_tree().get_root()
-		drag_layer.add_child(self)
-		# If in slot, clear the slot reference
-		if current_slot and current_slot.has_method("clear_slot"):
-			current_slot.clear_slot()
-			current_slot = null
-		return self
-	else:
+	if not can_drag:
 		print_debug("Card cannot be dragged")
-	return null
+		return null
+	# print_debug("Card _get_drag_data called, current_slot: " + str(current_slot))
+
+	set_drag_preview(create_drag_preview())
+	# Save current container position data:
+	if current_slot == null:
+		container_relative_position = position
+		original_index = get_index() # store current index in cardContainer
+	# Detach card from current parent and reparent to drag layer (for example, the scene root)
+	var drag_layer = get_tree().get_root()
+	drag_layer.add_child(self)
+	return self
+	
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	# Accept any card, whether the slot is empty or already occupied
+	print("Card _can_drop_data called with: " + str(data))
+	return data is Control and data.has_method("set_card_value")
+func create_drag_preview():
+	# Creates a simple preview (a copy of the card)
+	var preview = self.duplicate()
+	preview.set_z_index(1000) # Bring to front
+	# Optional: Make preview slightly transparent
+	preview.modulate = Color(1, 1, 1, 0.7)
+	return preview

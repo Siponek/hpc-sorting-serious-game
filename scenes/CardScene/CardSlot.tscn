@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://deusybpy07sll"]
 
-[ext_resource type="Script" uid="uid://xfy6ifu1lgby" path="res://scenes/CardScene/scripts/SlotDragDrop.gd" id="1_6sovq"]
+[ext_resource type="Script" uid="uid://xfy6ifu1lgby" path="res://scenes/CardScene/scripts/card-buffer.gd" id="1_6sovq"]
 
 [sub_resource type="FontFile" id="FontFile_6sovq"]
 subpixel_positioning = 0

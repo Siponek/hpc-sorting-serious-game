@@ -128,8 +128,8 @@ func create_buffer_slots():
 	# You might want to connect signals from slots to your manager
 	for slot in slots:
 		# Optional: Connect any custom signals from your slot script
-		if slot.has_signal("card_placed"):
-			slot.card_placed.connect(_on_card_placed_in_slot)
+		if slot.has_signal("card_placed_in_slot"):
+			slot.card_placed_in_slot.connect(_on_card_placed_in_slot)
 
 func _on_card_placed_in_slot(card, slot):
 	print("Card " + str(card.value) + " placed in slot " + slot.slot_text)
@@ -140,43 +140,43 @@ func _on_card_placed_in_slot(card, slot):
 	# Update the occupied_by property of the slot
 	slot.occupied_by = card
 	
-	# Check if all slots are filled and sorted properly
-	if check_player_buffer_contiguity():
-		print("Buffer is contiguous!")
-		store_sorted_chunk()
-		apply_scale_to_mini_buffer_children()
+	# # Check if all slots are filled and sorted properly
+	# if check_player_buffer_contiguity():
+	# 	print("Buffer is contiguous!")
+	# 	store_sorted_chunk()
+	# 	apply_scale_to_mini_buffer_children()
 		
-		# (Optional) Check if all cards are now in the mini_buffer
-		if mini_buffer.size() == cards.size():
-			print("All cards sorted! Game finished.")
-		# Instantiate the toast notification
-		var toast = toast_notification_scene.instantiate()
-		var time_taken = timer_node.getCurrentTime()
+	# 	# (Optional) Check if all cards are now in the mini_buffer
+	# 	if mini_buffer.size() == cards.size():
+	# 		print("All cards sorted! Game finished.")
+	# 	# Instantiate the toast notification
+	# 	var toast = toast_notification_scene.instantiate()
+	# 	var time_taken = timer_node.getCurrentTime()
 		
-		# Format the time taken
-		var minutes = int(time_taken / 60)
-		var seconds = int(time_taken) % 60
-		var time_string = "%02d:%02d" % [minutes, seconds]
+	# 	# Format the time taken
+	# 	var minutes = int(time_taken / 60)
+	# 	var seconds = int(time_taken) % 60
+	# 	var time_string = "%02d:%02d" % [minutes, seconds]
 		
-		# Create the toast notification text
-		var toast_text = "Cards sorted successfully in %s seconds with %d moves!" % [time_string, move_count]
-		# Set a high z_index so it appears on top
-		toast.z_index = 1000
+	# 	# Create the toast notification text
+	# 	var toast_text = "Cards sorted successfully in %s seconds with %d moves!" % [time_string, move_count]
+	# 	# Set a high z_index so it appears on top
+	# 	toast.z_index = 1000
 		
-		# Make the toast semi-transparent
-		toast.modulate = Color(1, 1, 1, 0.8)
+	# 	# Make the toast semi-transparent
+	# 	toast.modulate = Color(1, 1, 1, 0.8)
 		
-		# Reparent the toast to the scene root (or a dedicated overlay node)
-		get_tree().get_root().add_child(toast)
+	# 	# Reparent the toast to the scene root (or a dedicated overlay node)
+	# 	get_tree().get_root().add_child(toast)
 		
-		# Show the toast popup
-		toast.popup(toast_text)
+	# 	# Show the toast popup
+	# 	toast.popup(toast_text)
 		
-		# After 4 seconds, free the toast
-		var timer = get_tree().create_timer(4.0).timeout
-		await timer
-	else:
-		print("Buffer is not contiguous!")
+	# 	# After 4 seconds, free the toast
+	# 	var timer = get_tree().create_timer(4.0).timeout
+	# 	await timer
+	# else:
+	# 	print("Buffer is not contiguous!")
 	
 	# Optional: Disable the card's dragging after placement
 	if card.has_method("set_can_drag"):
@@ -290,8 +290,6 @@ func store_sorted_chunk() -> void:
 			card.set_can_drag(false)
 			mini_buffer_container.add_child(card)
 
-			# Optionally, remove the card from the current slot visually and update its references
-			slot.clear_slot()
 	print_debug("Sorted chunk stored in mini buffer: " + str(mini_buffer))
 	# (Optional) Reset your buffer if needed—for example, clear the slots array or recreate them.
 
