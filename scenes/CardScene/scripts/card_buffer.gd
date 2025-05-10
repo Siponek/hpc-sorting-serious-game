@@ -1,37 +1,54 @@
-extends Control
+class_name CardBuffer
+extends VBoxContainer
 
 @export var slot_text: String = "Slot":
 	set(value):
 		slot_text = value
-		# Assuming you have a Label child
-		if has_node("Label"): $Label.text = value
+		if has_node("Label") and is_inside_tree(): # Check if node is ready
+			$Panel/CenterContainer/Label.text = value # Path to label inside Panel
 
 @onready var panel: Panel = $Panel
-@onready var label: Label = $Panel/CenterContainer/Label
-var occupied_by = null
+@onready var label: Label = $Panel/CenterContainer/Label # Assuming this is the label showing slot_text
+var occupied_by: Card = null # Explicitly type if possible
 signal card_placed_in_slot(card, slot)
 signal card_removed(card, slot)
 
 func _ready() -> void:
-	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	# panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER # This might be okay depending on desired panel behavior
 	label.text = slot_text
+	_update_panel_visibility() # Set initial state
+
+func set_occupied_by(card: Variant) -> void:
+	self.occupied_by = card
+	_update_panel_visibility() # Update visibility based on new state
+
+func _update_panel_visibility():
+	if occupied_by != null:
+		# Hide panel (and its child label) when card is present
+		panel.visible = false
+	else:
+		# Show panel (and its child label) when slot is empty
+		panel.visible = true
+	print("Panel visibility updated: %s" % [panel.visible])
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-	# Accept any card, whether the slot is empty or already occupied
-	print("Slot " + str(slot_text) + " _can_drop_data called")
+	print("Checking if data can be dropped in slot %s" % [slot_text])
 	return data is Card
 
 func _get_drag_data(_position):
 	if occupied_by:
-		var card = occupied_by
-		occupied_by = null
-		# Remove card visually from the slot
-		remove_child(card)
-		# Set preview for the card being dragged
-		card.set_drag_preview(card.create_drag_preview())
-		emit_signal("card_removed", card, self)
-		# Return the card node itself
-		return card
+		var card_to_drag: Card = occupied_by
+		self.set_occupied_by(null) # Set this slot to empty
+
+		# The card is expected to be a child of this VBoxContainer if it's 'occupied_by' this slot.
+		if card_to_drag.get_parent() == self:
+			remove_child(card_to_drag) # Visually remove from this slot for dragging
+		
+		card_to_drag.set_drag_preview(card_to_drag.create_drag_preview())
+		
+		_update_panel_visibility() # Update visibility as slot is now empty
+		emit_signal("card_removed", card_to_drag, self)
+		return card_to_drag
 	return null
 
 # TODO unify the _drop data function in scroll_container and card_buffer
@@ -42,7 +59,7 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 
 	var card_container_node = get_tree().get_root().get_node("SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer")
 	var incoming_card: Card = data
-	var source_slot: Control = incoming_card.current_slot # The slot the incoming card *was* in, if any. Null if from container.
+	var source_slot: CardBuffer = incoming_card.current_slot # The slot the incoming card *was* in, if any. Null if from container.
 
 	# --- Handle the card currently in THIS slot (if any) ---
 	var old_card: Card = occupied_by # Card currently in this slot (can be null if empty)
@@ -54,18 +71,19 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 			self.remove_child(old_card)
 		else:
 			print_debug("Old card parent mismatch!") # Should ideally be a child of this slot control/panel
-
-		occupied_by = null # This slot is now logically empty
+		self.set_occupied_by(null) # Set this slot to empty
 
 		if source_slot != null and source_slot != self:
 			# Case: Swapping between two different slots. Move old_card to the source_slot.
 			print_debug("Swapping: Moving card %d from %s to %s" % [old_card.value, slot_text, source_slot.slot_text])
 			# Ensure source_slot is ready to receive
 			if source_slot.occupied_by == incoming_card: # Check if the source still thinks it holds the incoming card
-				source_slot.occupied_by = null
+				source_slot.set_occupied_by(null)
 			source_slot.add_child(old_card) # Add old_card to the source slot's visual tree
 			old_card.place_in_slot(source_slot) # Update style and set current_slot
-			source_slot.occupied_by = old_card # Update source slot's logical state
+			source_slot.set_occupied_by(old_card) # Set the source slot's logical state
+			if source_slot.has_method("_update_panel_visibility"):
+				source_slot._update_panel_visibility()
 		else:
 			# Case: Incoming card is from the main container (source_slot == null).
 			# Send old_card back to the main container using its original position.
@@ -84,14 +102,16 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	# Add incoming_card to this slot
 	print_debug("Placing card %d into %s" % [incoming_card.value, slot_text])
 	self.add_child(incoming_card) # Add to this slot's visual tree (assuming cards are direct children)
-	occupied_by = incoming_card # Update logical state
+	self.set_occupied_by(incoming_card) # Set this slot's logical state
 	incoming_card.place_in_slot(self) # Update style and set current_slot
 
-	# If the incoming card came from another slot, ensure that slot knows it's empty now
-	# (This check prevents issues if the signal/logic flow is slightly off)
+	# If incoming card came from another slot, ensure that slot knows it's empty
+	# and updates its panel visibility if it's not the one that received old_card.
 	if source_slot != null and source_slot != self and source_slot.occupied_by == incoming_card:
-		print_debug("Clearing occupied_by for source slot %s" % source_slot.slot_text)
-		source_slot.occupied_by = null
-
+		# This case might be redundant if swap logic is complete
+		source_slot.set_occupied_by(null)
+		if source_slot.has_method("_update_panel_visibility"):
+			source_slot._update_panel_visibility()
+	_update_panel_visibility() # Update this slot's panel visibility
 	# Emit the signal *after* all state changes are complete
 	emit_signal("card_placed_in_slot", incoming_card, self)

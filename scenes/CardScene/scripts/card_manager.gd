@@ -16,6 +16,17 @@ const CARD_WIDTH = 70
 var move_count: int = 0
 var timer_started: bool = false
 var is_animating = false # Flag to track animation state
+# TODO would be cool to add coloring/theme selection to main menu,
+# so players can choose if they want rainbow or now
+var card_colors = [
+	Color.STEEL_BLUE.lightened(0.1),
+	Color.SEA_GREEN.lightened(0.1),
+	Color.GOLDENROD.lightened(0.1),
+	Color.SLATE_BLUE.lightened(0.1),
+	Color.INDIAN_RED.lightened(0.1),
+	Color.DARK_KHAKI.lightened(0.1)
+]
+
 
 const card_scene: PackedScene = preload("res://scenes/CardScene/CardMain.tscn")
 const swap_button_scene: PackedScene = preload("res://scenes/CardScene/swapBtn.tscn")
@@ -93,21 +104,32 @@ func adjust_container_spacing():
 	var first_button_offset = (CARD_WIDTH - Constants.BUTTON_WIDTH) / 2
 	$SwapButtonPanel/CenterContainer.add_theme_constant_override("margin_left", first_button_offset)
 	
-	print("Max spacing set to: " + str(max_spacing))
-	print("Card spacing set to: " + str(card_spacing))
-	print("Button spacing set to: " + str(button_spacing))
-	print("Button container offset: " + str(first_button_offset))
+	print_debug("Max spacing set to: " + str(max_spacing))
+	print_debug("Card spacing set to: " + str(card_spacing))
+	print_debug("Button spacing set to: " + str(button_spacing))
+	print_debug("Button container offset: " + str(first_button_offset))
 
 func create_cards():
+	for card_node in cards:
+		if is_instance_valid(card_node):
+			card_node.queue_free()
+	cards.clear()
+	for child in card_container.get_children():
+		child.queue_free()
+
 	for i in range(num_cards):
 		var card_instance = card_scene.instantiate()
 		card_instance.set_card_value(values[i])
-		card_instance.name = "Card_" + str(values[i])
+		card_instance.name = "Card_" + str(i) + "_Val_" + str(values[i])
+		var new_card_style = StyleBoxFlat.new()
+		new_card_style.bg_color = card_colors[i % card_colors.size()]
+		card_instance.set_base_style(new_card_style)
 		# Add card to the container
 		card_container.add_child(card_instance)
 		# Save the initial relative position and the child index
 		card_instance.container_relative_position = card_instance.position
 		card_instance.original_index = card_instance.get_index()
+		
 		cards.append(card_instance)
 
 func create_buffer_slots():

@@ -17,8 +17,8 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		return
 
 	var incoming_card: Card = data
-	var source_slot: Control = incoming_card.current_slot # The slot the incoming card *was* in, if any. Null if from container.
-
+	var source_slot: CardBuffer = incoming_card.current_slot # The slot the incoming card *was* in, if any. Null if from container.
+	print_debug("Source slot is %s" % [source_slot])
 	# --- Handle the incoming card ---
 	# Remove incoming_card from its previous parent (could be the drag layer or a buffer slot)
 	if incoming_card.get_parent() != null:
@@ -47,6 +47,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		card_container.add_child(incoming_card)
 		card_container.move_child(incoming_card, target_index)
 		incoming_card.set_can_drag(true)
+		source_slot._update_panel_visibility()
 		# Update the card's original_index to its new position
 		# incoming_card.original_index = target_index # Do this in the final loop
 
@@ -83,20 +84,11 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			# Move the card that was at the target position to the source position
 			# Need to account for index shift if target_index < source_index
 			var final_source_index = source_index
-			# No longer need +1 adjustment here because we added incoming_card first
-			# if target_index < source_index:
-			# 	final_source_index += 1
 			card_container.move_child(target_card, final_source_index)
-
-			# Update original_index for both cards - will be done in the loop below
-			# incoming_card.original_index = target_index
-			# target_card.original_index = final_source_index
 		else:
 			# Dropping into an empty space or at the end
 			print_debug("Moving card %d from %d to empty space at %d" % [incoming_card.value, source_index, target_index])
 			card_container.move_child(incoming_card, target_index)
-			# Update original_index - will be done in the loop below
-			# incoming_card.original_index = target_index
 
 		# Ensure card is draggable and looks normal
 		incoming_card.remove_from_slot() # Resets style just in case
@@ -109,6 +101,6 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			child.original_index = i
 			# Optional: Reset visual position if needed, though HBoxContainer should handle it
 			# child.position = child.container_relative_position
-
+	print_debug("Forcing redraw/update layout")
 	# Optional: Force redraw/update layout if needed
 	card_container.queue_redraw()
