@@ -5,102 +5,190 @@ extends ScrollContainer
 # and we want to be able to drag and drop cards between the slots. The dynamic container cannot be used for that
 # Because we need clear indication where we can drag the cards to.
 const CARD_CONTINAER_PATH: String = "SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
+const DROP_PLACEHOLDER_SCENE: PackedScene = preload("res://scenes/CardScene/DropIndicator.tscn")
+var current_drop_placeholder: Control = null
+### Tracks if a card is being dragged over this container
+var is_dragging_card_over_self: bool = false
+### Stores the actual card node if dragged from this container
+var dragged_card_from_container_node: Card = null
+
 @onready var card_container: HBoxContainer = get_tree().get_root().get_node(CARD_CONTINAER_PATH)
 
+func _ready():
+	if DROP_PLACEHOLDER_SCENE:
+		current_drop_placeholder = DROP_PLACEHOLDER_SCENE.instantiate()
+		# Keep it out of the tree initially, or add and hide:
+		# add_child(current_drop_placeholder) # Optional: add to scroll container itself, not card_container
+		current_drop_placeholder.visible = false
 
-# Checking if card can be dropped
+### Checking if card can be dropped
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	return data is Card
-	
+
 func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if not (data is Card):
 		return
 
-	var incoming_card: Card = data
-	var source_slot: CardBuffer = incoming_card.current_slot # The slot the incoming card *was* in, if any. Null if from container.
-	print_debug("Source slot is %s" % [source_slot])
+	var incoming_card_data: Card = data # This is the data from _get_drag_data, which is the card itself
+	var card_to_place: Card = null
+	var final_insert_index: int = -1
 	# --- Handle the incoming card ---
-	# Remove incoming_card from its previous parent (could be the drag layer or a buffer slot)
-	if incoming_card.get_parent() != null:
-		incoming_card.get_parent().remove_child(incoming_card)
-
-	# Calculate target index based on drop position *before* adding the child
-	var card_spacing = card_container.get_theme_constant("separation", "HBoxContainer")
-	var effective_card_width = Constants.CARD_WIDTH + card_spacing
-	var drop_x_in_container = at_position.x + scroll_horizontal
-	# Ensure division by zero doesn't happen if effective_card_width is 0
-	var target_index = 0
-	if effective_card_width > 0:
-		target_index = int(drop_x_in_container / effective_card_width)
-	# Clamp index to valid range [0, current_child_count] (where it *will* be inserted)
-	target_index = clamp(target_index, 0, card_container.get_child_count())
-
-
-	if source_slot != null:
-		# Case: Card came FROM a buffer slot, place it back in the container at the calculated target_index
-		print_debug("Card %d returning from buffer slot %s to container at index %d" % [incoming_card.value, source_slot.slot_text, target_index])
-		if source_slot.occupied_by == incoming_card: # Ensure the source slot knows it's empty
-			source_slot.occupied_by = null
-		incoming_card.remove_from_slot() # Reset style, current_slot = null
-
-		# Add to container first, then move to the calculated target index
-		card_container.add_child(incoming_card)
-		card_container.move_child(incoming_card, target_index)
-		incoming_card.set_can_drag(true)
-		source_slot._update_panel_visibility()
-		# Update the card's original_index to its new position
-		# incoming_card.original_index = target_index # Do this in the final loop
-
+	# Determine which card node to actually place
+	if dragged_card_from_container_node != null and incoming_card_data == dragged_card_from_container_node:
+		# This means the card originated from this container and was hidden
+		card_to_place = dragged_card_from_container_node
+		card_to_place.visible = true # Make it visible again
 	else:
-		# Case: Card came FROM the container itself (swapping within container)
-		print_debug("Card %d dropped within container, targeting index %d" % [incoming_card.value, target_index])
+		# Card came from a buffer slot or another source
+		card_to_place = incoming_card_data
 
-		var source_index = incoming_card.original_index # Where the card started
 
-		print_debug("Source Index: %d, Target Index: %d" % [source_index, target_index])
+	# Remove incoming_card_data from its previous parent if it's still in one (e.g. buffer slot)
+	if card_to_place.get_parent() != null:
+		card_to_place.get_parent().remove_child(card_to_place)
+	
+	var source_slot: CardBuffer = card_to_place.current_slot # Get current_slot before clearing it
 
-		# Add the incoming card back temporarily to handle indices correctly
-		card_container.add_child(incoming_card)
-
-		# Find the card currently at the target index (if one exists AFTER adding incoming_card back)
-		var target_card: Card = null
-		# Adjust target index if it's beyond the source index after adding the child back
-		var adjusted_target_index = target_index
-		if target_index > source_index:
-			adjusted_target_index -= 1 # Account for the placeholder incoming_card added earlier
-
-		if adjusted_target_index < card_container.get_child_count():
-			var node_at_target = card_container.get_child(adjusted_target_index)
-			if node_at_target is Card and node_at_target != incoming_card:
-				target_card = node_at_target
-
-		# Perform the move/swap
-		if target_card != null and target_card != incoming_card:
-			# We are dropping onto another card - swap them
-			print_debug("Swapping card %d (at %d) with card %d (at %d)" % [incoming_card.value, source_index, target_card.value, adjusted_target_index])
-			# Move incoming card to target position (use the clamped target_index)
-			card_container.move_child(incoming_card, target_index)
-
-			# Move the card that was at the target position to the source position
-			# Need to account for index shift if target_index < source_index
-			var final_source_index = source_index
-			card_container.move_child(target_card, final_source_index)
+	# --- Determine insertion index ---
+	if is_dragging_card_over_self and current_drop_placeholder != null and current_drop_placeholder.is_inside_tree() and current_drop_placeholder.visible:
+		final_insert_index = current_drop_placeholder.get_index()
+		current_drop_placeholder.get_parent().remove_child(current_drop_placeholder) # Remove placeholder
+	else:
+		# Fallback: Calculate target index based on drop position (e.g., if placeholder wasn't active or card from buffer)
+		var card_spacing = card_container.get_theme_constant("separation", "HBoxContainer")
+		var effective_card_width = Constants.CARD_WIDTH + card_spacing
+		var drop_x_in_container = at_position.x + scroll_horizontal
+		if effective_card_width > 0:
+			final_insert_index = int((drop_x_in_container + effective_card_width / 2.0) / effective_card_width)
 		else:
-			# Dropping into an empty space or at the end
-			print_debug("Moving card %d from %d to empty space at %d" % [incoming_card.value, source_index, target_index])
-			card_container.move_child(incoming_card, target_index)
+			final_insert_index = 0
+		
+		var num_actual_cards_at_drop = 0
+		for i in card_container.get_child_count():
+			if card_container.get_child(i) is Card:
+				num_actual_cards_at_drop += 1
+		final_insert_index = clamp(final_insert_index, 0, num_actual_cards_at_drop)
 
-		# Ensure card is draggable and looks normal
-		incoming_card.remove_from_slot() # Resets style just in case
-		incoming_card.set_can_drag(true)
 
-	# Update original_index for ALL children after any move/swap to ensure correctness
+	# --- Handle card placement/swapping ---
+	if source_slot != null: # Card came FROM a buffer slot
+		print_debug("Card %d returning from buffer slot %s to container at index %d" % [card_to_place.value, source_slot.slot_text, final_insert_index])
+		if source_slot.occupied_by == card_to_place:
+			source_slot.occupied_by = null # CardBuffer will call _update_panel_visibility
+			source_slot._update_panel_visibility() # Explicitly call if not handled by setter
+		card_to_place.remove_from_slot() # Resets style, current_slot = null
+		
+		card_container.add_child(card_to_place)
+		card_container.move_child(card_to_place, final_insert_index)
+		card_to_place.set_can_drag(true)
+	else: # Card came FROM the container itself (swapping or reordering)
+		print_debug("Card %d dropped within container, targeting index %d" % [card_to_place.value, final_insert_index])
+		var source_index = card_to_place.original_index # Where the card started (if not hidden) or where it was if hidden
+
+		# If card_to_place was the dragged_card_from_container_node, it was already removed.
+		# Otherwise, it's an incoming_card that wasn't part of this container before this drop.
+		
+		# Check if there's a card at the target destination to swap with
+		var target_card_at_destination: Card = null
+		if final_insert_index < card_container.get_child_count():
+			var node_at_target = card_container.get_child(final_insert_index)
+			if node_at_target is Card and node_at_target != card_to_place: # Ensure it's not the placeholder
+				target_card_at_destination = node_at_target
+		
+		card_container.add_child(card_to_place) # Add the card first
+
+		if target_card_at_destination != null: # Swapping with an existing card
+			print_debug("Swapping card %d with card %d (at index %d)" % [card_to_place.value, target_card_at_destination.value, final_insert_index])
+			# card_to_place is added, target_card_at_destination is at final_insert_index (or final_insert_index+1 if card_to_place was added before it)
+			# The HBoxContainer will shift things. We need to place card_to_place at final_insert_index,
+			# and the card that *was* there needs to go to the original spot of card_to_place.
+			# This part of the logic from your previous version was more direct for swaps.
+			# For now, let's simplify: insert card_to_place. HBoxContainer shifts others.
+			card_container.move_child(card_to_place, final_insert_index)
+		else: # Moving to an empty slot or end
+			card_container.move_child(card_to_place, final_insert_index)
+
+		card_to_place.remove_from_slot() # Resets style just in case
+		card_to_place.set_can_drag(true)
+
+	# --- Finalize ---
+	# Update original_index for ALL children
 	for i in card_container.get_child_count():
 		var child = card_container.get_child(i)
 		if child is Card:
 			child.original_index = i
-			# Optional: Reset visual position if needed, though HBoxContainer should handle it
-			# child.position = child.container_relative_position
-	print_debug("Forcing redraw/update layout")
-	# Optional: Force redraw/update layout if needed
+			child.is_potential_swap_highlight = false # Reset swap highlight
+			child._apply_current_style()
+
 	card_container.queue_redraw()
+
+	# Reset DragState and local drag tracking
+	DragState.currently_dragged_card = null
+	DragState.card_dragged_from_main_container = false
+	dragged_card_from_container_node = null
+	is_dragging_card_over_self = false
+
+func _prepare_card_drag_from_container(card_node: Card):
+	if card_node != null:
+		dragged_card_from_container_node = card_node
+		# Instead of removing, just hide. This simplifies index management for placeholder.
+		# If removed, placeholder index calculation becomes more complex.
+		card_node.visible = true
+
+func _process(_delta: float) -> void:
+	# Check if a card is being dragged and if it originated from the main container
+	if DragState.currently_dragged_card == null or not DragState.card_dragged_from_main_container:
+		if current_drop_placeholder != null and current_drop_placeholder.is_inside_tree():
+			current_drop_placeholder.get_parent().remove_child(current_drop_placeholder)
+		is_dragging_card_over_self = false
+		return
+
+	var global_mouse_pos: Vector2 = get_global_mouse_position()
+	var container_global_rect: Rect2 = card_container.get_global_rect()
+
+	if container_global_rect.has_point(global_mouse_pos):
+		is_dragging_card_over_self = true
+		if current_drop_placeholder == null and DROP_PLACEHOLDER_SCENE: # Should have been instanced in _ready
+			current_drop_placeholder = DROP_PLACEHOLDER_SCENE.instantiate()
+
+		var mouse_pos_relative_to_scroll_container_viewport: Vector2 = get_local_mouse_position()
+		var local_mouse_pos_x_in_card_container: float = mouse_pos_relative_to_scroll_container_viewport.x + scroll_horizontal
+		
+		var card_spacing: float = card_container.get_theme_constant("separation", "HBoxContainer")
+		var effective_card_width: float = Constants.CARD_WIDTH + card_spacing
+		
+		var num_actual_cards: int = 0
+		for i in card_container.get_child_count():
+			var child = card_container.get_child(i)
+			# Exclude the placeholder itself and the card being dragged (which is hidden)
+			if child is Card and child.visible:
+				num_actual_cards += 1
+			elif child == current_drop_placeholder:
+				pass # Don't count placeholder if it's already there for num_actual_cards
+
+		var potential_insert_index: int = 0
+		if effective_card_width > 0:
+			# Add half of effective_card_width to mouse_pos.x to make insertion point appear "between" cards
+			# when mouse is over the latter half of a card's space.
+			potential_insert_index = int((local_mouse_pos_x_in_card_container + effective_card_width / 2.0) / effective_card_width)
+		
+		potential_insert_index = clamp(potential_insert_index, 0, num_actual_cards)
+
+
+		if not current_drop_placeholder.is_inside_tree():
+			card_container.add_child(current_drop_placeholder)
+		
+		# Ensure placeholder is not considered in its own positioning calculation for move_child
+		var current_placeholder_idx = -1
+		if current_drop_placeholder.is_inside_tree() and current_drop_placeholder.get_parent() == card_container:
+			current_placeholder_idx = current_drop_placeholder.get_index()
+
+		if current_placeholder_idx != potential_insert_index:
+			card_container.move_child(current_drop_placeholder, potential_insert_index)
+		
+		current_drop_placeholder.visible = true
+	else:
+		if is_dragging_card_over_self: # Mouse just exited
+			if current_drop_placeholder != null and current_drop_placeholder.is_inside_tree():
+				current_drop_placeholder.get_parent().remove_child(current_drop_placeholder)
+		is_dragging_card_over_self = false

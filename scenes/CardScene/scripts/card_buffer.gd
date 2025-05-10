@@ -115,3 +115,11 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	_update_panel_visibility() # Update this slot's panel visibility
 	# Emit the signal *after* all state changes are complete
 	emit_signal("card_placed_in_slot", incoming_card, self)
+	DragState.currently_dragged_card = null
+	DragState.card_dragged_from_main_container = false
+	if old_card != null and old_card.current_slot != null:
+		old_card.is_potential_swap_highlight = false
+		old_card._apply_current_style()
+	if incoming_card != null:
+		incoming_card.is_potential_swap_highlight = false
+		incoming_card._apply_current_style()

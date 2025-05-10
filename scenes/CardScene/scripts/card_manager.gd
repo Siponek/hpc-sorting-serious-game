@@ -101,7 +101,7 @@ func adjust_container_spacing():
 	
 	# For the first button, set an offset so that its center lies directly in the gap between the first two cards.
 	# This offset is half the difference between the card width and the button width.
-	var first_button_offset = (CARD_WIDTH - Constants.BUTTON_WIDTH) / 2
+	var first_button_offset: int = int((CARD_WIDTH - Constants.BUTTON_WIDTH) / 2.0)
 	$SwapButtonPanel/CenterContainer.add_theme_constant_override("margin_left", first_button_offset)
 	
 	print_debug("Max spacing set to: " + str(max_spacing))
