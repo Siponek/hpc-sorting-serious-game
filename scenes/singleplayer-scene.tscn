@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://nxdomgvrs6j1"]
+[gd_scene load_steps=8 format=3 uid="uid://nxdomgvrs6j1"]
 
-[ext_resource type="Script" uid="uid://cgm7j0pq254kp" path="res://scenes/CardScene/scripts/card-manager.gd" id="1_cagap"]
+[ext_resource type="Script" uid="uid://cgm7j0pq254kp" path="res://scenes/CardScene/scripts/card_manager.gd" id="1_cagap"]
 [ext_resource type="Theme" uid="uid://vuoefmjxurjo" path="res://res/dark_theme.tres" id="1_elcqy"]
 [ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_flg1c"]
 [ext_resource type="Script" uid="uid://do0qtlv3uyb5b" path="res://scenes/timer_controller_script.gd" id="2_ejm32"]
 [ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="4_flg1c"]
+[ext_resource type="Script" uid="uid://vr5k0agbhj2l" path="res://scenes/scroll_container.gd" id="5_6qlf5"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cagap"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
@@ -139,6 +140,7 @@ theme = ExtResource("1_flg1c")
 clip_contents = false
 layout_mode = 2
 draw_focus_border = true
+script = ExtResource("5_6qlf5")
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/CardPanel/ScrollContainer"]
 layout_mode = 2

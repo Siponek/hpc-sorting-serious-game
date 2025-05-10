@@ -8,6 +8,7 @@ var is_dragging: bool = false
 var current_slot = null
 var container_relative_position: Vector2
 var original_index: int = 0
+var original_style: StyleBoxFlat
 
 signal card_grabbed(card)
 signal card_dropped(card, drop_position)
@@ -40,14 +41,15 @@ func _process(_delta):
 		# global_position = get_global_mouse_position() - size / 2
 
 # This function can be called from another script
-func reset_position():
+func reset_position(_card_container_node: Node):
 	# Reattach card back to the card container at its original index
-	var card_container = get_tree().get_root().get_node(CARD_CONTINAER_PATH)
-	assert(card_container != null, "Card container not found in the scene tree.")
-	card_container.add_child(self)
+	assert(_card_container_node != null, "Card container not found in the scene tree.")
+	_card_container_node.add_child(self)
 	# Reorder child to original index (if the container supports it)
-	card_container.move_child(self, original_index)
+	_card_container_node.move_child(self, original_index)
 	position = container_relative_position
+
+	$Panel.remove_theme_stylebox_override("panel") # Remove any custom style
 
 func place_in_slot(slot):
 	# TODO make this stylebox a ready resource so no initialization is needed
@@ -71,6 +73,7 @@ func place_in_slot(slot):
 	self.current_slot = slot
 
 func remove_from_slot():
+	original_style = $Panel.get_theme_stylebox("panel")
 	# Create a stylebox for cards not in slots
 	var new_style = StyleBoxFlat.new()
 	
@@ -102,7 +105,8 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	# Accept any card, whether the slot is empty or already occupied
 	print("Card _can_drop_data called with: " + str(data))
-	return data is Control and data.has_method("set_card_value")
+	return data is Card
+
 func create_drag_preview():
 	# Creates a simple preview (a copy of the card)
 	var preview = self.duplicate()
