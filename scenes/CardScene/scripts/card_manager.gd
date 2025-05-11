@@ -63,7 +63,7 @@ func _ready():
 		if scroll_container_node.has_signal("card_dropped_card_container"):
 			# Connect to a method in CardManager that accepts a Card argument.
 			# Let's assume you have or create a method like _on_card_dropped_from_scroll_container
-			var error_code = scroll_container_node.connect("card_dropped_card_container", Callable(self, "_on_card_dropped_from_scroll_container"))
+			var error_code = scroll_container_node.connect("card_dropped_card_container", self._on_card_placed_in_container)
 			if error_code == OK:
 				print_debug("CardManager: Successfully connected scroll_container's card_dropped_card_container to _on_card_dropped_from_scroll_container.")
 			else:
@@ -176,7 +176,7 @@ func create_buffer_slots():
 		if slot.has_signal("card_placed_in_slot"):
 			slot.card_placed_in_slot.connect(_on_card_placed_in_slot)
 
-func _on_card_placed_in_container(card):
+func _on_card_placed_in_container():
 	move_count += 1
 	if not timer_started:
 		timer_node.start_timer()
@@ -239,23 +239,30 @@ func animate_card_swap(card_a, card_b):
 	
 func check_sorting_order():
 	var sorted_correctly = true
-	
+	if card_container.get_child_count() != num_cards:
+		print_debug("Card count mismatch!")
+		return false
+	var cards_in_container: Array[Card] = []
+	for child in card_container.get_children():
+		if child is Card:
+			cards_in_container.append(child as Card)
 	# Check if the cards are sorted
-	#TODO check this not checking the order of the cards in the slots
-	for i in range(1, cards.size()):
-		if cards[i].value > cards[i - 1].value:
-			print_debug("cards[%d] = %d < cards[%d] = %d" % [i, cards[i].value, i - 1, cards[i - 1].value])
+	for i in range(1, cards_in_container.size()):
+		var current_card = cards_in_container[i].value
+		var previous_card = cards_in_container[i - 1].value
+		if current_card < previous_card:
+			print_debug("cards[%d] = %d < cards[%d] = %d" % [i, current_card, i - 1, previous_card])
 			sorted_correctly = false
 			break
 	if not sorted_correctly:
 		print("Cards not sorted correctly!")
 		return
 	# Calculate the time taken
-	var timer_node_time = timer_node.get_time()
+	var timer_node_time: int = timer_node.getCurrentTime()
 	
 	# Format the time taken
 	var seconds = int(timer_node_time) % 60
-	var minutes = int(timer_node_time / 60)
+	var minutes = int(float(timer_node_time) / 60)
 	var time_string = "%02d:%02d" % [minutes, seconds]
 	
 	# Create the toast notification text
