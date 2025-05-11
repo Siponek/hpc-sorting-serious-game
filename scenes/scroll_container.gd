@@ -12,6 +12,8 @@ var is_dragging_card_over_self: bool = false
 ### Stores the actual card node if dragged from this container
 var dragged_card_from_container_node: Card = null
 
+signal card_dropped_card_container()
+
 @onready var card_container: HBoxContainer = get_tree().get_root().get_node(CARD_CONTINAER_PATH)
 
 func _ready():
@@ -68,7 +70,6 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			if card_container.get_child(i) is Card:
 				num_actual_cards_at_drop += 1
 		final_insert_index = clamp(final_insert_index, 0, num_actual_cards_at_drop)
-
 
 	# --- Handle card placement/swapping ---
 	if source_slot != null: # Card came FROM a buffer slot
@@ -127,6 +128,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	DragState.card_dragged_from_main_container = false
 	dragged_card_from_container_node = null
 	is_dragging_card_over_self = false
+	emit_signal(card_dropped_card_container.get_name())
 
 func _prepare_card_drag_from_container(card_node: Card):
 	if card_node != null:
@@ -137,7 +139,7 @@ func _prepare_card_drag_from_container(card_node: Card):
 
 func _process(_delta: float) -> void:
 	# Check if a card is being dragged and if it originated from the main container
-	if DragState.currently_dragged_card == null or not DragState.card_dragged_from_main_container:
+	if DragState.currently_dragged_card == null:
 		if current_drop_placeholder != null and current_drop_placeholder.is_inside_tree():
 			current_drop_placeholder.get_parent().remove_child(current_drop_placeholder)
 		is_dragging_card_over_self = false
@@ -146,10 +148,8 @@ func _process(_delta: float) -> void:
 	var global_mouse_pos: Vector2 = get_global_mouse_position()
 	var container_global_rect: Rect2 = card_container.get_global_rect()
 
-	if container_global_rect.has_point(global_mouse_pos):
+	if container_global_rect.has_point(global_mouse_pos) and DragState.currently_dragged_card != null:
 		is_dragging_card_over_self = true
-		if current_drop_placeholder == null and DROP_PLACEHOLDER_SCENE: # Should have been instanced in _ready
-			current_drop_placeholder = DROP_PLACEHOLDER_SCENE.instantiate()
 
 		var mouse_pos_relative_to_scroll_container_viewport: Vector2 = get_local_mouse_position()
 		var local_mouse_pos_x_in_card_container: float = mouse_pos_relative_to_scroll_container_viewport.x + scroll_horizontal

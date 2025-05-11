@@ -97,7 +97,6 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 	if not can_drag:
 		print_debug("Card cannot be dragged")
 		return null
-	# print_debug("Card _get_drag_data called, current_slot: " + str(current_slot))
 	DragState.currently_dragged_card = self
 	DragState.card_dragged_from_main_container = (current_slot == null)
 	set_drag_preview(create_drag_preview())
@@ -114,6 +113,8 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 	
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_END:
+		DragState.currently_dragged_card = null
+		DragState.card_dragged_from_main_container = false
 		is_potential_swap_highlight = false
 		is_mouse_hovering = false # Reset this too
 		_apply_current_style()

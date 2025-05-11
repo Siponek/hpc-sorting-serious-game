@@ -38,6 +38,7 @@ const card_slot_scene: PackedScene = preload("res://scenes/CardScene/CardSlot.ts
 @onready var slot_container: HBoxContainer = $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer
 @onready var timer_node: PanelContainer = get_node("./../TopBar/TimerPanel")
 @onready var mini_buffer_container: HBoxContainer = get_node("./../SortedCardsBufferPanel/HBoxContainer")
+@onready var scroll_container_node: ScrollContainer = $CardPanel/ScrollContainer
 
 func _ready():
 	var max_cards = calculate_max_cards()
@@ -57,11 +58,34 @@ func _ready():
 	adjust_container_spacing()
 	create_cards()
 	create_buffer_slots()
-
+	if scroll_container_node != null:
+		# Ensure the signal exists on scroll_container_node
+		if scroll_container_node.has_signal("card_dropped_card_container"):
+			# Connect to a method in CardManager that accepts a Card argument.
+			# Let's assume you have or create a method like _on_card_dropped_from_scroll_container
+			var error_code = scroll_container_node.connect("card_dropped_card_container", Callable(self, "_on_card_dropped_from_scroll_container"))
+			if error_code == OK:
+				print_debug("CardManager: Successfully connected scroll_container's card_dropped_card_container to _on_card_dropped_from_scroll_container.")
+			else:
+				printerr("CardManager: Failed to connect scroll_container's signal. Error code: %s" % error_code)
+		else:
+			printerr("CardManager: ScrollContainer node does not have signal 'card_dropped_card_container'.")
+	else:
+		printerr("CardManager: ScrollContainer node not found. Check path: $CardPanel/ScrollContainer")
+	
 	# wait 1 frame for scaling down
 	await get_tree().process_frame
 	# To make the contents smaller
 	mini_buffer_container.scale = Vector2(0.5, 0.5)
+	if scroll_container_node != null:
+		if scroll_container_node.has_signal("card_dropped_card_container"):
+			scroll_container_node.card_dropped_card_container.connect(check_sorting_order)
+			print_debug("CardManager: Connected to card_dropped_card_container signal from ScrollContainer.")
+		else:
+			printerr("CardManager: ScrollContainer node does not have signal 'card_dropped_card_container'.")
+	else:
+		printerr("CardManager: ScrollContainer node not found at path: CardPanel/ScrollContainer")
+
 
 func calculate_max_cards():
 	# Get screen width from constants
@@ -152,8 +176,13 @@ func create_buffer_slots():
 		if slot.has_signal("card_placed_in_slot"):
 			slot.card_placed_in_slot.connect(_on_card_placed_in_slot)
 
+func _on_card_placed_in_container(card):
+	move_count += 1
+	if not timer_started:
+		timer_node.start_timer()
+		timer_started = true
+
 func _on_card_placed_in_slot(card, slot):
-	print_debug("Card " + str(card.value) + " placed in slot " + slot.slot_text)
 	move_count += 1
 	if not timer_started:
 		timer_node.start_timer()
@@ -212,34 +241,36 @@ func check_sorting_order():
 	var sorted_correctly = true
 	
 	# Check if the cards are sorted
+	#TODO check this not checking the order of the cards in the slots
 	for i in range(1, cards.size()):
-		if cards[i].value < cards[i - 1].value:
+		if cards[i].value > cards[i - 1].value:
+			print_debug("cards[%d] = %d < cards[%d] = %d" % [i, cards[i].value, i - 1, cards[i - 1].value])
 			sorted_correctly = false
-			print("Cards not sorted correctly!")
 			break
+	if not sorted_correctly:
+		print("Cards not sorted correctly!")
+		return
+	# Calculate the time taken
+	var timer_node_time = timer_node.get_time()
 	
-	if sorted_correctly:
-		# Calculate the time taken
-		var timer_node_time = timer_node.get_time()
-		
-		# Format the time taken
-		var seconds = int(timer_node_time) % 60
-		var minutes = int(timer_node_time / 60)
-		var time_string = "%02d:%02d" % [minutes, seconds]
-		
-		# Create the toast notification text
-		var toast_text = "Cards sorted successfully in %s with %d moves!" % [time_string, move_count]
-		
-		# Create the toast notification instance
-		var toast = toast_notification_scene.instantiate()
-		
-		# Add the toast notification to the scene
-		add_child(toast)
-		
-		# Set the toast notification text
-		toast.popup(toast_text)
-		
-		print_rich("[color=green]Congratulations! Cards sorted correctly![/color]")
+	# Format the time taken
+	var seconds = int(timer_node_time) % 60
+	var minutes = int(timer_node_time / 60)
+	var time_string = "%02d:%02d" % [minutes, seconds]
+	
+	# Create the toast notification text
+	var toast_text = "Cards sorted successfully in %s with %d moves!" % [time_string, move_count]
+	
+	# Create the toast notification instance
+	var toast = toast_notification_scene.instantiate()
+	
+	# Add the toast notification to the scene
+	add_child(toast)
+	
+	# Set the toast notification text
+	toast.popup(toast_text)
+	
+	print_rich("[color=green]Congratulations! Cards sorted correctly![/color]")
 
 func check_player_buffer_contiguity() -> bool:
 	# Build a list of all card values from your cards array
