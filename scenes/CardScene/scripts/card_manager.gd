@@ -10,8 +10,8 @@ var slots = [] # Array to store slot references
 var cards = []
 var values = []
 var sorted_all = []
-var buffer_size: int = Settings.player_buffer
-var num_cards: int = Settings.num_cards
+var buffer_size: int = Settings.player_buffer_count
+var num_cards: int = Settings.cards_count
 const CARD_WIDTH = 70
 var move_count: int = 0
 var timer_started: bool = false
@@ -42,50 +42,67 @@ const card_slot_scene: PackedScene = preload("res://scenes/CardScene/CardSlot.ts
 
 func _ready():
 	var max_cards = calculate_max_cards()
-	print("Max cards: " + str(max_cards), "Num cards: " + str(num_cards))
-	# num_cards = min(num_cards, max_cards)
+	print("Max cards per page: " + str(max_cards), " Num cards used: " + str(num_cards))
 	if num_cards < 1:
 		num_cards = 1
 		push_warning("Screen too small - can only fit 1 card")
 	
-	var rng = RandomNumberGenerator.new()
-	rng.randomize()
-	for i in range(num_cards):
-		values.append(rng.randi_range(1, Settings.card_value_range))
-	sorted_all = values.duplicate()
-	sorted_all.sort() # ascending order
-	# Update layout in the editor
+	generate_card_values()
 	adjust_container_spacing()
 	create_cards()
 	create_buffer_slots()
-	if scroll_container_node != null:
-		# Ensure the signal exists on scroll_container_node
-		if scroll_container_node.has_signal("card_dropped_card_container"):
-			# Connect to a method in CardManager that accepts a Card argument.
-			# Let's assume you have or create a method like _on_card_dropped_from_scroll_container
-			var error_code = scroll_container_node.connect("card_dropped_card_container", self._on_card_placed_in_container)
-			if error_code == OK:
-				print_debug("CardManager: Successfully connected scroll_container's card_dropped_card_container to _on_card_dropped_from_scroll_container.")
-			else:
-				printerr("CardManager: Failed to connect scroll_container's signal. Error code: %s" % error_code)
-		else:
-			printerr("CardManager: ScrollContainer node does not have signal 'card_dropped_card_container'.")
-	else:
+	if scroll_container_node == null:
 		printerr("CardManager: ScrollContainer node not found. Check path: $CardPanel/ScrollContainer")
+	# Ensure the signal exists on scroll_container_node
+	if not scroll_container_node.has_signal("card_dropped_card_container"):
+		printerr("CardManager: ScrollContainer node does not have signal 'card_dropped_card_container'.")
+	# Connect to a method in CardManager that accepts a Card argument.
+	var error_code = scroll_container_node.connect("card_dropped_card_container", self._on_card_placed_in_container)
+	if error_code != OK:
+		printerr("CardManager: Failed to connect scroll_container's signal. Error code: %s" % error_code)
+	print_debug("CardManager: Successfully connected scroll_container's card_dropped_card_container to _on_card_dropped_from_scroll_container.")
 	
 	# wait 1 frame for scaling down
 	await get_tree().process_frame
 	# To make the contents smaller
 	mini_buffer_container.scale = Vector2(0.5, 0.5)
-	if scroll_container_node != null:
-		if scroll_container_node.has_signal("card_dropped_card_container"):
-			scroll_container_node.card_dropped_card_container.connect(check_sorting_order)
-			print_debug("CardManager: Connected to card_dropped_card_container signal from ScrollContainer.")
-		else:
-			printerr("CardManager: ScrollContainer node does not have signal 'card_dropped_card_container'.")
-	else:
+	if scroll_container_node == null:
 		printerr("CardManager: ScrollContainer node not found at path: CardPanel/ScrollContainer")
+	if not scroll_container_node.has_signal("card_dropped_card_container"):
+		printerr("CardManager: ScrollContainer node does not have signal 'card_dropped_card_container'.")
+	scroll_container_node.card_dropped_card_container.connect(check_sorting_order)
+	print_debug("CardManager: Connected to card_dropped_card_container signal from ScrollContainer.")
 
+func generate_card_values():
+	# Clear existing values
+	values.clear()
+	
+	# Generate new card values based on the selected range
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.randomize()
+	if Settings.can_cards_be_repeated:
+		for i in range(num_cards):
+			values.append(rng.randi_range(1, Settings.card_value_range))
+	else:
+		# Generate unique numbers
+		if num_cards > Settings.card_value_range:
+			push_error("Cannot generate %d unique cards from a range of 1 to %d. Allowing repeats." % [num_cards, Settings.card_value_range])
+			# Fallback to allowing repeats if unique generation is impossible
+			for i in range(num_cards):
+				values.append(rng.randi_range(1, Settings.card_value_range))
+		else:
+			var available_numbers: Array = []
+			for i in range(1, Settings.card_value_range + 1):
+				available_numbers.append(i)
+			
+			# Shuffle the list of available numbers
+			available_numbers.shuffle()
+			
+			for i in range(num_cards):
+				values.append(available_numbers[i]) # Take the first num_cards from the shuffled list
+
+	sorted_all = values.duplicate()
+	sorted_all.sort() # ascending order
 
 func calculate_max_cards():
 	# Get screen width from constants

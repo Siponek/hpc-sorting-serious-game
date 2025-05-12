@@ -35,7 +35,9 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	print("Checking if data can be dropped in slot %s" % [slot_text])
 	return data is Card
 
+###? Not necessary since buffer slots are not drag targets
 func _get_drag_data(_position):
+	pass
 	if occupied_by:
 		var card_to_drag: Card = occupied_by
 		self.set_occupied_by(null) # Set this slot to empty

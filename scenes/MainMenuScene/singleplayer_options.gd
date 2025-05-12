@@ -8,15 +8,15 @@ func _ready():
 
 func _on_start_button_pressed() -> void:
 	# Get values from the SpinBoxes
-	var buffer_slots = $VBoxContainer/BufferSpinBox.value
-	var num_cards = $VBoxContainer/CardCountSpinBox.value
+	var buffer_slots_count = $VBoxContainer/BufferSpinBox.value
+	var cards_count = $VBoxContainer/CardCountSpinBox.value
 	var card_range = $VBoxContainer/CardRangeSpinBox.value
-	print("Settings -> Buffer slots: " + str(buffer_slots))
-	print("Settings -> Number of cards: " + str(num_cards))
+	print("Settings -> Buffer slots: " + str(buffer_slots_count))
+	print("Settings -> Number of cards: " + str(cards_count))
 	print("Settings -> Card value range: " + str(card_range))
 	# Save these options, for example in a global (autoload) settings singleton:
-	Settings.player_buffer = int(buffer_slots)
-	Settings.num_cards = int(num_cards)
+	Settings.player_buffer_count = int(buffer_slots_count)
+	Settings.cards_count = int(cards_count)
 	Settings.card_value_range = int(card_range)
 	
 	# Then switch to the singleplayer game scene
