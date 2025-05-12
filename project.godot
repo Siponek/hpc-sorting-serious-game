@@ -23,6 +23,7 @@ SceneManager="*res://scene_manager.gd"
 Settings="*res://settings.gd"
 ThemeManager="*res://theme_manager.gd"
 ThemeAutoapplier="*res://scenes/scripts/theme_autoapplier.gd"
+DragState="*res://scenes/scripts/drag_state.gd"
 
 [dotnet]
 
