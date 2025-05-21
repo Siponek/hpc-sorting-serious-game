@@ -1,11 +1,11 @@
 class_name TimerController
 extends PanelContainer
 
-signal timer_started()
-signal timer_stopped()
+signal timer_started_signal()
+signal timer_stopped_signal()
 signal time_updated(elapsed_time: int)
 
-
+var timer_started: bool = false
 var elapsed_time: int = 0
 @onready var timerText = $MarginContainer/TimerPlaceholder
 @onready var timer: Timer = Timer.new()
@@ -21,12 +21,13 @@ func _ready():
 
 func start_timer():
 	elapsed_time = 0
+	timer_started = true
 	timer.start()
-	emit_signal("timer_started")
+	emit_signal("timer_started_signal")
 
 func stop_timer():
 	timer.stop()
-	emit_signal("timer_stopped")
+	emit_signal("timer_stopped_signal")
 
 func _on_timeout():
 	elapsed_time += 1
@@ -55,4 +56,5 @@ func getCurrentTimeAsString() -> String:
 func reset_timer() -> void:
 	stop_timer()
 	elapsed_time = 0
+	timer_started = false
 	_update_placeholder_text(elapsed_time)

@@ -13,7 +13,6 @@ var buffer_size: int = Settings.player_buffer_count
 var num_cards: int = Settings.cards_count
 const CARD_WIDTH = 70
 var move_count: int = 0
-var timer_started: bool = false
 var is_animating = false
 
 # TODO would be cool to add coloring/theme selection to main menu,
@@ -116,18 +115,24 @@ func _ready():
 
 func _on_restart_game_button_pressed() -> void:
 	timer_node.reset_timer()
+	clear_container(card_container)
+	clear_container(sorted_cards_container)
+	cards_array = generate_completed_card_array(values)
+	sorted_cards_array = generate_completed_card_array(sorted_all, "SortedCard_")
 	fill_card_container(cards_array, card_container)
 	fill_card_container(sorted_cards_array, sorted_cards_container)
 	slots = create_buffer_slots()
 
+func clear_container(_card_container: Node = null) -> void:
+	if _card_container == null:
+		push_error("CardManager: clear_container called with null _card_container.")
+	# Clear existing children
+	for child in _card_container.get_children():
+		child.queue_free()
 
 func fill_card_container(_card_instances_array: Array, _card_container: Node = null) -> void:
 	if _card_container == null:
 		push_error("CardManager: fill_card_container called with null _card_container.")
-	# Clear existing children
-	for child in _card_container.get_children():
-		child.queue_free()
-	
 	# Add new card instances
 	for card_instance in _card_instances_array:
 		_card_container.add_child(card_instance)
@@ -303,9 +308,8 @@ func create_buffer_slots() -> Array:
 
 func _on_card_placed_in_container():
 	move_count += 1
-	if not timer_started:
+	if not timer_node.timer_started:
 		timer_node.start_timer()
-		timer_started = true
 	if check_sorting_order():
 		var timer_node_time: int = timer_node.getCurrentTime()
 		var seconds = int(timer_node_time) % 60
@@ -325,9 +329,8 @@ func _on_card_placed_in_container():
 
 func _on_card_placed_in_slot(card, slot):
 	move_count += 1
-	if not timer_started:
+	if not timer_node.timer_started:
 		timer_node.start_timer()
-		timer_started = true
 	# Update the occupied_by property of the slot
 	slot.occupied_by = card
 
@@ -356,15 +359,16 @@ func _on_show_sorted_cards_button_pressed() -> void:
 	var text_to_show = "Cards are sorted! 👍"
 	if !check_sorting_order():
 		text_to_show = "Cards are NOT sorted! 😒"
-	ToastParty.show({
-		"text": text_to_show, # Text (emojis can be used)
-		"bgcolor": Color(0, 0, 0, 0.7), # Background Color
-		"color": Color(1, 1, 1, 1), # Text Color
-		"gravity": "top", # top or bottom
-		"direction": "left", # left or center or right
-		"text_size": 18, # [optional] Text (font) size // experimental (warning!)
-		"use_font": true # [optional] Use custom ToastParty font // experimental (warning!)
-	})
+	if !sorted_cards_panel.visible:
+		ToastParty.show({
+			"text": text_to_show, # Text (emojis can be used)
+			"bgcolor": Color(0, 0, 0, 0.7), # Background Color
+			"color": Color(1, 1, 1, 1), # Text Color
+			"gravity": "top", # top or bottom
+			"direction": "left", # left or center or right
+			"text_size": 18, # [optional] Text (font) size // experimental (warning!)
+			"use_font": true # [optional] Use custom ToastParty font // experimental (warning!)
+		})
 	# Toggle visibility
 	sorted_cards_panel.visible = not sorted_cards_panel.visible
 
