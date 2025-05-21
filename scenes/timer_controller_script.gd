@@ -45,3 +45,8 @@ func getCurrentTime() -> int:
 func setCurrentTime(time_sec: int) -> void:
 	elapsed_time = time_sec
 	_update_placeholder_text(elapsed_time)
+
+func getCurrentTimeAsString() -> String:
+	var minutes: float = float(self.getCurrentTime()) / 60
+	var seconds = elapsed_time % 60
+	return "%02d:%02d" % [minutes, seconds]

@@ -24,6 +24,7 @@ Settings="*res://settings.gd"
 ThemeManager="*res://theme_manager.gd"
 ThemeAutoapplier="*res://scenes/scripts/theme_autoapplier.gd"
 DragState="*res://scenes/scripts/drag_state.gd"
+ToastParty="*res://addons/toastparty/toast-autoload.gd"
 
 [dotnet]
 
@@ -36,7 +37,7 @@ version_control/autoload_on_startup=true
 
 [editor_plugins]
 
-enabled=PackedStringArray()
+enabled=PackedStringArray("res://addons/scene-selector/plugin.cfg", "res://addons/toastparty/plugin.cfg")
 
 [rendering]
 

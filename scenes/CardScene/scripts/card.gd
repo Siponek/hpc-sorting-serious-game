@@ -21,7 +21,6 @@ signal card_grabbed(card)
 signal card_dropped(card, drop_position)
 
 @onready var panel_node: Panel = $Panel # Assuming your card's visual panel is named "Panel"
-
 func _ready():
 	container_relative_position = position
 	# (Optional:) Save the card's container index
@@ -48,6 +47,10 @@ func set_base_style(new_style: StyleBoxFlat):
 	managed_base_style = new_style.duplicate()
 	_generate_hover_style()
 	_apply_current_style() # Apply the new base style immediately
+
+func set_card_size(new_padding: Vector2):
+	self.set_custom_minimum_size(new_padding)
+	self.update_minimum_size()
 
 ## Set the value of the card and update the label
 func set_card_value(new_value: int):
