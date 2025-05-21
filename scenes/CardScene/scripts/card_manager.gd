@@ -274,7 +274,12 @@ func _on_card_placed_in_container():
 		timer_node.start_timer()
 		timer_started = true
 	if check_sorting_order():
-		var text_to_show = "Cards are sorted! 👍"
+		var timer_node_time: int = timer_node.getCurrentTime()
+		var seconds = int(timer_node_time) % 60
+		var minutes = int(float(timer_node_time) / 60)
+		var time_string = "%02d:%02d" % [minutes, seconds]
+		
+		var text_to_show = "Cards are sortedsuccessfully in %s with %d moves! 👍" % [time_string, move_count]
 		ToastParty.show({
 			"text": text_to_show, # Text (emojis can be used)
 			"bgcolor": Color(0, 0, 0, 0.7), # Background Color
@@ -298,7 +303,12 @@ func _on_card_placed_in_slot(card, slot):
 		card.set_can_drag(true)
 	
 	if check_sorting_order():
-		var text_to_show = "Cards are sorted! 👍"
+		var timer_node_time: int = timer_node.getCurrentTime()
+		var seconds = int(timer_node_time) % 60
+		var minutes = int(float(timer_node_time) / 60)
+		var time_string = "%02d:%02d" % [minutes, seconds]
+		
+		var text_to_show = "Cards are sortedsuccessfully in %s with %d moves! 👍" % [time_string, move_count]
 		ToastParty.show({
 			"text": text_to_show, # Text (emojis can be used)
 			"bgcolor": Color(0, 0, 0, 0.7), # Background Color
