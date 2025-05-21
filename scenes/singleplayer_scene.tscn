@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://nxdomgvrs6j1"]
+[gd_scene load_steps=9 format=3 uid="uid://nxdomgvrs6j1"]
 
 [ext_resource type="Script" uid="uid://cgm7j0pq254kp" path="res://scenes/CardScene/scripts/card_manager.gd" id="1_cagap"]
 [ext_resource type="Theme" uid="uid://vuoefmjxurjo" path="res://res/dark_theme.tres" id="1_elcqy"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://do0qtlv3uyb5b" path="res://scenes/timer_controller_script.gd" id="2_ejm32"]
 [ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="4_flg1c"]
 [ext_resource type="Script" uid="uid://vr5k0agbhj2l" path="res://scenes/scroll_container.gd" id="5_6qlf5"]
+[ext_resource type="Script" uid="uid://bpvwcjxfptkki" path="res://addons/var_tree/var_tree.gd" id="7_wlw1e"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cagap"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
@@ -223,3 +224,14 @@ size_flags_vertical = 3
 alignment = 1
 
 [node name="Background" parent="." instance=ExtResource("4_flg1c")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="VarTree" type="Tree" parent="CanvasLayer"]
+custom_minimum_size = Vector2(250, 150)
+offset_right = 200.0
+offset_bottom = 164.0
+script = ExtResource("7_wlw1e")
+metadata/_custom_type_script = "uid://bpvwcjxfptkki"
+
+[connection signal="pressed" from="RightSideButtonsContainer/RestartGameButton" to="VBoxContainer" method="_on_restart_game_button_pressed"]

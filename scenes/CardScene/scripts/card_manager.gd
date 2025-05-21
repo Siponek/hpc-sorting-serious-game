@@ -38,20 +38,25 @@ var card_colors: Array[Color] = [
 ]
 
 
-const ToastNotificationScript: Script = preload("res://scenes/CardScene/scripts/toast_notification.gd") # Preload the script
-const card_scene: PackedScene = preload("res://scenes/CardScene/CardMain.tscn")
-const swap_button_scene: PackedScene = preload("res://scenes/CardScene/swapBtn.tscn")
-const toast_notification_scene: PackedScene = preload("res://scenes/toast_notification.tscn")
-const card_slot_scene: PackedScene = preload("res://scenes/CardScene/CardSlot.tscn")
+const card_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_MAIN)
+const swap_button_scene: PackedScene = preload(ProjectFiles.Scenes.SWAP_BTN)
+const card_slot_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_SLOT)
 
 @onready var show_sorted_button: Button = get_node("./../RightSideButtonsContainer/ShowSortedCardsButton")
 @onready var button_container: HBoxContainer = $SwapButtonPanel/CenterContainer/SwapButtonContainer
 @onready var card_container: HBoxContainer = $CardPanel/ScrollContainer/MarginContainer/CardContainer
 @onready var slot_container: HBoxContainer = $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer
-@onready var timer_node: PanelContainer = get_node("./../TopBar/TimerPanel")
+@onready var timer_node: TimerController = get_node("./../TopBar/TimerPanel")
 @onready var sorted_cards_container: HBoxContainer = get_node("./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer")
 @onready var sorted_cards_panel: PanelContainer = get_node("./../SortedCardsPanel")
 @onready var scroll_container_node: ScrollContainer = $CardPanel/ScrollContainer
+@onready var var_tree: VarTree = get_node("./../CanvasLayer/VarTree")
+
+class CardDebugData:
+	var cards_in_slots: int = 0
+	var cards_in_container: int = 0
+
+var card_debug_info = CardDebugData.new()
 
 func _ready():
 	card_colors.map(func(color: Color): return color.lightened(0.1))
@@ -74,7 +79,8 @@ func _ready():
 		card.set_card_size(Vector2(Constants.CARD_WIDTH, int(float(Constants.CARD_HEIGHT) / 2)))
 	fill_card_container(cards_array, card_container)
 	fill_card_container(sorted_cards_array, sorted_cards_container)
-	slots = create_buffer_slots() # This also connects signals from slots
+	# This also connects signals from slots
+	slots = create_buffer_slots()
 
 	# 3. Validate critical node references
 	if not _validate_node_references():
@@ -87,7 +93,34 @@ func _ready():
 	# 5. Initial UI states
 	if sorted_cards_panel != null: # sorted_cards_panel is checked in _validate_node_references
 		sorted_cards_panel.visible = false
-	
+	if Constants.DEBUG_MODE:
+		# TODO move this to separate class
+		# Debugging: Show the current scene path
+		var_tree.mount_var(self, "debug_info/card_cont", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				if card_container: # Ensure 'card_container' is available
+					return str(card_container.get_child_count())
+				return "0"
+		})
+		var_tree.mount_var(self, "debug_info/card_slots", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				var sum=0
+				if slot_container:
+					for slot in slot_container.get_children():
+						sum += slot.get_child_count() - 2
+					return str(sum)
+				return "0"
+		})
+
+func _on_restart_game_button_pressed() -> void:
+	timer_node.reset_timer()
+	fill_card_container(cards_array, card_container)
+	fill_card_container(sorted_cards_array, sorted_cards_container)
+	slots = create_buffer_slots()
+
+
 func fill_card_container(_card_instances_array: Array, _card_container: Node = null) -> void:
 	if _card_container == null:
 		push_error("CardManager: fill_card_container called with null _card_container.")
@@ -211,8 +244,8 @@ func adjust_container_spacing():
 	# Ensure a minimum spacing of 10
 	card_spacing = max(10, max_spacing / 2)
 	# Apply spacing to the card container so that cards_array are properly separated
-	card_container.add_theme_constant_override("separation", card_spacing * 0.8)
-	sorted_cards_container.add_theme_constant_override("separation", card_spacing * 0.8)
+	card_container.add_theme_constant_override("separation", int(card_spacing * 0.8))
+	sorted_cards_container.add_theme_constant_override("separation", int(card_spacing * 0.8))
 
 	# TODO Manual spaccing for buttons, doing it via container is impossible beacause of the way it calculates the spacing
 	# Place the cards_array in container, calculate the positions and place the swap buttons there

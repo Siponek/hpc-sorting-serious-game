@@ -1,3 +1,4 @@
+class_name TimerController
 extends PanelContainer
 
 signal timer_started()
@@ -50,3 +51,8 @@ func getCurrentTimeAsString() -> String:
 	var minutes: float = float(self.getCurrentTime()) / 60
 	var seconds = elapsed_time % 60
 	return "%02d:%02d" % [minutes, seconds]
+
+func reset_timer() -> void:
+	stop_timer()
+	elapsed_time = 0
+	_update_placeholder_text(elapsed_time)

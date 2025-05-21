@@ -8,10 +8,14 @@
 
 config_version=5
 
+[GD-Sync]
+
+version="0.10"
+
 [application]
 
 config/name="hpc-sorting-serious-game"
-run/main_scene="res://scenes/menu-scene.tscn"
+run/main_scene="res://scenes/MainMenuScene/menu_scene.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="uid://bm7kjaditjipu"
 config/windows_native_icon="res://icon.ico"
@@ -25,6 +29,8 @@ ThemeManager="*res://theme_manager.gd"
 ThemeAutoapplier="*res://scenes/scripts/theme_autoapplier.gd"
 DragState="*res://scenes/scripts/drag_state.gd"
 ToastParty="*res://addons/toastparty/toast-autoload.gd"
+PackRTC="*res://addons/packrtc/scripts/PackRTC.gd"
+GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
 
 [dotnet]
 
@@ -37,7 +43,7 @@ version_control/autoload_on_startup=true
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/scene-selector/plugin.cfg", "res://addons/toastparty/plugin.cfg")
+enabled=PackedStringArray("res://addons/GD-Sync/plugin.cfg", "res://addons/awaitable_http_request/plugin.cfg", "res://addons/const_generator/plugin.cfg", "res://addons/nodewebsockets/plugin.cfg", "res://addons/packrtc/plugin.cfg", "res://addons/scene-selector/plugin.cfg", "res://addons/toastparty/plugin.cfg", "res://addons/var_tree/plugin.cfg")
 
 [rendering]
 

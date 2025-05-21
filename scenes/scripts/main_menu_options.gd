@@ -1,4 +1,3 @@
-@tool
 extends VBoxContainer
 
 var button_handlers = {
@@ -11,7 +10,7 @@ var button_handlers = {
 var enter_tweens = {}
 var exit_tweens = {}
 var dialog_open = false
-var singleplayer_options_dialog_scene: Resource = preload("res://scenes/MainMenuScene/singleplayer_options.tscn")
+var singleplayer_options_dialog_scene: Resource = preload(ProjectFiles.Scenes.SINGLEPLAYER_OPTIONS)
 
 func _ready():
 	for btn in get_children():

@@ -23,7 +23,7 @@ offset_right = 300.0
 grow_vertical = 0
 script = ExtResource("1_brq7r")
 
-[node name="StartBtn" type="Button" parent="Control/MainMenuButtons"]
+[node name="SingleplayerBtn" type="Button" parent="Control/MainMenuButtons"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_vertical = 2
@@ -56,3 +56,5 @@ text = "Exit to desktop"
 alignment = 0
 
 [node name="Background" parent="." instance=ExtResource("3_yuoay")]
+
+[connection signal="pressed" from="Control/MainMenuButtons/SingleplayerBtn" to="Control/MainMenuButtons" method="_on_singleplayer_btn_pressed"]
