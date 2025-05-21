@@ -1,3 +1,4 @@
+@tool
 extends VBoxContainer
 
 var button_handlers = {
@@ -46,7 +47,7 @@ func kill_exit_tween(button):
 		exit_tweens[button].kill()
 		exit_tweens[button] = null
 
-func _on_StartBtn_pressed() -> void:
+func _on_singleplayer_btn_pressed() -> void:
 	if dialog_open:
 		return
 		

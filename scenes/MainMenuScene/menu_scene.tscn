@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://cuy0nrm8fn7yh"]
 
-[ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="1_hhaq2"]
-[ext_resource type="Script" uid="uid://dgpv8ktgd7p5c" path="res://scenes/scripts/main_menu_options.gd" id="1_iafdm"]
-[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="2_1sv24"]
+[ext_resource type="Script" uid="uid://dgpv8ktgd7p5c" path="res://scenes/scripts/main_menu_options.gd" id="1_brq7r"]
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="2_mqqe4"]
+[ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="3_yuoay"]
 
 [node name="Node2D" type="Node2D"]
 
@@ -21,13 +21,13 @@ anchor_bottom = 1.0
 offset_top = -212.0
 offset_right = 300.0
 grow_vertical = 0
-script = ExtResource("1_iafdm")
+script = ExtResource("1_brq7r")
 
 [node name="StartBtn" type="Button" parent="Control/MainMenuButtons"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_vertical = 2
-theme = ExtResource("2_1sv24")
+theme = ExtResource("2_mqqe4")
 text = "Singleplayer"
 alignment = 0
 
@@ -35,7 +35,7 @@ alignment = 0
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_vertical = 2
-theme = ExtResource("2_1sv24")
+theme = ExtResource("2_mqqe4")
 text = "Multiplayer"
 alignment = 0
 
@@ -43,7 +43,7 @@ alignment = 0
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_vertical = 2
-theme = ExtResource("2_1sv24")
+theme = ExtResource("2_mqqe4")
 text = "Options"
 alignment = 0
 
@@ -51,8 +51,8 @@ alignment = 0
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_vertical = 2
-theme = ExtResource("2_1sv24")
+theme = ExtResource("2_mqqe4")
 text = "Exit to desktop"
 alignment = 0
 
-[node name="Background" parent="." instance=ExtResource("1_hhaq2")]
+[node name="Background" parent="." instance=ExtResource("3_yuoay")]

@@ -20,4 +20,4 @@ func _on_start_button_pressed() -> void:
 	Settings.card_value_range = int(card_range)
 	
 	# Then switch to the singleplayer game scene
-	SceneManager.goto_scene("res://scenes/singleplayer-scene.tscn")
+	SceneManager.goto_scene("res://scenes/singleplayer_scene.tscn")
