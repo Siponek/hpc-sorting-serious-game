@@ -119,6 +119,9 @@ func _on_restart_game_button_pressed() -> void:
 	clear_container(sorted_cards_container)
 	cards_array = generate_completed_card_array(values)
 	sorted_cards_array = generate_completed_card_array(sorted_all, "SortedCard_")
+	for card in sorted_cards_array:
+		card.set_can_drag(false)
+		card.set_card_size(Vector2(Constants.CARD_WIDTH, int(float(Constants.CARD_HEIGHT) / 2)))
 	fill_card_container(cards_array, card_container)
 	fill_card_container(sorted_cards_array, sorted_cards_container)
 	slots = create_buffer_slots()

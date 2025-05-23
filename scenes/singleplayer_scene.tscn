@@ -108,6 +108,7 @@ text = "Click to show sorted"
 
 [node name="RestartGameButton" type="Button" parent="RightSideButtonsContainer"]
 layout_mode = 2
+theme = ExtResource("1_flg1c")
 text = "Restart game"
 
 [node name="SortedCardsPanel" type="PanelContainer" parent="."]
