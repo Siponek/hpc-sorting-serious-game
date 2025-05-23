@@ -2,7 +2,7 @@
 extends EditorPlugin
 
 ## This is how often the project is scanned for changes (in seconds)
-const GENERATION_FREQUENCY := 15.0
+const GENERATION_FREQUENCY := 10
 
 ## The addons directory is excluded by default
 const ADDONS_PATH := "res://addons"
