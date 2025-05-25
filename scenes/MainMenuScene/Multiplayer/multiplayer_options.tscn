@@ -40,12 +40,10 @@ layout_mode = 2
 text = "Start Game"
 
 [node name="NameServerLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-visible = false
 layout_mode = 2
 text = "Name for room:"
 
 [node name="NameServerLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer"]
-visible = false
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]

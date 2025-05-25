@@ -31,6 +31,7 @@ DragState="*res://scenes/scripts/drag_state.gd"
 ToastParty="*res://addons/toastparty/toast-autoload.gd"
 PackRTC="*res://addons/packrtc/scripts/PackRTC.gd"
 GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
+ConnectionManager="*res://scenes/Multiplayer/connection_manager.gd"
 
 [dotnet]
 

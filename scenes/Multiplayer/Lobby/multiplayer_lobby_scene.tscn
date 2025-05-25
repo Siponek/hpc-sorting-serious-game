@@ -1,0 +1,56 @@
+[gd_scene load_steps=3 format=3 uid="uid://bawdf1siw14pf"]
+
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_nigir"]
+[ext_resource type="Script" uid="uid://dnjrqxk7epxy1" path="res://scenes/Multiplayer/Lobby/multiplayer_lobby.gd" id="2_f6dde"]
+
+[node name="MultiplayerLobbyScene" type="Window"]
+title = "Multiplayer lobby"
+initial_position = 2
+size = Vector2i(250, 250)
+min_size = Vector2i(250, 250)
+theme = ExtResource("1_nigir")
+script = ExtResource("2_f6dde")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_nigir")
+theme_type_variation = &"WindowBackgroundPanel"
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="LabelLobbyID" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Current lobby name"
+
+[node name="CurrentlyConnectedLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Currently connected:
+"
+
+[node name="ConnectedPlayersLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "---"
+
+[node name="LeaveLobbyButton" type="Button" parent="MarginContainer"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_vertical = 8
+text = "Leave lobby"
+
+[connection signal="pressed" from="MarginContainer/LeaveLobbyButton" to="." method="_on_leave_lobby_button_pressed"]

@@ -9,7 +9,7 @@ var game_options_dialog_scene: PackedScene = preload(ProjectFiles.Scenes.GAME_OP
 var enter_tweens = {}
 var exit_tweens = {}
 const EDGE_MARGIN = 50.0 # Margin from screen edges for button movement
-const MOVE_DISTANCE = 100.0
+const MOVE_DISTANCE = 15.0
 enum CircularPathState {
 	# NONE,
 	MOVING_RIGHT,
@@ -42,18 +42,18 @@ func _ready():
 			# We need to store original position and rotation for the button but with regards to the 
 			btn.set_meta("original_container_offset", btn.global_position - self.global_position)
 			btn.set_meta("current_rotation", 0)
+
 func kill_tweens_from_dict(_tween_dictionary, button):
 	if _tween_dictionary.has(button) and _tween_dictionary[button]:
 		_tween_dictionary[button].kill()
 		_tween_dictionary[button] = null
 
-func _open_dialog_scene(scene_resource: PackedScene) -> void:
+func _open_instantiated_dialog(dialog_instance: Window) -> void:
 	if dialog_open:
 		print("Dialog already open, cannot open another.")
 		return
 		
 	dialog_open = true
-	var dialog_instance = scene_resource.instantiate()
 	add_child(dialog_instance)
 	
 	# Setup window properties
@@ -67,13 +67,13 @@ func _open_dialog_scene(scene_resource: PackedScene) -> void:
 	dialog_instance.popup_centered()
 
 func _on_singleplayer_btn_pressed() -> void:
-	_open_dialog_scene(singleplayer_options_dialog_scene)
+	_open_instantiated_dialog(singleplayer_options_dialog_scene.instantiate())
 
 func _on_multiplayer_btn_pressed() -> void:
-	_open_dialog_scene(multiplayer_options_dialog_scene)
+	_open_instantiated_dialog(multiplayer_options_dialog_scene.instantiate())
 
 func _on_options_btn_pressed() -> void:
-	_open_dialog_scene(game_options_dialog_scene)
+	_open_instantiated_dialog(game_options_dialog_scene.instantiate())
 
 func _on_exit_btn_pressed() -> void:
 	# Todo add confimation screen?
@@ -104,7 +104,7 @@ func _on_button_mouse_entered(button: Button):
 	var distance_to_edge
 	var current_side_vector_move
 	var min_distance = 5.0 # Minimum distance to use when button passes an edge
-    
+	
 	match button.get_meta("current_side"):
 		CircularPathState.MOVING_RIGHT:
 			button_right_edge = button.global_position.x + button.size.x

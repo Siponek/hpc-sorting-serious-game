@@ -1,0 +1,38 @@
+[gd_scene load_steps=3 format=3 uid="uid://dngqkxgg2h370"]
+
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_beqhh"]
+[ext_resource type="Script" uid="uid://dibx6epo0dyov" path="res://scenes/Multiplayer/Lobby/player_in_lobby.gd" id="2_vnrqp"]
+
+[node name="PlayerInLobby" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+theme = ExtResource("1_beqhh")
+script = ExtResource("2_vnrqp")
+
+[node name="Panel" type="Panel" parent="."]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 50.0
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 15.0
+offset_top = -11.5
+offset_right = 112.0
+offset_bottom = 11.5
+grow_vertical = 2
+text = "Player name default"
+
+[node name="Button" type="Button" parent="Panel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -42.0
+offset_bottom = 50.0
+grow_horizontal = 0
+text = "Kick"
