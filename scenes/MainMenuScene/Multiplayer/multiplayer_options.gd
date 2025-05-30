@@ -2,6 +2,17 @@ extends Window
 
 const multiplayer_lobby_scene: PackedScene = preload(ProjectFiles.Scenes.MULTIPLAYER_LOBBY_SCENE)
 var lobby_id_to_join: String = "wololo"
+var selected_lobby_id_from_list: String = "" # To store ID from ItemList
+
+@onready var lobby_start_name_input: LineEdit = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/NameServerLineEdit # Get lobby name from UI
+@onready var lobby_join_id_input: LineEdit = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer/CodeFieldLineEdit
+@onready var lobby_list_ui: ItemList = $MarginContainer/HBoxContainer/LobbyListVBoxContainer/MarginContainer/LobbyList
+@onready var host_game_button: Button = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/HostGameButton
+@onready var refresh_lobbies_button: Button = $MarginContainer/HBoxContainer/LobbyListVBoxContainer/RefreshLobbiesButton
+@onready var join_game_button: Button = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer/JoinGameButton
+
+func _on_about_to_popup() -> void:
+	ConnectionManager.ensure_multiplayer_started() # Ensure GDSync is active before showing the dialog
 
 func _ready() -> void:
 	# Connect signals from conection manager
@@ -9,15 +20,28 @@ func _ready() -> void:
 	ConnectionManager.lobby_creation_has_failed.connect(_on_connection_manager_lobby_creation_failed)
 	ConnectionManager.joined_lobby_successfully.connect(_on_connection_manager_joined_lobby)
 	ConnectionManager.failed_to_join_lobby.connect(_on_connection_manager_failed_to_join_lobby)
-	# No longer connect directly to GDSync.lobby_created or GDSync.lobby_creation_failed here
+	ConnectionManager.discovered_lobbies_updated.connect(_on_connection_manager_lobbies_updated)
+	lobby_start_name_input.text_changed.connect(func(text: String) -> void:
+		# Enable host button if lobby name is not empty
+		host_game_button.disabled=text.is_empty()
+		)
+	lobby_join_id_input.text_changed.connect(func(text: String) -> void:
+		join_game_button.disabled=text.is_empty() and selected_lobby_id_from_list.is_empty()
+		)
+	# Get the latest lobbies
+	lobby_list_ui.clear() # Clear old list
+	ConnectionManager.get_discovered_lobbies()
+	join_game_button.disabled = true # Disable join button until we have a lobby ID
+	lobby_start_name_input.text = lobby_id_to_join # Set default lobby name input
+
 
 func _on_host_game_button_pressed() -> void:
-	var lobby_name_input = $MarginContainer/VBoxContainer/NameServerLineEdit.text # Get lobby name from UI
+	var lobby_name_input = lobby_start_name_input.text
 	if lobby_name_input.is_empty():
 		lobby_name_input = lobby_id_to_join # Fallback or default
-	ConnectionManager.ensure_multiplayer_started()
+	# ConnectionManager.ensure_multiplayer_started()
 	ConnectionManager.start_hosting_lobby(
-		lobby_id_to_join,
+		lobby_name_input,
 		# password = 
 		"",
 		# public = 
@@ -43,57 +67,36 @@ func _on_connection_manager_lobby_created(lobby_id: String):
 	else:
 		push_error("MultiplayerOptions: Parent or _open_instantiated_dialog method not found.")
 		# Fallback: just add and show if parent logic is complex
-		get_tree().root.add_child(lobby_scene_instance)
+		get_parent().add_child(lobby_scene_instance)
 		lobby_scene_instance.popup_centered()
-
-
 	self.close_requested.emit() # Close the current window
 
-func _on_connection_manager_lobby_creation_failed(lobby_name: String, error_code: int):
+func _on_connection_manager_lobby_creation_failed(lobby_name: String, error_message: String):
 	# Use the error_code to display a user-friendly message
 	# You can use your existing lobby_creation_failed logic here,
 	# but call it with the parameters from ConnectionManager's signal.
-	lobby_creation_failed(lobby_name, error_code) # Assuming this method shows a Toast or error message
-	push_error("MultiplayerOptions: Lobby creation failed for '", lobby_name, "'. Error: ", error_code)
-	# Show an error message to the user, e.g., using ToastParty
-	ToastParty.show({
-		"text": "Failed to create lobby: " + lobby_name + " (Error: " + str(error_code) + ")",
-		"bgcolor": Color.RED,
-		"color": Color.WHITE
-	})
+	lobby_creation_failed(lobby_name, error_message) # Assuming this method shows a Toast or error message
 
-
+	
 func _on_join_game_button_pressed() -> void:
-	ToastParty.show({
-		"text": "You are totally joining a game rn ☆*: .｡. o(≧▽≦)o .｡.:*☆", # Text (emojis can be used)
-		"bgcolor": Color.KHAKI, # Background Color
-		"color": Color.DARK_KHAKI, # Text Color
-		"gravity": "top", # top or bottom
-		"direction": "left", # left or center or right
-		"text_size": 18, # [optional] Text (font) size // experimental (warning!)
-		"use_font": true # [optional] Use custom ToastParty font // experimental (warning!)
-	})
-	var lobby_id_input = $PathToYourLobbyIDLineEdit.text # Get lobby ID from UI
-	if lobby_id_input.is_empty():
-		# Show error or use a default if appropriate
-		ToastParty.show({"text": "Please enter a Lobby ID to join.", "bgcolor": Color.ORANGE_RED})
+	var lobby_id_to_attempt_join: String = ""
+
+	if not selected_lobby_id_from_list.is_empty():
+		lobby_id_to_attempt_join = selected_lobby_id_from_list
+		ToastParty.show({"text": "Joining selected lobby: " + lobby_id_to_attempt_join, "bgcolor": Color.PALE_GREEN})
+	elif not lobby_join_id_input.text.is_empty():
+		lobby_id_to_attempt_join = lobby_join_id_input.text
+		ToastParty.show({"text": "Joining lobby by code: " + lobby_id_to_attempt_join, "bgcolor": Color.PALE_TURQUOISE})
+	else:
+		ToastParty.show({"text": "Please select a lobby or enter a code to join.", "bgcolor": Color.ORANGE_RED})
 		return
 
-	# ConnectionManager.ensure_multiplayer_started() # If needed
-	ConnectionManager.join_existing_lobby(
-		lobby_id_input
-		# password = "" # Get from UI if password protected
-	)
-	ToastParty.show({
-		"text": "Attempting to join lobby: " + lobby_id_input + "...",
-		"bgcolor": Color.SKY_BLUE
-	})
+	# ConnectionManager.ensure_multiplayer_started() # Ensure GDSync is active
+	ConnectionManager.join_existing_lobby(lobby_id_to_attempt_join)
 
 func _on_connection_manager_joined_lobby(lobby_id: String):
-	print("MultiplayerOptions: Joined lobby successfully via ConnectionManager! ID: ", lobby_id)
+	print("MultiplayerOptions: JOINED lobby successfully via ConnectionManager! ID: ", lobby_id)
 	var lobby_scene_instance = multiplayer_lobby_scene.instantiate()
-	# lobby_scene_instance.set_lobby_id(lobby_id) # Lobby scene can get this from ConnectionManager
-
 	if get_parent() and get_parent().has_method("_open_instantiated_dialog"):
 		get_parent().dialog_open = false
 		get_parent()._open_instantiated_dialog(lobby_scene_instance)
@@ -103,24 +106,60 @@ func _on_connection_manager_joined_lobby(lobby_id: String):
 	
 	self.close_requested.emit()
 
-func _on_connection_manager_failed_to_join_lobby(lobby_id: String, error_code: int):
-	push_error("MultiplayerOptions: Failed to join lobby '", lobby_id, "'. Error: ", error_code)
-	# Show an error message to the user
+func _on_refresh_lobbies_button_pressed() -> void:
+	ToastParty.show({"text": "Refreshing lobby list...", "bgcolor": Color.LIGHT_BLUE})
+	ConnectionManager.find_lobbies()
+	lobby_list_ui.clear() # Clear old list while waiting for new one
+	selected_lobby_id_from_list = "" # Reset selection
+	join_game_button.disabled = true # Disable join until new selection or code entry
+
+func _on_connection_manager_lobbies_updated(lobbies: Array):
+	ToastParty.show({"text": "Lobby list updated with %d lobbies." % lobbies.size(), "bgcolor": Color.LIGHT_GREEN})
+	lobby_list_ui.clear()
+	selected_lobby_id_from_list = "" # Reset selection
+	join_game_button.disabled = true # Disable join until new selection or code entry
+	
+	if lobbies.is_empty():
+		lobby_list_ui.add_item("No lobbies found.")
+		lobby_list_ui.set_item_disabled(0, true)
+		return
+
+	for lobby_data in lobbies:
+		# GDSync lobby_find usually returns a list of dictionaries.
+		# Each dictionary contains details about a lobby.
+		# Common keys might be "id", "name", "player_count", "max_players".
+		# Adjust these based on what GDSync actually provides.
+		var lobby_name = lobby_data.get("Name", "Unnamed Lobby")
+		var player_count = lobby_data.get("PlayerCount", 0)
+		var max_players = lobby_data.get("PlayerLimit", 0)
+		
+		var display_text = "%s (%s/%s)" % [lobby_name, player_count, max_players if max_players > 0 else "-"]
+		var item_idx = lobby_list_ui.add_item(display_text, null, true)
+		lobby_list_ui.set_item_metadata(item_idx, lobby_name) # Store the actual ID
+
+func _on_lobby_list_item_selected(index: int):
+	if lobby_list_ui.is_item_disabled(index):
+		selected_lobby_id_from_list = ""
+		join_game_button.disabled = true
+		print("MultiplayerOptions: Selected item is disabled, cannot join.")
+		return
+		
+	selected_lobby_id_from_list = lobby_list_ui.get_item_metadata(index)
+	lobby_join_id_input.text = "" # Clear code field if a list item is selected
+	print("MultiplayerOptions: Selected lobby ID from list: ", selected_lobby_id_from_list)
+	join_game_button.disabled = selected_lobby_id_from_list.is_empty()
+
+
+func _on_connection_manager_failed_to_join_lobby(_lobby_name: String, error_message: String):
 	ToastParty.show({
-		"text": "Failed to join lobby: " + lobby_id + " (Error: " + str(error_code) + ")",
+		"text": error_message,
 		"bgcolor": Color.RED,
 		"color": Color.WHITE
 	})
 
-# This local function can still be used for displaying errors from ConnectionManager
-func lobby_creation_failed(lobby_name: String, error: int):
-	# ... your existing error matching logic ...
-	var error_message = "Lobby creation failed for " + lobby_name + ". "
-	match (error):
-		ENUMS.LOBBY_CREATION_ERROR.LOBBY_ALREADY_EXISTS:
-			error_message += "A lobby with this name already exists."
-		# ... other cases ...
-		_:
-			error_message += "Unknown error (" + str(error) + ")."
-	push_error(error_message) # Log it
-	# ToastParty.show(...) # Show to user (already handled in _on_connection_manager_lobby_creation_failed)
+func lobby_creation_failed(lobby_name: String, error: String):
+	ToastParty.show({
+		"text": "Failed to create lobby: " + lobby_name + ". Error: " + error,
+		"bgcolor": Color.DARK_RED,
+		"color": Color.WHITE
+	})

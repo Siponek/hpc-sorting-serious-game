@@ -9,8 +9,7 @@ bg_color = Color(0.94902, 0.917647, 0.894118, 1)
 [node name="SingleplayerOptions" type="Window"]
 title = "Singleplayer Options"
 initial_position = 1
-size = Vector2i(220, 220)
-min_size = Vector2i(200, 220)
+size = Vector2i(310, 345)
 theme = ExtResource("1_g2niw")
 script = ExtResource("1_eleap")
 
@@ -23,8 +22,11 @@ grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_g2niw")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 8
@@ -34,6 +36,7 @@ theme_override_constants/margin_bottom = 12
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
+theme_override_constants/separation = 8
 
 [node name="BufferLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -64,6 +67,9 @@ layout_mode = 2
 min_value = 10.0
 value = 100.0
 allow_greater = true
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
 
 [node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2

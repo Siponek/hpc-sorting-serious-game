@@ -39,7 +39,7 @@ func _update_placeholder_text(time_sec: int):
 	var seconds = time_sec % 60
 	# Assume this TimerPanel has a child RichTextLabel named "TimerPlaceholder"
 	if timerText:
-		timerText.text = "%02d:%02d" % [minutes, seconds]
+		timerText.text = "Time: %02d:%02d" % [minutes, seconds]
 
 func getCurrentTime() -> int:
 	return elapsed_time

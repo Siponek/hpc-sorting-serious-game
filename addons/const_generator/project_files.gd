@@ -73,3 +73,8 @@ class Images:
 	const WEB_EXPORT_APPLE_TOUCH_ICON = "res://exports/web-export/web-export.apple-touch-icon.png"
 	const WEB_EXPORT_ICON = "res://exports/web-export/web-export.icon.png"
 	const WEB_EXPORT = "res://exports/web-export/web-export.png"
+
+class Fonts:
+	const FONT_AWESOME_6_BRANDS_REGULAR_400 = "res://res/fontawesome-free-6.7.2-desktop/otfs/Font Awesome 6 Brands-Regular-400.otf"
+	const FONT_AWESOME_6_FREE_REGULAR_400 = "res://res/fontawesome-free-6.7.2-desktop/otfs/Font Awesome 6 Free-Regular-400.otf"
+	const FONT_AWESOME_6_FREE_SOLID_900 = "res://res/fontawesome-free-6.7.2-desktop/otfs/Font Awesome 6 Free-Solid-900.otf"

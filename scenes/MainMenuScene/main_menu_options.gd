@@ -4,8 +4,7 @@ var dialog_open = false
 var singleplayer_options_dialog_scene: PackedScene = preload(ProjectFiles.Scenes.SINGLEPLAYER_OPTIONS)
 var multiplayer_options_dialog_scene: PackedScene = preload(ProjectFiles.Scenes.MULTIPLAYER_OPTIONS)
 var game_options_dialog_scene: PackedScene = preload(ProjectFiles.Scenes.GAME_OPTIONS)
-
-# Dictionary to keep track of active tweens per button.
+const var_tree_node_path: NodePath = "../CanvasLayer/VarTreeMainMenu"
 var enter_tweens = {}
 var exit_tweens = {}
 const EDGE_MARGIN = 50.0 # Margin from screen edges for button movement
@@ -21,7 +20,34 @@ enum CircularPathState {
 	MOVING_DOWN,
 	# READY_TO_LOOP_RIGHT # State before starting the loop by moving right again
 }
+
 func _ready():
+	# Turn off the debug tree if not needed.
+	if OS.has_feature("debug"):
+		var var_tree: VarTree = get_node(var_tree_node_path)
+		var_tree.visible = OS.has_feature("debug")
+		var_tree.mount_var(self, "clientID", {
+		"font_color": Color.WHITE_SMOKE,
+		"format_callback": func(_value: Variant) -> String:
+			return str(ConnectionManager.get_my_client_id())
+		})
+		var_tree.mount_var(self, "IAmHost", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				return str(ConnectionManager.am_i_host())
+		})
+		var_tree.mount_var(self, "currentLobbyID", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				return str(ConnectionManager.get_current_lobby_id())
+		})
+		var_tree.mount_var(self, "Players count", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				return str(ConnectionManager.get_player_list().size())
+		})
+		
+		 
 	var cumulative_pivot_y_offset = 0.0 # Accumulator for the Y pivot offset
 	for btn: Button in get_children():
 		if btn is Button:

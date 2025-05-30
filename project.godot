@@ -39,6 +39,7 @@ project/assembly_name="hpc-sorting-serious-game"
 
 [editor]
 
+run/main_run_args="game_debug_id=1"
 version_control/plugin_name="GitPlugin"
 version_control/autoload_on_startup=true
 

@@ -1,0 +1,39 @@
+[gd_scene load_steps=3 format=3 uid="uid://dngqkxgg2h370"]
+
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_n1vmo"]
+[ext_resource type="Script" uid="uid://dibx6epo0dyov" path="res://scenes/Multiplayer/Lobby/player_in_lobby.gd" id="2_g06qc"]
+
+[node name="PlayerInLobby" type="Panel"]
+custom_minimum_size = Vector2(286.475, 50)
+offset_right = 247.545
+offset_bottom = 50.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = ExtResource("1_n1vmo")
+script = ExtResource("2_g06qc")
+player_name = "Player #"
+player_id = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 25
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 110
+
+[node name="PlayerNameLabel" type="Label" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Player #"
+horizontal_alignment = 1
+
+[node name="KickPlayerButton" type="Button" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "Kick"
