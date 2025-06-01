@@ -15,6 +15,19 @@ func goto_scene(res_path):
 	# This will result in a crash or unexpected behavior.
 	# The solution is to defer the load to a later time, when
 	# we can be sure that no code from the current scene is running:
+	#Check if the res_path is valid
+	if not ResourceLoader.exists(res_path):
+		ToastParty.show({
+			"text": "Error: Scene path does not exist: " + res_path, # Text (emojis can be used)
+			"bgcolor": Color(0, 0, 0, 0.7), # Background Color
+			"color": Color(1, 1, 1, 1), # Text Color
+			"gravity": "top", # top or bottom
+			"direction": "left", # left or center or right
+			"text_size": 18, # [optional] Text (font) size // experimental (warning!)
+			"use_font": true # [optional] Use custom ToastParty font // experimental (warning!)
+		})
+		print("Error: Scene path does not exist: " + res_path)
+		return
 	_deferred_goto_scene.call_deferred(res_path)
 
 

@@ -1,0 +1,71 @@
+[gd_scene load_steps=5 format=3 uid="uid://cuy0nrm8fn7yh"]
+
+[ext_resource type="Script" uid="uid://dgpv8ktgd7p5c" path="res://scenes/MainMenuScene/main_menu_options.gd" id="1_brq7r"]
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="2_mqqe4"]
+[ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="3_yuoay"]
+[ext_resource type="Script" uid="uid://bpvwcjxfptkki" path="res://addons/var_tree/var_tree.gd" id="4_mqqe4"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1151.0
+offset_bottom = 649.0
+metadata/_edit_lock_ = true
+
+[node name="Background" parent="." instance=ExtResource("3_yuoay")]
+
+[node name="MainMenuButtons" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -212.0
+offset_right = 300.0
+grow_vertical = 0
+script = ExtResource("1_brq7r")
+
+[node name="SingleplayerBtn" type="Button" parent="MainMenuButtons"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_vertical = 2
+theme = ExtResource("2_mqqe4")
+text = "Singleplayer"
+alignment = 0
+
+[node name="MultiplayerBtn" type="Button" parent="MainMenuButtons"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_vertical = 2
+theme = ExtResource("2_mqqe4")
+text = "Multiplayer"
+alignment = 0
+
+[node name="OptionsBtn" type="Button" parent="MainMenuButtons"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_vertical = 2
+theme = ExtResource("2_mqqe4")
+text = "Options"
+alignment = 0
+
+[node name="ExitBtn" type="Button" parent="MainMenuButtons"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_vertical = 2
+theme = ExtResource("2_mqqe4")
+text = "Exit to desktop"
+alignment = 0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="VarTreeMainMenu" type="Tree" parent="CanvasLayer"]
+custom_minimum_size = Vector2(250, 150)
+offset_right = 200.0
+offset_bottom = 164.0
+script = ExtResource("4_mqqe4")
+metadata/_custom_type_script = "uid://bpvwcjxfptkki"
+
+[connection signal="pressed" from="MainMenuButtons/SingleplayerBtn" to="MainMenuButtons" method="_on_singleplayer_btn_pressed"]
+[connection signal="pressed" from="MainMenuButtons/MultiplayerBtn" to="MainMenuButtons" method="_on_multiplayer_btn_pressed"]
+[connection signal="pressed" from="MainMenuButtons/OptionsBtn" to="MainMenuButtons" method="_on_options_btn_pressed"]
+[connection signal="pressed" from="MainMenuButtons/ExitBtn" to="MainMenuButtons" method="_on_exit_btn_pressed"]

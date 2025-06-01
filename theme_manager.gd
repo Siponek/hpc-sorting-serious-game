@@ -13,8 +13,8 @@ enum ThemeType {
 
 # Preload all theme resources
 var themes = {
-    ThemeType.DEFAULT: preload("res://res/menu_theme.tres"),
-    ThemeType.DARK: preload("res://res/dark_theme.tres"),
+    ThemeType.DEFAULT: preload(ProjectFiles.Resources.MENU_THEME),
+    ThemeType.DARK: preload(ProjectFiles.Resources.DARK_THEME),
 }
 
 # Theme names for UI

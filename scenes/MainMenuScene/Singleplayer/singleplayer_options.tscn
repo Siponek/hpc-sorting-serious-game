@@ -1,0 +1,78 @@
+[gd_scene load_steps=4 format=3 uid="uid://i5ed2cgaleb"]
+
+[ext_resource type="Script" uid="uid://b0apfif5vhb18" path="res://scenes/MainMenuScene/Singleplayer/singleplayer_options.gd" id="1_eleap"]
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_g2niw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g2niw"]
+bg_color = Color(0.94902, 0.917647, 0.894118, 1)
+
+[node name="SingleplayerOptions" type="Window"]
+title = "Singleplayer Options"
+initial_position = 1
+size = Vector2i(310, 345)
+theme = ExtResource("1_g2niw")
+script = ExtResource("1_eleap")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_g2niw")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="BufferLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Player Buffer (slots):"
+
+[node name="BufferSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 20.0
+value = 5.0
+
+[node name="CardCountLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Amount of Cards to Sort:"
+
+[node name="CardCountSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+min_value = 2.0
+value = 9.0
+allow_greater = true
+
+[node name="CardRangeLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Range of Card Values:"
+
+[node name="CardRangeSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+min_value = 10.0
+value = 100.0
+allow_greater = true
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Start Game"
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]

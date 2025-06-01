@@ -1,0 +1,116 @@
+[gd_scene load_steps=5 format=3 uid="uid://uftx8e2j6d5f"]
+
+[ext_resource type="Script" uid="uid://bv1sn1hqygubb" path="res://scenes/MainMenuScene/Multiplayer/multiplayer_options.gd" id="1_2yuo4"]
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_q3dwk"]
+[ext_resource type="Texture2D" uid="uid://bg2ibr4giol6t" path="res://res/fontawesome-free-6.7.2-desktop/svgs/solid/arrows-rotate.svg" id="3_hnmqr"]
+[ext_resource type="Texture2D" uid="uid://fk3lixpagdu" path="res://res/fontawesome-free-6.7.2-desktop/svgs/solid/star-of-david.svg" id="5_87rvy"]
+
+[node name="MultiplayerOptions" type="Window"]
+title = "Multiplayer Options"
+initial_position = 1
+size = Vector2i(500, 420)
+min_size = Vector2i(500, 420)
+theme = ExtResource("1_q3dwk")
+theme_type_variation = &"ActionSidePanelButton"
+script = ExtResource("1_2yuo4")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"WindowBackgroundPanel"
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 12
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="ActionOptionsVBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="NameServerLabel" type="Label" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+layout_mode = 2
+text = "Name for room:"
+
+[node name="NameServerLineEdit" type="LineEdit" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+layout_mode = 2
+
+[node name="HostGameButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Start Game"
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 40
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="CodeFieldLabel" type="Label" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Enter code for room:"
+
+[node name="CodeFieldLineEdit" type="LineEdit" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="JoinGameButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Join room
+"
+
+[node name="VSeparator" type="VSeparator" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+
+[node name="LobbyListVBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RefreshLobbiesButton" type="Button" parent="MarginContainer/HBoxContainer/LobbyListVBoxContainer"]
+clip_contents = true
+layout_mode = 2
+theme = ExtResource("1_q3dwk")
+theme_override_constants/icon_max_width = 30
+text = "Refresh lobbies"
+icon = ExtResource("3_hnmqr")
+
+[node name="LobbiesListLabel" type="Label" parent="MarginContainer/HBoxContainer/LobbyListVBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Lobbies list"
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HBoxContainer/LobbyListVBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="LobbyList" type="ItemList" parent="MarginContainer/HBoxContainer/LobbyListVBoxContainer/MarginContainer"]
+layout_mode = 2
+allow_rmb_select = true
+auto_width = true
+auto_height = true
+item_count = 1
+fixed_icon_size = Vector2i(15, 15)
+item_0/text = "Dummy lobby"
+item_0/icon = ExtResource("5_87rvy")
+
+[connection signal="about_to_popup" from="." to="." method="_on_about_to_popup"]
+[connection signal="pressed" from="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/HostGameButton" to="." method="_on_host_game_button_pressed"]
+[connection signal="pressed" from="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer/JoinGameButton" to="." method="_on_join_game_button_pressed"]
+[connection signal="pressed" from="MarginContainer/HBoxContainer/LobbyListVBoxContainer/RefreshLobbiesButton" to="." method="_on_refresh_lobbies_button_pressed"]
+[connection signal="item_selected" from="MarginContainer/HBoxContainer/LobbyListVBoxContainer/MarginContainer/LobbyList" to="." method="_on_lobby_list_item_selected"]
