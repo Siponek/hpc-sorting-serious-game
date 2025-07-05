@@ -30,8 +30,8 @@ ThemeAutoapplier="*res://scenes/scripts/theme_autoapplier.gd"
 DragState="*res://scenes/scripts/drag_state.gd"
 ToastParty="*res://addons/toastparty/toast-autoload.gd"
 PackRTC="*res://addons/packrtc/scripts/PackRTC.gd"
-GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
 ConnectionManager="*res://scenes/Multiplayer/connection_manager.gd"
+GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
 
 [dotnet]
 
@@ -40,8 +40,6 @@ project/assembly_name="hpc-sorting-serious-game"
 [editor]
 
 run/main_run_args="game_debug_id=1"
-version_control/plugin_name="GitPlugin"
-version_control/autoload_on_startup=true
 
 [editor_plugins]
 
