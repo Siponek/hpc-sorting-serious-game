@@ -2,4 +2,6 @@
 .godot/
 /android/
 *.env
-addons
+addons/**git**
+# Ignore link to submodule
+# addons/GD-Sync
