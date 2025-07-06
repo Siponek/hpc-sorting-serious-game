@@ -77,7 +77,7 @@ func leave_current_lobby():
 	if current_lobby_name_id != "":
 		print("ConnectionManager: Leaving lobby: ", current_lobby_name_id)
 		GDSync.lobby_leave()
-		if GDSync.lobby_get_player_count() <= 1: # Check if you are the last one
+		if GDSync.lobby_get_player_count() < 1: # Check if you are the last one
 			GDSync.lobby_close() # This might trigger _on_gdsync_lobby_closed
 		emit_signal("lobby_closed")
 		_reset_lobby_state()
