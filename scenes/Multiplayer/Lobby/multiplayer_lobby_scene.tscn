@@ -2,13 +2,13 @@
 
 [ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_nigir"]
 [ext_resource type="Script" uid="uid://dnjrqxk7epxy1" path="res://scenes/Multiplayer/Lobby/multiplayer_lobby.gd" id="2_f6dde"]
-[ext_resource type="Script" uid="uid://dhshecoo5nk4g" path="res://addons/GD-Sync/Scripts/Types/NodeInstantiator.gd" id="3_51bqt"]
 [ext_resource type="PackedScene" uid="uid://dngqkxgg2h370" path="res://scenes/Multiplayer/Lobby/player_in_lobby_scene.tscn" id="3_t8do3"]
+[ext_resource type="Script" uid="uid://3w6rt5jrh7oh" path="res://addons/GD-Sync/Scripts/Types/NodeInstantiator.gd" id="4_51bqt"]
 
 [node name="MultiplayerLobbyScene" type="Window"]
 title = "Multiplayer lobby"
 initial_position = 2
-size = Vector2i(972, 367)
+size = Vector2i(972, 386)
 wrap_controls = true
 min_size = Vector2i(800, 150)
 content_scale_aspect = 4
@@ -103,13 +103,14 @@ layout_mode = 2
 size_flags_vertical = 8
 text = "Leave lobby"
 
-[node name="PlayerNodeInstantiator" type="Node" parent="."]
-script = ExtResource("3_51bqt")
-target_location = NodePath("")
-scene = null
-replicate_on_join = true
+[node name="NodeInstantiator" type="Node" parent="."]
+script = ExtResource("4_51bqt")
+spawn_type = 0
+target_location = NodePath("../MarginContainer/VBoxContainer2/GridContainer")
+scene = ExtResource("3_t8do3")
+replicate_on_join = false
 sync_starting_changes = true
 excluded_properties = PackedStringArray()
-metadata/_custom_type_script = "uid://dhshecoo5nk4g"
+metadata/_custom_type_script = "uid://3w6rt5jrh7oh"
 
 [connection signal="pressed" from="MarginContainer/VBoxContainer2/LeaveLobbyButton" to="." method="_on_leave_lobby_button_pressed"]

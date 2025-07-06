@@ -11,29 +11,30 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = ExtResource("1_n1vmo")
 script = ExtResource("2_g06qc")
-player_name = "Player #"
-player_id = 0
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 32.0
+offset_right = -0.475006
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 25
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 110
 
 [node name="PlayerNameLabel" type="Label" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_horizontal = 0
 text = "Player #"
 horizontal_alignment = 1
+clip_text = true
 
 [node name="KickPlayerButton" type="Button" parent="MarginContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 10
 text = "Kick"
+
+[connection signal="pressed" from="MarginContainer/HBoxContainer/KickPlayerButton" to="." method="_on_kick_player_button_pressed"]
