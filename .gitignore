@@ -5,4 +5,7 @@
 **/**tmp**
 addons/**git**
 # Ignore link to submodule
-# addons/GD-Sync
+addons/GD-Sync
+
+# temporary ingore of exports
+exports
