@@ -69,7 +69,8 @@ func _on_connection_manager_lobby_created(lobby_id: String):
 		# Fallback: just add and show if parent logic is complex
 		get_parent().add_child(lobby_scene_instance)
 		lobby_scene_instance.popup_centered()
-	self.close_requested.emit() # Close the current window
+	self.close_requested.emit()
+	ConnectionManager.join_existing_lobby(lobby_id)
 
 func _on_connection_manager_lobby_creation_failed(lobby_name: String, error_message: String):
 	# Use the error_code to display a user-friendly message
