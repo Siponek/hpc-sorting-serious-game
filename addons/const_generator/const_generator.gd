@@ -6,7 +6,7 @@ const GENERATION_FREQUENCY := 10
 
 ## The addons directory is excluded by default
 const ADDONS_PATH := "res://addons"
-
+const GIT_SUBMODULES_PATH := "res://git-submodules"
 ## The plugin name is used to create the output directory
 const PLUGIN_NAME := "const_generator"
 
@@ -19,8 +19,9 @@ const DEBUG := false
 ## Paths that should be excluded from generation
 const EXCLUDED_PATHS: Array[String] = [
 	ADDONS_PATH,
+	GIT_SUBMODULES_PATH,
 	"res://export",
-	"res://tmp"
+	"res://tmp",
 ]
 
 ## Generated classnames to file extensions
