@@ -375,7 +375,8 @@ func _on_show_sorted_cards_button_pressed() -> void:
 		show_sorted_button.text = "Hide Sorted Cards" # Update button text
 
 	else:
-		show_sorted_button.text = "Show Sorted Cards" # Reset button text
+		# show_sorted_button.text = "Show Sorted Cards" # Reset button text
+		show_sorted_button.text = "Finish game!" # Reset button text
 
 func _setup_button_glow_animation(button: Button):
 	# Define base and glow colors

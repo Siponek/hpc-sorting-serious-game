@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3 uid="uid://dsix5r7ccx5yb"]
+
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_jwrws"]
+
+[node name="FinishGameScene" type="Panel"]
+custom_minimum_size = Vector2(300, 300)
+offset_right = 50.0
+theme = ExtResource("1_jwrws")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Congratulations,
+What a success"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Your time: N/A"
+horizontal_alignment = 1
+
+[node name="ResetGameButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Reset the game"
+
+[node name="ExitToMainMenuButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Exit to main menu"

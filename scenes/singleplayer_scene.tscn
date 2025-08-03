@@ -103,7 +103,7 @@ metadata/_edit_use_anchors_ = true
 layout_mode = 2
 theme = ExtResource("1_flg1c")
 theme_type_variation = &"ActionSidePanelButton"
-text = "Show sorted"
+text = "Finish game"
 
 [node name="RestartGameButton" type="Button" parent="RightSideButtonsContainer"]
 layout_mode = 2
