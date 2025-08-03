@@ -26,6 +26,11 @@ func _ready():
 	if OS.has_feature("debug"):
 		var var_tree: VarTree = get_node(var_tree_node_path)
 		var_tree.visible = OS.has_feature("debug")
+		var_tree.mount_var(self, "Debug ID", {
+			"font_color": Color.WHITE_SMOKE,
+			"format_callback": func(_value: Variant) -> String:
+				return str(Constants.arguments.get("game_debug_id", "N/A"))
+		})
 		var_tree.mount_var(self, "clientID", {
 		"font_color": Color.WHITE_SMOKE,
 		"format_callback": func(_value: Variant) -> String:
@@ -45,6 +50,11 @@ func _ready():
 			"font_color": Color.SEASHELL,
 			"format_callback": func(_value: Variant) -> String:
 				return str(ConnectionManager.get_player_list().size())
+		})
+		var_tree.mount_var(self, "IDs", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				return str(ConnectionManager.get_player_list().keys())
 		})
 		
 		 
