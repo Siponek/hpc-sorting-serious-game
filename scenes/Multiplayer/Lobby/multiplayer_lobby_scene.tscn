@@ -1,16 +1,19 @@
-[gd_scene load_steps=5 format=3 uid="uid://bawdf1siw14pf"]
+[gd_scene load_steps=7 format=3 uid="uid://bawdf1siw14pf"]
 
 [ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_nigir"]
 [ext_resource type="Script" uid="uid://dnjrqxk7epxy1" path="res://scenes/Multiplayer/Lobby/multiplayer_lobby.gd" id="2_f6dde"]
 [ext_resource type="PackedScene" uid="uid://dngqkxgg2h370" path="res://scenes/Multiplayer/Lobby/player_in_lobby_scene.tscn" id="3_t8do3"]
 [ext_resource type="Script" uid="uid://dd4esb2gfoip4" path="res://addons/GD-Sync/Scripts/Types/NodeInstantiator.gd" id="4_51bqt"]
+[ext_resource type="Texture2D" uid="uid://7i5bw1srgc1e" path="res://res/fontawesome-free-6.7.2-desktop/svgs/regular/circle-xmark.svg" id="4_kotqg"]
+[ext_resource type="Texture2D" uid="uid://cvuoqeuds50x5" path="res://res/fontawesome-free-6.7.2-desktop/svgs/regular/circle-play.svg" id="5_kotqg"]
 
 [node name="MultiplayerLobbyScene" type="Window"]
 title = "Multiplayer lobby"
 initial_position = 2
-size = Vector2i(972, 386)
+size = Vector2i(1100, 600)
 wrap_controls = true
-min_size = Vector2i(800, 150)
+min_size = Vector2i(600, 450)
+max_size = Vector2i(1100, 600)
 content_scale_aspect = 4
 content_scale_stretch = 1
 theme = ExtResource("1_nigir")
@@ -40,6 +43,57 @@ theme_override_constants/margin_bottom = 12
 [node name="VBoxContainer2" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 
+[node name="HBoxContainerCardOptions" type="HBoxContainer" parent="MarginContainer/VBoxContainer2"]
+clip_contents = true
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="BufferLabel" type="Label" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
+clip_contents = true
+layout_mode = 2
+text = "Player Buffer (slots):"
+
+[node name="BufferSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
+layout_mode = 2
+tooltip_text = "For now only host can change lobby settings."
+theme_override_constants/buttons_width = 20
+min_value = 1.0
+max_value = 20.0
+value = 5.0
+
+[node name="CardCountLabel" type="Label" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
+clip_contents = true
+custom_minimum_size = Vector2(239.425, 0)
+layout_mode = 2
+text = "Amount of Cards to Sort:"
+
+[node name="CardCountSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
+layout_mode = 2
+tooltip_text = "For now only host can change lobby settings."
+theme_override_constants/buttons_width = 20
+min_value = 2.0
+value = 9.0
+allow_greater = true
+
+[node name="CardRangeLabel" type="Label" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
+custom_minimum_size = Vector2(234, 0)
+layout_mode = 2
+text = "Range of Card Values:"
+text_overrun_behavior = 4
+
+[node name="CardRangeSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
+layout_mode = 2
+tooltip_text = "For now only host can change lobby settings."
+theme_override_constants/buttons_width = 20
+min_value = 10.0
+value = 100.0
+allow_greater = true
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBoxContainer2"]
+clip_contents = true
+layout_mode = 2
+theme_override_constants/separation = 20
+
 [node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer2"]
 layout_mode = 2
 theme_override_constants/h_separation = 49
@@ -57,41 +111,51 @@ text = "Currently connected:"
 [node name="Empty label" type="Label" parent="MarginContainer/VBoxContainer2/GridContainer"]
 layout_mode = 2
 
-[node name="PlayerInLobby" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="VScrollBar" type="ScrollContainer" parent="MarginContainer/VBoxContainer2"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+
+[node name="GridContainerPlayerInLobby" type="GridContainer" parent="MarginContainer/VBoxContainer2/VScrollBar"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 3
+
+[node name="PlayerInLobby" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 display_name = "Player asdasdas"
 
-[node name="PlayerInLobby2" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby2" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby3" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby3" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby4" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby4" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby5" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby5" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby6" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby6" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby7" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby7" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby8" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby8" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby9" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby9" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby10" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby10" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby11" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby11" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
-[node name="PlayerInLobby12" parent="MarginContainer/VBoxContainer2/GridContainer" instance=ExtResource("3_t8do3")]
+[node name="PlayerInLobby12" parent="MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby" instance=ExtResource("3_t8do3")]
 layout_mode = 2
 
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer2"]
@@ -99,19 +163,36 @@ custom_minimum_size = Vector2(0, -0.3)
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="LeaveLobbyButton" type="Button" parent="MarginContainer/VBoxContainer2"]
-custom_minimum_size = Vector2(0, 35)
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer2"]
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
-size_flags_vertical = 8
+
+[node name="LeaveLobbyButton" type="Button" parent="MarginContainer/VBoxContainer2/HBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Leave lobby"
+icon = ExtResource("4_kotqg")
+expand_icon = true
+
+[node name="StartGameButton" type="Button" parent="MarginContainer/VBoxContainer2/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Only the host player can start the game!"
+theme_override_colors/icon_hover_color = Color(0, 0.490196, 0, 1)
+theme_override_constants/icon_max_width = 60
+text = "Start game"
+icon = ExtResource("5_kotqg")
+expand_icon = true
 
 [node name="NodeInstantiator" type="Node" parent="."]
 script = ExtResource("4_51bqt")
 spawn_type = 0
-target_location = NodePath("../MarginContainer/VBoxContainer2/GridContainer")
+target_location = NodePath("../MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby")
 scene = ExtResource("3_t8do3")
 replicate_on_join = false
 sync_starting_changes = true
 excluded_properties = PackedStringArray()
 
-[connection signal="pressed" from="MarginContainer/VBoxContainer2/LeaveLobbyButton" to="." method="_on_leave_lobby_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer2/HBoxContainer/LeaveLobbyButton" to="." method="_on_leave_lobby_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer2/HBoxContainer/StartGameButton" to="." method="_on_start_game_button_pressed"]

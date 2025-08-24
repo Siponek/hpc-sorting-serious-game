@@ -2,10 +2,17 @@ extends Window
 
 var clients_ui_nodes: Dictionary = {} # To keep track of instantiated player UI elements
 const label_lobby_name_path: NodePath = "MarginContainer/VBoxContainer2/GridContainer/LabelLobbyID"
-@onready var player_container: Node = $MarginContainer/VBoxContainer2/GridContainer # Ensure this path is correct
+const start_game_button_path: NodePath = "MarginContainer/VBoxContainer2/HBoxContainer/StartGameButton"
+@onready var player_container: Node = $MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby # Ensure this path is correct
 @onready var player_lobby_spawner: NodeInstantiator = $NodeInstantiator
+@onready var options_buffer_slots_count = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/BufferSpinBox.value
+@onready var options_cards_count = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardCountSpinBox.value
+@onready var options_card_range = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardRangeSpinBox.value
+@onready var options_container = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions
+
 
 func _ready():
+	var start_game_button: Button = self.get_node(start_game_button_path)
 	if player_lobby_spawner.scene == null:
 		push_error("MultiplayerLobby: PlayerInLobby scene is not loaded in NodeInstantiator!")
 		ToastParty.show({
@@ -20,8 +27,10 @@ func _ready():
 		ConnectionManager.player_left_lobby.connect(_on_cm_player_left)
 		ConnectionManager.player_list_updated.connect(_on_cm_player_list_updated)
 		ConnectionManager.lobby_closed.connect(_on_cm_lobby_closed)
-	GDSync.expose_func(self.clear_player_list_ui)
 
+
+	GDSync.expose_func(self.clear_player_list_ui)
+	GDSync.expose_func(self.transition_to_multiplayer_game)
 	# Initial population of the lobby
 	# The lobby_id should be set by the scene that creates this one,
 	# or this scene should fetch it from ConnectionManager.
@@ -42,6 +51,13 @@ func _ready():
 			"text": "Joined lobby: " + current_lobby_id + " (My ID: " + str(ConnectionManager.get_my_client_id()) + ")",
 			"bgcolor": Color.DARK_GREEN, # ...
 		})
+		start_game_button.visible = false
+		# TODO make changes to spixboxes update on player side too
+		# make every field in options_container non-editable for clients
+		# we can make the clients change their settings later ;>
+		for child in options_container.get_children():
+			if child is SpinBox:
+				child.editable = false
 
 func set_lobby_id(id: String) -> void:
 	self.get_node(label_lobby_name_path).text = "Lobby ID: " + id
@@ -136,7 +152,38 @@ func _on_leave_lobby_button_pressed() -> void:
 func _on_start_game_button_pressed() -> void:
 	if ConnectionManager.am_i_host():
 		print("MultiplayerLobby: Host is starting the game...")
-		# get_tree().change_scene_to_file("res://path_to_your_game_scene.tscn")
-		ToastParty.show({"text": "Starting game... (Not implemented yet!)"})
+
+		# Show preparation message
+		GDSync.call_func(ToastParty.show, [ {
+			"text": "Host is starting the game...",
+			"bgcolor": Color.BLUE
+		}])
+		GDSync.call_func(prepare_for_game_transition, [])
+
+		# Short delay to ensure all clients see the message
+		await get_tree().create_timer(1.0).timeout
+		#TODO make this somehow configurable for both singleplayer and multiplayer
+
+		print("Settings -> Buffer slots: " + str(options_buffer_slots_count))
+		print("Settings -> Number of cards: " + str(options_cards_count))
+		print("Settings -> Card value range: " + str(options_card_range))
+		# Save these options, for example in a global (autoload) settings singleton:
+		Settings.player_buffer_count = int(options_buffer_slots_count)
+		Settings.cards_count = int(options_cards_count)
+		Settings.card_value_range = int(options_card_range)
+
+		# Transition all players to the multiplayer game scene
+		GDSync.call_func(transition_to_multiplayer_game, [])
+
+		# Transition ourselves
+		transition_to_multiplayer_game()
 	else:
 		push_error("MultiplayerLobby: Client tried to press start game button!")
+
+func prepare_for_game_transition() -> void:
+	# Prepare data, show loading indicator, etc.
+	ToastParty.show({"text": "Preparing game...", "bgcolor": Color.BLUE})
+
+func transition_to_multiplayer_game():
+	print("MultiplayerLobby: Transitioning to multiplayer game scene")
+	SceneManager.goto_scene(ProjectFiles.Scenes.MULTIPLAYER_GAME_SCENE)

@@ -29,10 +29,11 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		player_name_label.name = "PlayerNameLabel" # Ensure the label has the correct name in editor
 
-	GDSync.expose_func(self.setup_player_display)
-	GDSync.expose_func(self.set_player_name)
-	GDSync.expose_func(self.set_client_id)
-	GDSync.expose_func(self.set_player_color)
+	# unsafe :D
+	# GDSync.expose_func(self.setup_player_display)
+	# GDSync.expose_func(self.set_player_name)
+	# GDSync.expose_func(self.set_client_id)
+	# GDSync.expose_func(self.set_player_color)
 	client_id = ConnectionManager.get_my_client_id()
 
 # func _multiplayer_ready():
@@ -72,8 +73,6 @@ func print_please():
 
 func determine_and_set_color(actual_host_id: int, remote_client_id: int) -> void:
 	var color: Color = Color.WHITE
-	print("player_in_lobby_> Am I an owner? ", GDSync.is_gdsync_owner(self), " belongs to: ", GDSync.get_gdsync_owner(self))
-
 	if remote_client_id == actual_host_id:
 		color = Color.AQUAMARINE # Host color
 	elif GDSync.is_gdsync_owner(self):

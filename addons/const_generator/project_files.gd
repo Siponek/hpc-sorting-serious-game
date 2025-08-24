@@ -9,6 +9,7 @@ class Scripts:
 	const CONSTANTS = "res://scenes/scripts/constants.gd"
 	const DRAG_STATE = "res://scenes/scripts/drag_state.gd"
 	const MAIN_MENU_OPTIONS = "res://scenes/MainMenuScene/main_menu_options.gd"
+	const MULTIPLAYER_CARD_MANAGER = "res://scenes/Multiplayer/MultiplayerGame/multiplayer_card_manager.gd"
 	const MULTIPLAYER_LOBBY = "res://scenes/Multiplayer/Lobby/multiplayer_lobby.gd"
 	const MULTIPLAYER_OPTIONS = "res://scenes/MainMenuScene/Multiplayer/multiplayer_options.gd"
 	const OPTIONS_DIALOG_SCRIPT = "res://scenes/MainMenuScene/Options/options_dialog_script.gd"
@@ -31,18 +32,19 @@ class Scenes:
 	const FINISH_GAME_SCENE = "res://scenes/CardScene/FinishGameScene.tscn"
 	const GAME_OPTIONS = "res://scenes/MainMenuScene/Options/game_options.tscn"
 	const MENU_SCENE = "res://scenes/MainMenuScene/menu_scene.tscn"
+	const MULTIPLAYER_GAME_SCENE = "res://scenes/Multiplayer/MultiplayerGame/multiplayer_game_scene.tscn"
 	const MULTIPLAYER_LOBBY_SCENE = "res://scenes/Multiplayer/Lobby/multiplayer_lobby_scene.tscn"
 	const MULTIPLAYER_OPTIONS = "res://scenes/MainMenuScene/Multiplayer/multiplayer_options.tscn"
-	const MULTIPLAYER_SCENE = "res://scenes/Multiplayer/Lobby/multiplayer_scene.tscn"
 	const PLAYER_IN_LOBBY_SCENE = "res://scenes/Multiplayer/Lobby/player_in_lobby_scene.tscn"
 	const SINGLEPLAYER_OPTIONS = "res://scenes/MainMenuScene/Singleplayer/singleplayer_options.tscn"
-	const SINGLEPLAYER_SCENE = "res://scenes/singleplayer_scene.tscn"
+	const SINGLEPLAYER_SCENE = "res://scenes/Singleplayer/singleplayer_scene.tscn"
 	const SWAP_BTN = "res://scenes/CardScene/swapBtn.tscn"
 
 class Resources:
 	const BACKGROUND_STYLEBLOX = "res://res/background_styleblox.tres"
 	const DARK_THEME = "res://res/dark_theme.tres"
 	const MENU_THEME = "res://res/menu_theme.tres"
+	const PLAY_SVG_802978C_6F_452_DDE_0C_40917B_7989F_9A_2D = "res://.godot/imported/play.svg-802978c6f452dde0c40917b7989f9a2d.res"
 
 class Images:
 	const GD_SYNC_PROTECTED = "res://GDSync-protected.png"

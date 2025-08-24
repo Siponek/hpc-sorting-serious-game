@@ -10,7 +10,7 @@ config_version=5
 
 [GD-Sync]
 
-version="0.10"
+version="0.11"
 protectedMode=false
 
 [application]
