@@ -62,8 +62,8 @@ func _ready():
 	# 1. Initial calculations and data generation
 	if num_cards < 1:
 		num_cards = 1 # Ensure at least 1 card
-		push_warning("CardManager: num_cards was less than 1, set to 1.")
-		
+		push_warning("CardManager: num_cards was less than 1, set to 1. Check for settings!")
+
 	values = generate_random_values()
 	sorted_all = values.duplicate()
 	sorted_all.sort()
@@ -92,17 +92,18 @@ func _ready():
 	# 5. Initial UI states
 	if sorted_cards_panel != null: # sorted_cards_panel is checked in _validate_node_references
 		sorted_cards_panel.visible = false
-	if Constants.DEBUG_MODE:
+	# Var tree mounting for debugging purposes
+	if OS.has_feature("debug"):
 		# TODO move this to separate class
 		# Debugging: Show the current scene path
-		var_tree.mount_var(self, "debug_info/card_cont", {
+		var_tree.mount_var(self, "dbg_game_info/card_cont", {
 			"font_color": Color.SEASHELL,
 			"format_callback": func(_value: Variant) -> String:
 				if card_container: # Ensure 'card_container' is available
 					return str(card_container.get_child_count())
 				return "0"
 		})
-		var_tree.mount_var(self, "debug_info/card_slots", {
+		var_tree.mount_var(self, "dbg_game_info/card_slots", {
 			"font_color": Color.SEASHELL,
 			"format_callback": func(_value: Variant) -> String:
 				var sum=0
@@ -112,6 +113,28 @@ func _ready():
 					return str(sum)
 				return "0"
 		})
+		if Settings.is_multiplayer:
+			#
+			var_tree.mount_var(self, "dbg_game_mp/multiplayer", {
+				"font_color": Color.AQUA,
+				"format_callback": func(_value: Variant) -> String:
+					return "ON"
+			})
+			var_tree.mount_var(self, "dbg_game_mp/IAmHost", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				return str(ConnectionManager.am_i_host())
+			})
+			var_tree.mount_var(self, "dbg_game_mp/currentLobbyID", {
+				"font_color": Color.SEASHELL,
+				"format_callback": func(_value: Variant) -> String:
+					return str(ConnectionManager.get_current_lobby_id())
+			})
+			var_tree.mount_var(self, "dbg_game_mp/Players count", {
+				"font_color": Color.SEASHELL,
+				"format_callback": func(_value: Variant) -> String:
+					return str(ConnectionManager.get_player_list().size())
+			})
 
 func _on_restart_game_button_pressed() -> void:
 	timer_node.reset_timer()
