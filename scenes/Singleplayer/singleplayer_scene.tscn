@@ -1,12 +1,12 @@
-[gd_scene load_steps=9 format=3 uid="uid://nxdomgvrs6j1"]
+[gd_scene load_steps=9 format=3 uid="uid://d3kykh26ao1gu"]
 
-[ext_resource type="Script" uid="uid://cgm7j0pq254kp" path="res://scenes/CardScene/scripts/card_manager.gd" id="1_cagap"]
-[ext_resource type="Theme" uid="uid://vuoefmjxurjo" path="res://res/dark_theme.tres" id="1_elcqy"]
-[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_flg1c"]
-[ext_resource type="Script" uid="uid://do0qtlv3uyb5b" path="res://scenes/timer_controller_script.gd" id="2_ejm32"]
-[ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="4_flg1c"]
-[ext_resource type="Script" uid="uid://vr5k0agbhj2l" path="res://scenes/scroll_container.gd" id="5_6qlf5"]
-[ext_resource type="Script" uid="uid://bpvwcjxfptkki" path="res://addons/var_tree/var_tree.gd" id="7_wlw1e"]
+[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_et7ul"]
+[ext_resource type="Script" uid="uid://do0qtlv3uyb5b" path="res://scenes/timer_controller_script.gd" id="2_v126x"]
+[ext_resource type="Script" uid="uid://cgm7j0pq254kp" path="res://scenes/CardScene/scripts/card_manager.gd" id="3_11tx2"]
+[ext_resource type="Theme" uid="uid://vuoefmjxurjo" path="res://res/dark_theme.tres" id="4_c4j03"]
+[ext_resource type="Script" uid="uid://vr5k0agbhj2l" path="res://scenes/scroll_container.gd" id="5_8sm1x"]
+[ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="6_62g6h"]
+[ext_resource type="Script" uid="uid://bpvwcjxfptkki" path="res://addons/var_tree/var_tree.gd" id="7_7qs7x"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cagap"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
@@ -41,7 +41,7 @@ offset_left = -216.5
 offset_right = 216.5
 offset_bottom = 64.0
 grow_horizontal = 2
-theme = ExtResource("1_flg1c")
+theme = ExtResource("1_et7ul")
 
 [node name="MarginContainer" type="MarginContainer" parent="TopBar/HeaderPanel"]
 layout_mode = 2
@@ -68,8 +68,8 @@ anchor_right = 1.0
 offset_left = -200.0
 offset_bottom = 60.0
 grow_horizontal = 0
-theme = ExtResource("1_flg1c")
-script = ExtResource("2_ejm32")
+theme = ExtResource("1_et7ul")
+script = ExtResource("2_v126x")
 
 [node name="MarginContainer" type="MarginContainer" parent="TopBar/TimerPanel"]
 layout_mode = 2
@@ -80,7 +80,7 @@ theme_override_constants/margin_bottom = 10
 
 [node name="TimerPlaceholder" type="RichTextLabel" parent="TopBar/TimerPanel/MarginContainer"]
 layout_mode = 2
-theme = ExtResource("1_flg1c")
+theme = ExtResource("1_et7ul")
 text = "Timer placeholder"
 fit_content = true
 scroll_active = false
@@ -101,13 +101,13 @@ metadata/_edit_use_anchors_ = true
 
 [node name="ShowSortedCardsButton" type="Button" parent="RightSideButtonsContainer"]
 layout_mode = 2
-theme = ExtResource("1_flg1c")
+theme = ExtResource("1_et7ul")
 theme_type_variation = &"ActionSidePanelButton"
 text = "Finish game"
 
 [node name="RestartGameButton" type="Button" parent="RightSideButtonsContainer"]
 layout_mode = 2
-theme = ExtResource("1_flg1c")
+theme = ExtResource("1_et7ul")
 theme_type_variation = &"ActionSidePanelButton"
 text = "Restart game"
 
@@ -152,7 +152,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 0
 alignment = 1
-script = ExtResource("1_cagap")
+script = ExtResource("3_11tx2")
 
 [node name="SwapButtonPanel" type="PanelContainer" parent="VBoxContainer"]
 visible = false
@@ -166,7 +166,7 @@ size_flags_vertical = 8
 
 [node name="SwapButtonContainer" type="HBoxContainer" parent="VBoxContainer/SwapButtonPanel/CenterContainer"]
 layout_mode = 2
-theme = ExtResource("1_elcqy")
+theme = ExtResource("4_c4j03")
 alignment = 1
 
 [node name="CardPanel" type="PanelContainer" parent="VBoxContainer"]
@@ -174,13 +174,13 @@ custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme = ExtResource("1_flg1c")
+theme = ExtResource("1_et7ul")
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/CardPanel"]
 clip_contents = false
 layout_mode = 2
 draw_focus_border = true
-script = ExtResource("5_6qlf5")
+script = ExtResource("5_8sm1x")
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/CardPanel/ScrollContainer"]
 layout_mode = 2
@@ -201,7 +201,7 @@ custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme = ExtResource("1_flg1c")
+theme = ExtResource("1_et7ul")
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/BufferZonePanel"]
 layout_mode = 2
@@ -224,7 +224,7 @@ layout_mode = 2
 size_flags_vertical = 3
 alignment = 1
 
-[node name="Background" parent="." instance=ExtResource("4_flg1c")]
+[node name="Background" parent="." instance=ExtResource("6_62g6h")]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -232,7 +232,7 @@ alignment = 1
 custom_minimum_size = Vector2(250, 150)
 offset_right = 200.0
 offset_bottom = 164.0
-script = ExtResource("7_wlw1e")
+script = ExtResource("7_7qs7x")
 metadata/_custom_type_script = "uid://bpvwcjxfptkki"
 
 [connection signal="pressed" from="RightSideButtonsContainer/RestartGameButton" to="VBoxContainer" method="_on_restart_game_button_pressed"]
