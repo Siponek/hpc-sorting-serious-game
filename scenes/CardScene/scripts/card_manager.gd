@@ -17,7 +17,7 @@ var is_animating = false
 
 # TODO would be cool to add coloring/theme selection to main menu,
 # so players can choose if they want rainbow or now
-	
+
 var card_colors: Array[Color] = [
 	Color.STEEL_BLUE,
 	Color.SEA_GREEN,
@@ -67,7 +67,7 @@ func _ready():
 	values = generate_random_values()
 	sorted_all = values.duplicate()
 	sorted_all.sort()
-	
+
 	# 2. UI Adjustments and Node Population
 	adjust_container_spacing()
 
@@ -189,7 +189,7 @@ func _validate_node_references() -> bool:
 	if not button_container:
 		printerr("CardManager: button_container (for swap buttons) not found. Path: $SwapButtonPanel/CenterContainer/SwapButtonContainer")
 		all_valid = false
-		
+
 	return all_valid
 
 func _connect_signals():
@@ -199,28 +199,25 @@ func _connect_signals():
 			# Ensure _on_card_placed_in_container can accept a Card argument if the signal sends one
 			# Or use a dedicated handler like _on_card_dropped_from_scroll_container(card: Card)
 			var error_code = scroll_container_node.connect("card_dropped_card_container", Callable(self, "_on_card_placed_in_container"))
-			if error_code == OK:
-				print_debug("CardManager: Connected scroll_container_node.card_dropped_card_container to _on_card_placed_in_container.")
-			else:
+			if error_code != OK:
 				printerr("CardManager: Failed to connect scroll_container_node.card_dropped_card_container. Error: %s" % error_code)
 		else:
 			printerr("CardManager: scroll_container_node does not have signal 'card_dropped_card_container'.")
-	
+
 	# Connect ShowSortedCardsButton
 	if show_sorted_button: # Already validated
 		if not show_sorted_button.is_connected("pressed", Callable(self, "_on_show_sorted_cards_button_pressed")):
 			show_sorted_button.connect("pressed", Callable(self, "_on_show_sorted_cards_button_pressed"))
 			_setup_button_glow_animation(show_sorted_button) # Setup glow after connecting
-			print_debug("CardManager: Connected show_sorted_button.pressed to _on_show_sorted_cards_button_pressed.")
 		else:
 			print_debug("CardManager: show_sorted_button.pressed already connected.")
-	
+
 	# Note: Signals from dynamically created slots are connected in create_buffer_slots()
 
 
 func generate_random_values() -> Array[int]:
 	var random_values_array: Array[int] = []
-	
+
 	# Generate new card values based on the selected range
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.randomize()
@@ -238,10 +235,10 @@ func generate_random_values() -> Array[int]:
 			var available_numbers: Array = []
 			for i in range(1, Settings.card_value_range + 1):
 				available_numbers.append(i)
-			
+
 			# Shuffle the list of available numbers
 			available_numbers.shuffle()
-			
+
 			for i in range(num_cards):
 				random_values_array.append(available_numbers[i]) # Take the first num_cards from the shuffled list
 	return random_values_array
@@ -249,29 +246,29 @@ func generate_random_values() -> Array[int]:
 func calculate_max_cards():
 	# Get screen width from constants
 	var screen_width = Constants.SCREEN_WIDTH
-	
+
 	# Account for margins (e.g., 10% of screen width for padding)
 	var usable_width = screen_width * 0.9
-	
+
 	# Get card width from constant or scene
 	var total_card_width = CARD_WIDTH + card_spacing
-	
+
 	# Calculate max cards_array that can fit
 	var max_cards = int(usable_width / total_card_width)
-	
+
 	# Ensure at least 2 cards_array (for sorting to make sense)
 	return max(2, max_cards)
 
 func adjust_container_spacing():
 	# Calculate available width (80% of screen width for cards_array)
 	var available_width = Constants.SCREEN_WIDTH * 0.8
-	
+
 	# Calculate total width taken by cards_array
 	var total_card_width = num_cards * CARD_WIDTH
-	
+
 	# Compute maximum spacing allowed (ensuring it doesn't exceed a chosen cap, e.g., 100)
 	var max_spacing = min(100, int((available_width - total_card_width) / (num_cards - 1)))
-	
+
 	# Ensure a minimum spacing of 10
 	card_spacing = max(10, max_spacing / 2)
 	# Apply spacing to the card container so that cards_array are properly separated
@@ -282,16 +279,16 @@ func adjust_container_spacing():
 	# Place the cards_array in container, calculate the positions and place the swap buttons there
 	button_spacing = (card_spacing * 2) + CARD_WIDTH - Constants.BUTTON_WIDTH
 	button_container.add_theme_constant_override("separation", button_spacing)
-	
+
 	# For the first button, set an offset so that its center lies directly in the gap between the first two cards_array.
 	# This offset is half the difference between the card width and the button width.
 	var first_button_offset: int = int((CARD_WIDTH - Constants.BUTTON_WIDTH) / 2.0)
 	$SwapButtonPanel/CenterContainer.add_theme_constant_override("margin_left", first_button_offset)
-	
-	print_debug("Max spacing set to: " + str(max_spacing))
-	print_debug("Card spacing set to: " + str(card_spacing))
-	print_debug("Button spacing set to: " + str(button_spacing))
-	print_debug("Button container offset: " + str(first_button_offset))
+
+	# print_debug("Max spacing set to: " + str(max_spacing))
+	# print_debug("Card spacing set to: " + str(card_spacing))
+	# print_debug("Button spacing set to: " + str(button_spacing))
+	# print_debug("Button container offset: " + str(first_button_offset))
 
 func generate_completed_card_array(_values_for_cards: Array[int], _name_prefix: String = "Card_") -> Array[Card]:
 	var array_to_be_filled: Array[Card] = []
@@ -300,6 +297,7 @@ func generate_completed_card_array(_values_for_cards: Array[int], _name_prefix: 
 	for i in range(num_cards):
 		var card_instance = card_scene.instantiate()
 		card_instance.set_card_value(_values_for_cards[i])
+		card_instance.set_card_container_ref(card_container) # Set the reference
 		card_instance.name = _name_prefix + str(i) + "_Val_" + str(_values_for_cards[i])
 		var new_card_style = StyleBoxFlat.new()
 		new_card_style.bg_color = card_colors[card_instance.value % card_colors.size()]
@@ -308,7 +306,7 @@ func generate_completed_card_array(_values_for_cards: Array[int], _name_prefix: 
 		# Save the initial relative position and the child index
 		card_instance.container_relative_position = card_instance.position
 		card_instance.original_index = card_instance.get_index()
-		
+
 		array_to_be_filled.append(card_instance)
 	return array_to_be_filled
 
@@ -317,14 +315,14 @@ func create_buffer_slots() -> Array:
 	# Clear any existing slots
 	for child in slot_container.get_children():
 		child.queue_free()
-	
+
 	# Create new _slots based on buffer_size
 	for i in range(buffer_size):
 		var slot = card_slot_scene.instantiate()
 		slot.slot_text = "Slot " + str(i + 1)
 		slot_container.add_child(slot)
 		_slots.append(slot)
-	
+
 	# You might want to connect signals from _slots to your manager
 	for slot in _slots:
 		# Optional: Connect any custom signals from your slot script
@@ -341,7 +339,7 @@ func _on_card_placed_in_container():
 		var seconds = int(timer_node_time) % 60
 		var minutes = int(float(timer_node_time) / 60)
 		var time_string = "%02d:%02d" % [minutes, seconds]
-		
+
 		var text_to_show = "Cards are sortedsuccessfully in %s with %d moves! 👍" % [time_string, move_count]
 		ToastParty.show({
 			"text": text_to_show, # Text (emojis can be used)
@@ -363,7 +361,7 @@ func _on_card_placed_in_slot(card, slot):
 	# Optional: Disable the card's dragging after placement
 	if card.has_method("set_can_drag"):
 		card.set_can_drag(true)
-	
+
 	if check_sorting_order():
 		var time_string = timer_node.getCurrentTimeAsString()
 		var text_to_show = "Cards are sortedsuccessfully in %s with %d moves! 👍" % [time_string, move_count]
@@ -408,7 +406,7 @@ func _setup_button_glow_animation(button: Button):
 
 	# Attempt to get the existing normal stylebox or create a new one
 	var stylebox_normal: StyleBoxFlat = null
-	
+
 	# Check if the button already has a theme override for "normal" stylebox
 	if button.has_theme_stylebox_override("normal"):
 		var existing_override = button.get_theme_stylebox_override("normal")
@@ -434,7 +432,7 @@ func _setup_button_glow_animation(button: Button):
 
 	# Apply the (potentially new or duplicated) stylebox to the button's normal state
 	button.add_theme_stylebox_override("normal", stylebox_normal)
-	
+
 	# Ensure other states don't look too different or also get a basic stylebox if they have none
 	# This part is optional and depends on your theme setup.
 	# For simplicity, we'll only animate the 'normal' state's bg_color.
@@ -444,17 +442,14 @@ func _setup_button_glow_animation(button: Button):
 	# Create a tween to animate the bg_color
 	var tween = get_tree().create_tween() # Use get_tree().create_tween() for persistent tweens
 	tween.set_loops() # Loop indefinitely
-	
+
 	# Animate from base_button_color to glow_button_color
 	tween.tween_property(stylebox_normal, "bg_color", glow_button_color, 3)
 	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		 
+
 	# Animate from glow_button_color back to base_button_color
 	tween.tween_property(stylebox_normal, "bg_color", base_button_color, 3)
 	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	
-	print_debug("CardManager: Button color pulse animation setup complete for button: ", button.name)
-
 
 func animate_card_swap(card_a, card_b):
 	# Kill any existing tweens on these cards_array
@@ -463,38 +458,38 @@ func animate_card_swap(card_a, card_b):
 		for tween in node.get_children():
 			if tween is Tween:
 				tweens_to_kill.append(tween)
-	
+
 	for tween in tweens_to_kill:
 		tween.kill()
-	
+
 	# Store original positions
 	var pos_a = card_a.global_position
 	var pos_b = card_b.global_position
-	
+
 	# Create a single tween for the entire animation
 	var tween = create_tween()
 	tween.set_parallel(true)
-	
+
 	# First step: Move cards_array up
 	tween.tween_property(card_a, "position:y", card_a.position.y - 30, 0.2)
 	tween.tween_property(card_b, "position:y", card_b.position.y - 30, 0.2)
-	
+
 	# Wait for up movement to complete
 	tween.chain()
-	
+
 	# Second step: Move horizontally
 	tween.tween_property(card_a, "global_position:x", pos_b.x, 0.3)
 	tween.tween_property(card_b, "global_position:x", pos_a.x, 0.3)
-	
+
 	# Wait for horizontal movement
 	tween.chain()
-	
+
 	# Third step: Move down
 	tween.tween_property(card_a, "position:y", card_a.position.y, 0.2)
 	tween.tween_property(card_b, "position:y", card_b.position.y, 0.2)
-	
+
 	return tween
-	
+
 func check_sorting_order() -> bool:
 	var sorted_correctly = true
 	if card_container.get_child_count() != num_cards:
@@ -527,6 +522,6 @@ func check_player_buffer_contiguity() -> bool:
 			print_debug("Buffer not full")
 			return false # Buffer not full
 		buffer_values.append(slot.occupied_by.value)
-	
+
 	# Now check if buffer_values is a contiguous subsequence of sorted_all
 	return SubarrayUtils.is_contiguous_subarray(sorted_all, buffer_values)

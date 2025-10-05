@@ -1,7 +1,6 @@
 class_name Card
 extends Control
-const CARD_CONTINAER_PATH: String = "SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
-
+var card_container_ref: Node = null
 var value: int = 0
 var can_drag: bool = true
 var is_dragging: bool = false
@@ -16,12 +15,17 @@ var managed_hover_style: StyleBoxFlat
 var managed_swap_highlight_style: StyleBoxFlat
 var is_mouse_hovering: bool = false
 var is_potential_swap_highlight: bool = false
-
+var SCROLL_CONTAINER_PATH: String
 signal card_grabbed(card)
 signal card_dropped(card, drop_position)
 
 @onready var panel_node: Panel = $Panel # Assuming your card's visual panel is named "Panel"
 func _ready():
+	#TODO make this somehow detached so multiplayer doesnt have to pick this way, or al least single source of truth
+	if Settings.is_multiplayer:
+		SCROLL_CONTAINER_PATH = "MultiPlayerScene/VBoxContainer/CardPanel/ScrollContainer"
+	else:
+		SCROLL_CONTAINER_PATH = "SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer"
 	container_relative_position = position
 	# (Optional:) Save the card's container index
 	if get_parent() != null:
@@ -52,6 +56,9 @@ func set_card_size(new_padding: Vector2):
 	self.set_custom_minimum_size(new_padding)
 	self.update_minimum_size()
 
+func set_card_container_ref(container: Node):
+	card_container_ref = container
+
 ## Set the value of the card and update the label
 func set_card_value(new_value: int):
 	value = new_value
@@ -70,13 +77,14 @@ func set_can_drag(_value: bool):
 
 # This function can be called from another script
 func reset_position(_card_container_node: Node):
-	assert(_card_container_node != null, "Card container not found in the scene tree.")
-	if get_parent() != _card_container_node: # Avoid re-adding if already there
+	var container = _card_container_node if _card_container_node else card_container_ref
+	assert(container != null, "Card container not found in the scene tree.")
+	if get_parent() != container: # Avoid re-adding if already there
 		if get_parent():
 			get_parent().remove_child(self)
-		_card_container_node.add_child(self)
+		container.add_child(self)
 	
-	_card_container_node.move_child(self, original_index)
+	container.move_child(self, original_index)
 	position = container_relative_position
 	current_slot = null
 	is_mouse_hovering = false # Reset hover state
@@ -107,10 +115,11 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 	if current_slot == null: # Dragged from main container
 		original_index = get_index()
 		# Notify scroll_container to hide this card and store it
-		var scroll_container_node = get_tree().get_root().get_node_or_null("SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer")
+		var scroll_container_node = get_tree().get_root().get_node_or_null(SCROLL_CONTAINER_PATH)
 		if scroll_container_node != null and scroll_container_node.has_method("_prepare_card_drag_from_container"):
 			scroll_container_node._prepare_card_drag_from_container(self)
 		else: # Fallback if direct call isn't set up: just hide
+			print("Warning: ScrollContainer node not found or method missing. Hiding card directly.", SCROLL_CONTAINER_PATH)
 			self.visible = false
 	return self
 	

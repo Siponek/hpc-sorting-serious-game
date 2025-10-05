@@ -4,7 +4,8 @@ extends ScrollContainer
 # we want to be able to scroll through the cards when there are too many cards to fit on the screen
 # and we want to be able to drag and drop cards between the slots. The dynamic container cannot be used for that
 # Because we need clear indication where we can drag the cards to.
-const CARD_CONTINAER_PATH: String = "SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
+var CARD_CONTAINER_PATH: String
+
 const DROP_PLACEHOLDER_SCENE: PackedScene = preload("res://scenes/CardScene/DropIndicator.tscn")
 var current_drop_placeholder: Control = null
 ### Tracks if a card is being dragged over this container
@@ -13,15 +14,23 @@ var is_dragging_card_over_self: bool = false
 var dragged_card_from_container_node: Card = null
 
 signal card_dropped_card_container()
-
-@onready var card_container: HBoxContainer = get_tree().get_root().get_node(CARD_CONTINAER_PATH)
+var card_container: HBoxContainer
 
 func _ready():
+	#TODO make this somehow detached so multiplayer doesnt have to pick this way, or al least single source of truth
+	if Settings.is_multiplayer:
+		CARD_CONTAINER_PATH = "MultiPlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
+	else:
+		CARD_CONTAINER_PATH = "SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
 	if DROP_PLACEHOLDER_SCENE:
 		current_drop_placeholder = DROP_PLACEHOLDER_SCENE.instantiate()
 		# Keep it out of the tree initially, or add and hide:
 		# add_child(current_drop_placeholder) # Optional: add to scroll container itself, not card_container
 		current_drop_placeholder.visible = false
+	card_container = get_tree().get_root().get_node(CARD_CONTAINER_PATH)
+	if card_container == null:
+		push_error("ScrollContainer: Card container not found at path: " + CARD_CONTAINER_PATH)
+		return
 
 ### Checking if card can be dropped
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
@@ -48,7 +57,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# Remove incoming_card_data from its previous parent if it's still in one (e.g. buffer slot)
 	if card_to_place.get_parent() != null:
 		card_to_place.get_parent().remove_child(card_to_place)
-	
+
 	var source_slot: CardBuffer = card_to_place.current_slot # Get current_slot before clearing it
 
 	# --- Determine insertion index ---
@@ -64,7 +73,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			final_insert_index = int((drop_x_in_container + effective_card_width / 2.0) / effective_card_width)
 		else:
 			final_insert_index = 0
-		
+
 		var num_actual_cards_at_drop = 0
 		for i in card_container.get_child_count():
 			if card_container.get_child(i) is Card:
@@ -78,7 +87,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			source_slot.occupied_by = null # CardBuffer will call _update_panel_visibility
 			source_slot._update_panel_visibility() # Explicitly call if not handled by setter
 		card_to_place.remove_from_slot() # Resets style, current_slot = null
-		
+
 		card_container.add_child(card_to_place)
 		card_container.move_child(card_to_place, final_insert_index)
 		card_to_place.set_can_drag(true)
@@ -88,14 +97,14 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 
 		# If card_to_place was the dragged_card_from_container_node, it was already removed.
 		# Otherwise, it's an incoming_card that wasn't part of this container before this drop.
-		
+
 		# Check if there's a card at the target destination to swap with
 		var target_card_at_destination: Card = null
 		if final_insert_index < card_container.get_child_count():
 			var node_at_target = card_container.get_child(final_insert_index)
 			if node_at_target is Card and node_at_target != card_to_place: # Ensure it's not the placeholder
 				target_card_at_destination = node_at_target
-		
+
 		card_container.add_child(card_to_place) # Add the card first
 
 		if target_card_at_destination != null: # Swapping with an existing card
@@ -153,10 +162,10 @@ func _process(_delta: float) -> void:
 
 		var mouse_pos_relative_to_scroll_container_viewport: Vector2 = get_local_mouse_position()
 		var local_mouse_pos_x_in_card_container: float = mouse_pos_relative_to_scroll_container_viewport.x + scroll_horizontal
-		
+
 		var card_spacing: float = card_container.get_theme_constant("separation", "HBoxContainer")
 		var effective_card_width: float = Constants.CARD_WIDTH + card_spacing
-		
+
 		var num_actual_cards: int = 0
 		for i in card_container.get_child_count():
 			var child = card_container.get_child(i)
@@ -171,13 +180,13 @@ func _process(_delta: float) -> void:
 			# Add half of effective_card_width to mouse_pos.x to make insertion point appear "between" cards
 			# when mouse is over the latter half of a card's space.
 			potential_insert_index = int((local_mouse_pos_x_in_card_container + effective_card_width / 2.0) / effective_card_width)
-		
+
 		potential_insert_index = clamp(potential_insert_index, 0, num_actual_cards)
 
 
 		if not current_drop_placeholder.is_inside_tree():
 			card_container.add_child(current_drop_placeholder)
-		
+
 		# Ensure placeholder is not considered in its own positioning calculation for move_child
 		var current_placeholder_idx = -1
 		if current_drop_placeholder.is_inside_tree() and current_drop_placeholder.get_parent() == card_container:
@@ -185,7 +194,7 @@ func _process(_delta: float) -> void:
 
 		if current_placeholder_idx != potential_insert_index:
 			card_container.move_child(current_drop_placeholder, potential_insert_index)
-		
+
 		current_drop_placeholder.visible = true
 	else:
 		if is_dragging_card_over_self: # Mouse just exited

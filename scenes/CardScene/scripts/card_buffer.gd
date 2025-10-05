@@ -10,10 +10,18 @@ extends VBoxContainer
 @onready var panel: Panel = $Panel
 @onready var label: Label = $Panel/CenterContainer/Label # Assuming this is the label showing slot_text
 var occupied_by: Card = null # Explicitly type if possible
+var CARD_CONTAINER_PATH: String
 signal card_placed_in_slot(card, slot)
 signal card_removed(card, slot)
 
 func _ready() -> void:
+	#TODO make this somehow detached so multiplayer doesnt have to pick this way, or al least single source of truth
+	if Settings.is_multiplayer:
+		CARD_CONTAINER_PATH = "MultiPlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
+	else:
+		CARD_CONTAINER_PATH = "SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
+
+
 	# panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER # This might be okay depending on desired panel behavior
 	label.text = slot_text
 	_update_panel_visibility() # Set initial state
@@ -29,7 +37,7 @@ func _update_panel_visibility():
 	else:
 		# Show panel (and its child label) when slot is empty
 		panel.visible = true
-	print("Panel visibility updated: %s" % [panel.visible])
+	# print("Panel visibility updated: %s" % [panel.visible])
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	print("Checking if data can be dropped in slot %s" % [slot_text])
@@ -45,9 +53,9 @@ func _get_drag_data(_position):
 		# The card is expected to be a child of this VBoxContainer if it's 'occupied_by' this slot.
 		if card_to_drag.get_parent() == self:
 			remove_child(card_to_drag) # Visually remove from this slot for dragging
-		
+
 		card_to_drag.set_drag_preview(card_to_drag.create_drag_preview())
-		
+
 		_update_panel_visibility() # Update visibility as slot is now empty
 		emit_signal("card_removed", card_to_drag, self)
 		return card_to_drag
@@ -59,7 +67,10 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	if data is not Control: # or !data.has_method("set_card_value"):
 		return
 
-	var card_container_node = get_tree().get_root().get_node("SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer")
+	var card_container_node = get_tree().get_root().get_node(CARD_CONTAINER_PATH)
+	if card_container_node == null:
+		push_error("CardBuffer: Cannot find card container at path: " + CARD_CONTAINER_PATH)
+		return
 	var incoming_card: Card = data
 	var source_slot: CardBuffer = incoming_card.current_slot # The slot the incoming card *was* in, if any. Null if from container.
 

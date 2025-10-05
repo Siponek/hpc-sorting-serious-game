@@ -115,10 +115,11 @@ func update_player_list_ui(players_map: Dictionary):
 		client_ui_instance.set_client_id(client_id)
 		clients_ui_nodes[client_id] = client_ui_instance
 		GDSync.set_gdsync_owner(client_ui_instance, client_id)
-		GDSync.call_func_on(
-			client_id, GDSync.set_gdsync_owner, [client_ui_instance, client_id]
-		)
-				# Setup locally first (for the host view)
+		# TODO this is creating error somethere
+		# GDSync.call_func_on(
+		# 	client_id, GDSync.set_gdsync_owner, [client_ui_instance, client_id]
+		# )
+		# Setup locally first (for the host view)
 		client_ui_instance.setup_player_display(client_id, player_data)
 		client_ui_instance.determine_and_set_color(actual_host_id, client_id)
 		await get_tree().process_frame
@@ -186,4 +187,6 @@ func prepare_for_game_transition() -> void:
 
 func transition_to_multiplayer_game():
 	print("MultiplayerLobby: Transitioning to multiplayer game scene")
+	# add some flag or env variable to indicate multiplayer mode
+	Settings.is_multiplayer = true
 	SceneManager.goto_scene(ProjectFiles.Scenes.MULTIPLAYER_GAME_SCENE)
