@@ -31,6 +31,7 @@ func _ready():
 
 	GDSync.expose_func(self.clear_player_list_ui)
 	GDSync.expose_func(self.transition_to_multiplayer_game)
+	GDSync.expose_func(self.sync_game_settings)
 	# Initial population of the lobby
 	# The lobby_id should be set by the scene that creates this one,
 	# or this scene should fetch it from ConnectionManager.
@@ -159,34 +160,60 @@ func _on_start_game_button_pressed() -> void:
 			"text": "Host is starting the game...",
 			"bgcolor": Color.BLUE
 		}])
-		GDSync.call_func(prepare_for_game_transition, [])
-
-		# Short delay to ensure all clients see the message
+		
+		# First, sync game settings to all clients
+		var game_settings = {
+			"buffer_slots": int(options_buffer_slots_count),
+			"cards_count": int(options_cards_count),
+			"card_range": int(options_card_range)
+		}
+		
+		print("MultiplayerLobby: Broadcasting settings:")
+		print("  - Buffer slots: ", game_settings.buffer_slots)
+		print("  - Cards count: ", game_settings.cards_count)
+		print("  - Card range: ", game_settings.card_range)
+		
+		# Broadcast settings to all clients
+		GDSync.call_func(self.sync_game_settings, [game_settings])
+		
+		# Apply settings locally for host
+		sync_game_settings(game_settings)
+		
+		# Wait to ensure settings are synced
+		await get_tree().create_timer(0.5).timeout
+		
+		# Then transition everyone to game
+		GDSync.call_func(self.prepare_for_game_transition, [])
+		prepare_for_game_transition()
+		
 		await get_tree().create_timer(1.0).timeout
-		#TODO make this somehow configurable for both singleplayer and multiplayer
-
-		print("Settings -> Buffer slots: " + str(options_buffer_slots_count))
-		print("Settings -> Number of cards: " + str(options_cards_count))
-		print("Settings -> Card value range: " + str(options_card_range))
-		# Save these options, for example in a global (autoload) settings singleton:
-		Settings.player_buffer_count = int(options_buffer_slots_count)
-		Settings.cards_count = int(options_cards_count)
-		Settings.card_value_range = int(options_card_range)
-
-		# Transition all players to the multiplayer game scene
-		GDSync.call_func(transition_to_multiplayer_game, [])
-
-		# Transition ourselves
+		
+		# Transition all players
+		GDSync.call_func(self.transition_to_multiplayer_game, [])
 		transition_to_multiplayer_game()
 	else:
 		push_error("MultiplayerLobby: Client tried to press start game button!")
 
+func sync_game_settings(settings: Dictionary):
+	"""Apply game settings received from host"""
+	print("MultiplayerLobby: Syncing game settings: ", settings)
+	
+	Settings.player_buffer_count = settings.buffer_slots
+	Settings.cards_count = settings.cards_count
+	Settings.card_value_range = settings.card_range
+	Settings.is_multiplayer = true
+	
+	print("MultiplayerLobby: Settings applied:")
+	print("  - Buffer count: ", Settings.player_buffer_count)
+	print("  - Cards count: ", Settings.cards_count)
+	print("  - Card range: ", Settings.card_value_range)
+
 func prepare_for_game_transition() -> void:
 	# Prepare data, show loading indicator, etc.
 	ToastParty.show({"text": "Preparing game...", "bgcolor": Color.BLUE})
+	print("MultiplayerLobby: Preparing for game transition")
 
 func transition_to_multiplayer_game():
 	print("MultiplayerLobby: Transitioning to multiplayer game scene")
 	# add some flag or env variable to indicate multiplayer mode
-	Settings.is_multiplayer = true
 	SceneManager.goto_scene(ProjectFiles.Scenes.MULTIPLAYER_GAME_SCENE)
