@@ -10,7 +10,7 @@ config_version=5
 
 [GD-Sync]
 
-version="0.12"
+version="0.13"
 protectedMode=false
 
 [application]
@@ -23,6 +23,7 @@ config/windows_native_icon="res://icon.ico"
 
 [autoload]
 
+Logger="*res://lib/logger/logger.gd"
 Constants="*res://scenes/scripts/constants.gd"
 SceneManager="*res://scene_manager.gd"
 Settings="*res://settings.gd"
@@ -31,8 +32,8 @@ ThemeAutoapplier="*res://scenes/scripts/theme_autoapplier.gd"
 DragState="*res://scenes/scripts/drag_state.gd"
 ToastParty="*res://addons/toastparty/toast-autoload.gd"
 PackRTC="*res://addons/packrtc/scripts/PackRTC.gd"
-ConnectionManager="*res://scenes/Multiplayer/connection_manager.gd"
 GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
+ConnectionManager="*res://scenes/Multiplayer/connection_manager.gd"
 
 [dotnet]
 
