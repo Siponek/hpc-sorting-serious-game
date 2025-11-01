@@ -1,0 +1,14 @@
+[project]
+name = "godot-tools"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["gdtoolkit>=4.5.0"]
+
+# Make the 'dev' group active for uv run/sync so gdtoolkit is present
+[tool.uv]
+default-groups = ["dev"]

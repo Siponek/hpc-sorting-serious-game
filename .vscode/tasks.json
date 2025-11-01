@@ -1,0 +1,43 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Format: GDScript (gdformat, file)",
+            "type": "shell",
+            "command": "uv run gdformat \"${file}\"",
+            "problemMatcher": []
+        },
+        {
+            "label": "Format: GDScript (gdformat, project)",
+            "type": "shell",
+            "command": "uv run gdformat .",
+            "problemMatcher": []
+        },
+        {
+            "label": "Lint: GDScript (gdlint, file)",
+            "type": "shell",
+            "command": "uv run gdlint \"${file}\"",
+            "problemMatcher": {
+                "owner": "gdlint",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*?):(\\d+):\\s+(Error|Warning):\\s+(.*)\\s+\\((.*)\\)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4,
+                    "code": 5
+                }
+            }
+        },
+        {
+            "label": "Lint: GDScript (gdlint, project)",
+            "type": "shell",
+            "command": "uv run gdlint .",
+            "problemMatcher": "$gdlint"
+        }
+    ]
+}

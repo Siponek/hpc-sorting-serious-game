@@ -1,0 +1,5 @@
+excluded_directories: !!set
+  .git: null
+line_length: 80
+safety_checks: true
+use_spaces: null
