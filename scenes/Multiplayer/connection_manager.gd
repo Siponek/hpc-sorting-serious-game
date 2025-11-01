@@ -22,8 +22,10 @@ var local_client_id: int = -1
 var actual_lobby_host_id: int = -1
 ### To store found lobbies
 var discovered_lobbies: Array = []
+var logger: ColorfulLogger
 
 func _ready():
+	logger = Logger.get_logger(self)
 	# Connect to GDSync signals here
 	GDSync.connected.connect(_on_gdsync_connected)
 	GDSync.connection_failed.connect(_on_gdsync_connection_failed)
@@ -40,7 +42,7 @@ func _ready():
 	GDSync.expose_var(self, "actual_lobby_host_id")
 # --- Public API Methods ---
 func start_hosting_lobby(lobby_name: String, _password: String = "", _is_public: bool = true, _player_limit: int = 0):
-	# print("ConnectionManager: Attempting to create lobby: ", lobby_name)
+	# logger.log_info("Attempting to create lobby: ", lobby_name)
 	# GDSync.lobby_create(lobby_name, passw password, is_public, player_limit)
 	GDSync.lobby_create(lobby_name)
 
@@ -48,12 +50,12 @@ func start_hosting_lobby(lobby_name: String, _password: String = "", _is_public:
 func ensure_multiplayer_started():
 	if not GDSync.is_active(): # Or appropriate check for GDSync
 		GDSync.start_local_multiplayer()
-		print("ConnectionManager: Started local multiplayer.")
+		logger.log_info("Started local multiplayer.")
 	else:
-		print("ConnectionManager: Local multiplayer already started or connected.")
+		logger.log_info("Local multiplayer already started or connected.")
 
 func find_lobbies():
-	# print("ConnectionManager: Requesting lobby list from GDSync.")
+	# logger.log_info("Requesting lobby list from GDSync.")
 	#Assing return array or just empty array if the result is null
 	GDSync.get_public_lobbies()
 	# GDSync will emit 'lobby_list_updated' when results are available
@@ -64,19 +66,19 @@ func get_lobby_host_id() -> int:
 	return actual_lobby_host_id
 
 func join_existing_lobby(lobby_id_to_join: String, password: String = ""):
-	# print("ConnectionManager: Attempting to join lobby: ", lobby_id_to_join)
+	# logger.log_info("Attempting to join lobby: ", lobby_id_to_join)
 	GDSync.lobby_join(lobby_id_to_join, password)
 
 func leave_current_lobby():
 	if current_lobby_name_id != "":
-		# print("ConnectionManager: Leaving lobby: ", current_lobby_name_id)
+		# logger.log_info("Leaving lobby: ", current_lobby_name_id)
 		GDSync.lobby_leave()
 		if GDSync.lobby_get_player_count() < 1: # Check if you are the last one
 			GDSync.lobby_close() # This might trigger _on_gdsync_lobby_closed
 		emit_signal("lobby_closed")
 		_reset_lobby_state()
 	else:
-		print("ConnectionManager: Not in a lobby to leave.")
+		logger.log_info("Not in a lobby to leave.")
 
 func get_player_list() -> Dictionary:
 	return connected_clients.duplicate(true)
@@ -93,7 +95,7 @@ func get_my_client_id() -> int:
 # --- GDSync Signal Handlers (Internal) ---
 func _on_gdsync_connected():
 	local_client_id = GDSync.get_client_id()
-	# print("ConnectionManager: Connected to multiplayer. Client ID: ", local_client_id)
+	# logger.log_info("Connected to multiplayer. Client ID: ", local_client_id)
 	emit_signal("connected_to_multiplayer")
 
 func _on_gdsync_connection_failed(error: int):
@@ -107,7 +109,7 @@ func _on_gdsync_connection_failed(error: int):
 	emit_signal("connection_to_multiplayer_failed", error)
 
 func _on_gdsync_lobby_created(lobby_id: String):
-	# print("ConnectionManager: Lobby created successfully. ID: ", lobby_id)
+	# logger.log_info("Lobby created successfully. ID: ", lobby_id)
 	current_lobby_name_id = lobby_id
 	is_currently_host = true
 	local_client_id = GDSync.get_client_id()
@@ -133,7 +135,7 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 	emit_signal("lobby_creation_has_failed", lobby_name, error_message)
 
 func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_id here too
-	# print("ConnectionManager: Successfully joined lobby: ", lobby_name_id)
+	# logger.log_info("Successfully joined lobby: ", lobby_name_id)
 	current_lobby_name_id = lobby_name_id
 	is_currently_host = GDSync.is_host() # Update host status
 	emit_signal("joined_lobby_successfully", lobby_name_id)
@@ -159,7 +161,7 @@ func _on_gdsync_lobby_join_failed(lobby_name: String, error_code: int):
 func _on_gdsync_client_joined(client_id: int):
 	if client_id == local_client_id and is_currently_host:
 		if not connected_clients.has(client_id):
-			# print("ConnectionManager: Host (self) officially noted in lobby. ID: ", client_id)
+			# logger.log_info("Host (self) officially noted in lobby. ID: ", client_id)
 			connected_clients[client_id] = {"name": "Player " + str(client_id)
 			}
 			emit_signal("player_list_updated", connected_clients)
@@ -169,23 +171,23 @@ func _on_gdsync_client_joined(client_id: int):
 				"text": "Error, You are already in the lobby as host!",
 				"bgcolor": Color.ROSY_BROWN,
 			})
-			# print("ConnectionManager: Host (self) re-announced or already present in lobby. ID: ", client_id)
+			# logger.log_info("Host (self) re-announced or already present in lobby. ID: ", client_id)
 		return
 
 
 	if not connected_clients.has(client_id):
-		print("ConnectionManager: Client joined lobby. ID: ", client_id)
+		logger.log_info("Client joined lobby. ID: ", client_id)
 		connected_clients[client_id] = {"name": "Player " + str(client_id)
 		}
 		emit_signal("player_list_updated", connected_clients)
 		emit_signal("player_joined_lobby", client_id)
 	else:
-		print("ConnectionManager: Client ", client_id, " re-announced or already present.")
+		logger.log_info("Client ", client_id, " re-announced or already present.")
 
 
 func _on_gdsync_client_left(client_id: int):
 	if connected_clients.has(client_id):
-		print("ConnectionManager: Client left lobby. ID: ", client_id)
+		logger.log_info("Client left lobby. ID: ", client_id)
 		connected_clients.erase(client_id)
 		emit_signal("player_list_updated", connected_clients)
 		emit_signal("player_left_lobby", client_id)
@@ -195,12 +197,12 @@ func _on_gdsync_client_left(client_id: int):
 
 
 func _on_gdsync_lobby_closed():
-	print("ConnectionManager: Lobby has been closed.")
+	logger.log_info("Lobby has been closed.")
 	_reset_lobby_state()
 	emit_signal("lobby_closed")
 
 func _on_gdsync_lobby_list_updated(lobbies: Array):
-	print("ConnectionManager: Received lobby list update. Count: ", lobbies.size())
+	logger.log_info("Received lobby list update. Count: ", lobbies.size())
 	discovered_lobbies = lobbies
 	emit_signal("discovered_lobbies_updated", discovered_lobbies)
 

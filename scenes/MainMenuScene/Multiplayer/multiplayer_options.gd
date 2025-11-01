@@ -3,7 +3,7 @@ extends Window
 const multiplayer_lobby_scene: PackedScene = preload(ProjectFiles.Scenes.MULTIPLAYER_LOBBY_SCENE)
 var lobby_id_to_join: String = "wololo"
 var selected_lobby_id_from_list: String = "" # To store ID from ItemList
-
+@onready var logger = Logger.get_logger(self)
 @onready var lobby_start_name_input: LineEdit = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/NameServerLineEdit # Get lobby name from UI
 @onready var lobby_join_id_input: LineEdit = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer/CodeFieldLineEdit
 @onready var lobby_list_ui: ItemList = $MarginContainer/HBoxContainer/LobbyListVBoxContainer/MarginContainer/LobbyList
@@ -53,7 +53,7 @@ func _on_host_game_button_pressed() -> void:
 	)
 
 func _on_connection_manager_lobby_created(lobby_id: String):
-	print("MultiplayerOptions: Lobby created successfully via ConnectionManager! ID: ", lobby_id)
+	logger.log_info("Lobby created successfully via ConnectionManager! ID: ", lobby_id)
 	var lobby_scene_instance = multiplayer_lobby_scene.instantiate()
 	# It's important that the lobby_scene itself knows how to get its ID
 	# or that ConnectionManager provides it when the lobby scene is shown.
@@ -96,7 +96,7 @@ func _on_join_game_button_pressed() -> void:
 	ConnectionManager.join_existing_lobby(lobby_id_to_attempt_join)
 
 func _on_connection_manager_joined_lobby(lobby_id: String):
-	print("MultiplayerOptions: JOINED lobby successfully via ConnectionManager! ID: ", lobby_id)
+	logger.log_info("JOINED lobby successfully via ConnectionManager! ID: ", lobby_id)
 	var lobby_scene_instance = multiplayer_lobby_scene.instantiate()
 	if get_parent() and get_parent().has_method("_open_instantiated_dialog"):
 		get_parent().dialog_open = false
@@ -142,12 +142,12 @@ func _on_lobby_list_item_selected(index: int):
 	if lobby_list_ui.is_item_disabled(index):
 		selected_lobby_id_from_list = ""
 		join_game_button.disabled = true
-		print("MultiplayerOptions: Selected item is disabled, cannot join.")
+		logger.log_info("Selected item is disabled, cannot join.")
 		return
 		
 	selected_lobby_id_from_list = lobby_list_ui.get_item_metadata(index)
 	lobby_join_id_input.text = "" # Clear code field if a list item is selected
-	print("MultiplayerOptions: Selected lobby ID from list: ", selected_lobby_id_from_list)
+	logger.log_info("Selected lobby ID from list: ", selected_lobby_id_from_list)
 	join_game_button.disabled = selected_lobby_id_from_list.is_empty()
 
 

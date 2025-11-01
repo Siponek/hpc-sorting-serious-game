@@ -19,7 +19,8 @@ var SCROLL_CONTAINER_PATH: String
 signal card_grabbed(card)
 signal card_dropped(card, drop_position)
 
-@onready var panel_node: Panel = $Panel # Assuming your card's visual panel is named "Panel"
+@onready var panel_node: Panel = $Panel
+@onready var logger = Logger.get_logger(self)
 func _ready():
 	#TODO make this somehow detached so multiplayer doesnt have to pick this way, or al least single source of truth
 	if Settings.is_multiplayer:
@@ -119,7 +120,7 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 		if scroll_container_node != null and scroll_container_node.has_method("_prepare_card_drag_from_container"):
 			scroll_container_node._prepare_card_drag_from_container(self)
 		else: # Fallback if direct call isn't set up: just hide
-			print("Warning: ScrollContainer node not found or method missing. Hiding card directly.", SCROLL_CONTAINER_PATH)
+			logger.log_warning("ScrollContainer node not found or method missing. Hiding card directly.", SCROLL_CONTAINER_PATH)
 			self.visible = false
 	return self
 	

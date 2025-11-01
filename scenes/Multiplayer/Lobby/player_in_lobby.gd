@@ -23,6 +23,7 @@ const kick_button_path: NodePath = "MarginContainer/HBoxContainer/KickPlayerButt
 			kick_button.set_meta("client_id", value)
 @onready var player_name_label: Label = get_node_or_null(player_name_label_path)
 @onready var kick_button: Button = get_node_or_null(kick_button_path)
+@onready var logger = Logger.get_logger(self)
 var client_id: int = -1
 
 func _ready() -> void:
@@ -37,10 +38,10 @@ func _ready() -> void:
 	client_id = ConnectionManager.get_my_client_id()
 
 # func _multiplayer_ready():
-# 	print("PlayerInLobby: Multiplayer ready for client ID: ", client_id)
+# 	logger.log_info("Multiplayer ready for client ID: ", client_id)
 
 func setup_player_display(id: int, data: Dictionary) -> void:
-	print("PlayerInLobby: Setting up player display for ID: ", id, " with data: ", data)
+	logger.log_info("Setting up player display for ID: ", id, " with data: ", data)
 	# Set root node properties - these will sync automatically
 	self.set_client_id(id)
 	self.set_player_name(data.get("name", "Player " + str(id)))
@@ -68,7 +69,7 @@ func set_player_color(color: Color) -> void:
 	self.display_color = color
 
 func print_please():
-	print("PlayerInLobby: Please call me with a client ID to set up the player display.")
+	logger.log_info("Please call me with a client ID to set up the player display.")
 	print("Current client ID: ", client_id)
 
 func determine_and_set_color(actual_host_id: int, remote_client_id: int) -> void:

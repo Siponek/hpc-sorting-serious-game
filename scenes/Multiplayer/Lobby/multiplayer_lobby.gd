@@ -9,7 +9,7 @@ const start_game_button_path: NodePath = "MarginContainer/VBoxContainer2/HBoxCon
 @onready var options_cards_count = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardCountSpinBox.value
 @onready var options_card_range = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardRangeSpinBox.value
 @onready var options_container = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions
-
+@onready var logger = Logger.get_logger(self)
 
 func _ready():
 	var start_game_button: Button = self.get_node(start_game_button_path)
@@ -62,7 +62,7 @@ func _ready():
 
 func set_lobby_id(id: String) -> void:
 	self.get_node(label_lobby_name_path).text = "Lobby ID: " + id
-	print("MultiplayerLobby: UI received lobby ID: ", id)
+	logger.log_info("UI received lobby ID: ", id)
 
 func clear_player_list_ui() -> void:
 	# Clear the player list UI
@@ -72,7 +72,7 @@ func clear_player_list_ui() -> void:
 	clients_ui_nodes.clear()
 
 func _on_cm_player_joined(client_id: int):
-	print("MultiplayerLobby: Player joined event from CM. ID: ", client_id)
+	logger.log_info("Player joined event from CM. ID: ", client_id)
 	# This signal might be redundant if player_list_updated is comprehensive.
 	# If player_list_updated always follows, you might only need to connect to that.
 	# For now, let's assume we want a specific toast for a new joiner.
@@ -89,7 +89,7 @@ func _on_cm_player_joined(client_id: int):
 	})
 
 func _on_cm_player_left(client_id: int):
-	print("MultiplayerLobby: Player left event from CM. ID: ", client_id)
+	logger.log_info("Player left event from CM. ID: ", client_id)
 	ToastParty.show({
 		"text": "Player (" + str(client_id) + ") left.", # Ideally, get player name before they are removed from CM's list
 		"bgcolor": Color.LIGHT_CORAL,
@@ -97,7 +97,7 @@ func _on_cm_player_left(client_id: int):
 	})
 
 func _on_cm_player_list_updated(players_map: Dictionary):
-	# print("MultiplayerLobby: Player list updated event from CM. Players: ", players_map.size())
+	# logger.log_info("Player list updated event from CM. Players: ", players_map.size())
 	self.clear_player_list_ui()
 	GDSync.call_func(clear_player_list_ui, [])
 	if ConnectionManager.am_i_host():
@@ -139,7 +139,7 @@ func update_player_list_ui(players_map: Dictionary):
 
 
 func _on_cm_lobby_closed():
-	print("MultiplayerLobby: Lobby closed event from CM.")
+	logger.log_info("Lobby closed event from CM.")
 	ToastParty.show({
 		"text": "The lobby has been closed.",
 		"bgcolor": Color.GRAY
@@ -147,13 +147,13 @@ func _on_cm_lobby_closed():
 	self.close_requested.emit() # Close this lobby window
 
 func _on_leave_lobby_button_pressed() -> void:
-	print("MultiplayerLobby: Requesting to leave lobby via ConnectionManager.")
+	logger.log_info("Requesting to leave lobby via ConnectionManager.")
 	ConnectionManager.leave_current_lobby()
 	self.close_requested.emit()
 
 func _on_start_game_button_pressed() -> void:
 	if ConnectionManager.am_i_host():
-		print("MultiplayerLobby: Host is starting the game...")
+		logger.log_info("Host is starting the game...")
 
 		# Show preparation message
 		GDSync.call_func(ToastParty.show, [ {
@@ -168,7 +168,7 @@ func _on_start_game_button_pressed() -> void:
 			"card_range": int(options_card_range)
 		}
 		
-		print("MultiplayerLobby: Broadcasting settings:")
+		logger.log_info("Broadcasting settings:")
 		print("  - Buffer slots: ", game_settings.buffer_slots)
 		print("  - Cards count: ", game_settings.cards_count)
 		print("  - Card range: ", game_settings.card_range)
@@ -196,14 +196,14 @@ func _on_start_game_button_pressed() -> void:
 
 func sync_game_settings(settings: Dictionary):
 	"""Apply game settings received from host"""
-	print("MultiplayerLobby: Syncing game settings: ", settings)
+	logger.log_info("Syncing game settings: ", settings)
 	
 	Settings.player_buffer_count = settings.buffer_slots
 	Settings.cards_count = settings.cards_count
 	Settings.card_value_range = settings.card_range
 	Settings.is_multiplayer = true
 	
-	print("MultiplayerLobby: Settings applied:")
+	logger.log_info("Settings applied:")
 	print("  - Buffer count: ", Settings.player_buffer_count)
 	print("  - Cards count: ", Settings.cards_count)
 	print("  - Card range: ", Settings.card_value_range)
@@ -211,9 +211,9 @@ func sync_game_settings(settings: Dictionary):
 func prepare_for_game_transition() -> void:
 	# Prepare data, show loading indicator, etc.
 	ToastParty.show({"text": "Preparing game...", "bgcolor": Color.BLUE})
-	print("MultiplayerLobby: Preparing for game transition")
+	logger.log_info("Preparing for game transition")
 
 func transition_to_multiplayer_game():
-	print("MultiplayerLobby: Transitioning to multiplayer game scene")
+	logger.log_info("Transitioning to multiplayer game scene")
 	# add some flag or env variable to indicate multiplayer mode
 	SceneManager.goto_scene(ProjectFiles.Scenes.MULTIPLAYER_GAME_SCENE)
