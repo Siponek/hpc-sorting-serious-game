@@ -4,7 +4,7 @@ var _loggers: Dictionary = {}
 
 
 # Get logger with automatic name detection from calling script
-func get_logger(caller: Object = null) -> ColorfulLogger:
+func get_logger(caller: Object = null, minimal_name: bool = true) -> ColorfulLogger:
 	var _name: String
 
 	if caller != null and caller.get_script() != null:
@@ -15,7 +15,10 @@ func get_logger(caller: Object = null) -> ColorfulLogger:
 		# Try to append game_debug_id if Constants is ready
 		var debug_id = Constants.get_game_debug_id()
 		if debug_id != "":
-			_name = "%s-Client%s" % [base_name, debug_id]
+			if minimal_name:
+				_name = "Client-%s" % [debug_id]
+			else:
+				_name = "%s-Client%s" % [base_name, debug_id]
 		else:
 			_name = base_name
 	else:
