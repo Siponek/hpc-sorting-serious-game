@@ -4,6 +4,7 @@ extends ScrollContainer
 # we want to be able to scroll through the cards when there are too many cards to fit on the screen
 # and we want to be able to drag and drop cards between the slots. The dynamic container cannot be used for that
 # Because we need clear indication where we can drag the cards to.
+@onready var logger = Logger.get_logger(self)
 var CARD_CONTAINER_PATH: String
 
 const DROP_PLACEHOLDER_SCENE: PackedScene = preload("res://scenes/CardScene/DropIndicator.tscn")
@@ -13,7 +14,7 @@ var is_dragging_card_over_self: bool = false
 ### Stores the actual card node if dragged from this container
 var dragged_card_from_container_node: Card = null
 
-signal card_dropped_card_container()
+signal card_dropped_card_container(dropped_card: Card, was_in_buffer: bool, original_slot: Variant)
 var card_container: HBoxContainer
 
 func _ready():
@@ -53,7 +54,8 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		# Card came from a buffer slot or another source
 		card_to_place = incoming_card_data
 
-
+	var was_in_buffer = (card_to_place.current_slot != null)
+	var original_slot_ref = card_to_place.current_slot
 	# Remove incoming_card_data from its previous parent if it's still in one (e.g. buffer slot)
 	if card_to_place.get_parent() != null:
 		card_to_place.get_parent().remove_child(card_to_place)
@@ -92,7 +94,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		card_container.move_child(card_to_place, final_insert_index)
 		card_to_place.set_can_drag(true)
 	else: # Card came FROM the container itself (swapping or reordering)
-		print_debug("Card %d dropped within container, targeting index %d" % [card_to_place.value, final_insert_index])
+		logger.log_info("Card %d dropped within container, targeting index %d" % [card_to_place.value, final_insert_index])
 		var source_index = card_to_place.original_index # Where the card started (if not hidden) or where it was if hidden
 
 		# If card_to_place was the dragged_card_from_container_node, it was already removed.
@@ -108,7 +110,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		card_container.add_child(card_to_place) # Add the card first
 
 		if target_card_at_destination != null: # Swapping with an existing card
-			print_debug("Swapping card %d with card %d (at index %d)" % [card_to_place.value, target_card_at_destination.value, final_insert_index])
+			logger.log_info("Swapping card %d with card %d (at index %d)" % [card_to_place.value, target_card_at_destination.value, final_insert_index])
 			# card_to_place is added, target_card_at_destination is at final_insert_index (or final_insert_index+1 if card_to_place was added before it)
 			# The HBoxContainer will shift things. We need to place card_to_place at final_insert_index,
 			# and the card that *was* there needs to go to the original spot of card_to_place.
@@ -137,7 +139,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	DragState.card_dragged_from_main_container = false
 	dragged_card_from_container_node = null
 	is_dragging_card_over_self = false
-	emit_signal(card_dropped_card_container.get_name())
+	emit_signal(card_dropped_card_container.get_name(), card_to_place, was_in_buffer, original_slot_ref)
 
 func _prepare_card_drag_from_container(card_node: Card):
 	if card_node != null:

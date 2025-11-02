@@ -9,12 +9,12 @@ var cards_array: Array[Card] = []
 var sorted_cards_array: Array[Card] = []
 var values: Array[int] = []
 var sorted_all = []
-var buffer_size: int = Settings.player_buffer_count
 var num_cards: int = Settings.cards_count
 const CARD_WIDTH = 70
 var move_count: int = 0
 var is_animating = false
-
+# Dirty hack to not add multiple var_tree entries
+var _var_tree_mounted: bool = false
 # TODO would be cool to add coloring/theme selection to main menu,
 # so players can choose if they want rainbow or now
 
@@ -36,7 +36,6 @@ var card_colors: Array[Color] = [
 	Color.DARK_ORCHID
 ]
 
-
 const card_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_MAIN)
 const swap_button_scene: PackedScene = preload(ProjectFiles.Scenes.SWAP_BTN)
 const card_slot_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_SLOT)
@@ -50,6 +49,7 @@ const card_slot_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_SLOT)
 @onready var sorted_cards_panel: PanelContainer = get_node("./../SortedCardsPanel")
 @onready var scroll_container_node: ScrollContainer = $CardPanel/ScrollContainer
 @onready var var_tree: VarTree = get_node("./../CanvasLayer/VarTree")
+@onready var logger := Logger.get_logger(self)
 
 class CardDebugData:
 	var cards_in_slots: int = 0
@@ -94,47 +94,63 @@ func _ready():
 		sorted_cards_panel.visible = false
 	# Var tree mounting for debugging purposes
 	if OS.has_feature("debug"):
-		# TODO move this to separate class
-		# Debugging: Show the current scene path
-		var_tree.mount_var(self, "dbg_game_info/card_cont", {
-			"font_color": Color.SEASHELL,
+		mount_var_tree_variables()
+
+func mount_var_tree_variables() -> void:
+	if _var_tree_mounted:
+		return # Already mounted
+	_var_tree_mounted = true
+	var_tree.mount_var(self, "Client number", {
+		"font_color": Color.CYAN,
+		"format_callback": func(_value: Variant) -> String:
+			return str(Constants.get_game_debug_id())
+	})
+	var_tree.mount_var(self, "dbg_game_info/curr_dragged_card", {
+		"font_color": Color.SEASHELL,
+		"format_callback": func(_value: Variant) -> String:
+			if card_container: # Ensure 'card_container' is available
+				return str(DragState.currently_dragged_card.value) if DragState.currently_dragged_card != null else "None"
+			return "0"
+	})
+	var_tree.mount_var(self, "dbg_game_info/card_count", {
+		"font_color": Color.SEASHELL,
+		"format_callback": func(_value: Variant) -> String:
+			if card_container: # Ensure 'card_container' is available
+				return str(card_container.get_child_count())
+			return "0"
+	})
+	var_tree.mount_var(self, "dbg_game_info/card_slots", {
+		"font_color": Color.SEASHELL,
+		"format_callback": func(_value: Variant) -> String:
+			var sum=0
+			if slot_container:
+				for slot in slot_container.get_children():
+					sum += slot.get_child_count() - 2
+				return str(sum)
+			return "0"
+	})
+	if Settings.is_multiplayer:
+		#
+		var_tree.mount_var(self, "dbg_game_mp/multiplayer", {
+			"font_color": Color.AQUA,
 			"format_callback": func(_value: Variant) -> String:
-				if card_container: # Ensure 'card_container' is available
-					return str(card_container.get_child_count())
-				return "0"
+				return "ON"
 		})
-		var_tree.mount_var(self, "dbg_game_info/card_slots", {
-			"font_color": Color.SEASHELL,
-			"format_callback": func(_value: Variant) -> String:
-				var sum=0
-				if slot_container:
-					for slot in slot_container.get_children():
-						sum += slot.get_child_count() - 2
-					return str(sum)
-				return "0"
+		var_tree.mount_var(self, "dbg_game_mp/IAmHost", {
+		"font_color": Color.SEASHELL,
+		"format_callback": func(_value: Variant) -> String:
+			return str(ConnectionManager.am_i_host())
 		})
-		if Settings.is_multiplayer:
-			#
-			var_tree.mount_var(self, "dbg_game_mp/multiplayer", {
-				"font_color": Color.AQUA,
-				"format_callback": func(_value: Variant) -> String:
-					return "ON"
-			})
-			var_tree.mount_var(self, "dbg_game_mp/IAmHost", {
+		var_tree.mount_var(self, "dbg_game_mp/currentLobbyID", {
 			"font_color": Color.SEASHELL,
 			"format_callback": func(_value: Variant) -> String:
-				return str(ConnectionManager.am_i_host())
-			})
-			var_tree.mount_var(self, "dbg_game_mp/currentLobbyID", {
-				"font_color": Color.SEASHELL,
-				"format_callback": func(_value: Variant) -> String:
-					return str(ConnectionManager.get_current_lobby_id())
-			})
-			var_tree.mount_var(self, "dbg_game_mp/Players count", {
-				"font_color": Color.SEASHELL,
-				"format_callback": func(_value: Variant) -> String:
-					return str(ConnectionManager.get_player_list().size())
-			})
+				return str(ConnectionManager.get_current_lobby_id())
+		})
+		var_tree.mount_var(self, "dbg_game_mp/Players count", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				return str(ConnectionManager.get_player_list().size())
+		})
 
 func _on_restart_game_button_pressed() -> void:
 	timer_node.reset_timer()
@@ -210,7 +226,7 @@ func _connect_signals():
 			show_sorted_button.connect("pressed", Callable(self, "_on_show_sorted_cards_button_pressed"))
 			_setup_button_glow_animation(show_sorted_button) # Setup glow after connecting
 		else:
-			print_debug("CardManager: show_sorted_button.pressed already connected.")
+			logger.log_info("show_sorted_button.pressed already connected.")
 
 	# Note: Signals from dynamically created slots are connected in create_buffer_slots()
 
@@ -285,10 +301,10 @@ func adjust_container_spacing():
 	var first_button_offset: int = int((CARD_WIDTH - Constants.BUTTON_WIDTH) / 2.0)
 	$SwapButtonPanel/CenterContainer.add_theme_constant_override("margin_left", first_button_offset)
 
-	# print_debug("Max spacing set to: " + str(max_spacing))
-	# print_debug("Card spacing set to: " + str(card_spacing))
-	# print_debug("Button spacing set to: " + str(button_spacing))
-	# print_debug("Button container offset: " + str(first_button_offset))
+	# logger.log_info("Max spacing set to: " + str(max_spacing))
+	# logger.log_info("Card spacing set to: " + str(card_spacing))
+	# logger.log_info("Button spacing set to: " + str(button_spacing))
+	# logger.log_info("Button container offset: " + str(first_button_offset))
 
 func generate_completed_card_array(_values_for_cards: Array[int], _name_prefix: String = "Card_") -> Array[Card]:
 	var array_to_be_filled: Array[Card] = []
@@ -310,27 +326,35 @@ func generate_completed_card_array(_values_for_cards: Array[int], _name_prefix: 
 		array_to_be_filled.append(card_instance)
 	return array_to_be_filled
 
-func create_buffer_slots() -> Array:
+func create_buffer_slots(buffer_size: int = Settings.player_buffer_count) -> Array:
+	# Clamp to valid range [1, num_cards]
+	var actual_size = clampi(buffer_size, 1, num_cards)
+
+	if buffer_size != actual_size:
+		push_warning("CardManager: buffer_size (%d) was clamped to %d (valid range: 1-%d)" % [buffer_size, actual_size, num_cards])
+		buffer_size = actual_size
+
 	var _slots: Array = []
+
 	# Clear any existing slots
 	for child in slot_container.get_children():
 		child.queue_free()
 
-	# Create new _slots based on buffer_size
-	for i in range(buffer_size):
+	# Create new _slots based on actual_size
+	for i in range(actual_size):
 		var slot = card_slot_scene.instantiate()
 		slot.slot_text = "Slot " + str(i + 1)
 		slot_container.add_child(slot)
 		_slots.append(slot)
 
-	# You might want to connect signals from _slots to your manager
+	# Connect signals from _slots to your manager
 	for slot in _slots:
-		# Optional: Connect any custom signals from your slot script
 		if slot.has_signal("card_placed_in_slot"):
 			slot.card_placed_in_slot.connect(_on_card_placed_in_slot)
+
 	return _slots
 
-func _on_card_placed_in_container():
+func _on_card_placed_in_container(dropped_card: Card = null, was_in_buffer: bool = false, original_slot: Variant = null):
 	move_count += 1
 	if not timer_node.timer_started:
 		timer_node.start_timer()
@@ -493,7 +517,7 @@ func animate_card_swap(card_a, card_b):
 func check_sorting_order() -> bool:
 	var sorted_correctly = true
 	if card_container.get_child_count() != num_cards:
-		print_debug("Card count mismatch!")
+		logger.log_info("Card count mismatch!")
 		return false
 	var cards_in_container: Array[Card] = []
 	for child in card_container.get_children():
@@ -504,11 +528,11 @@ func check_sorting_order() -> bool:
 		var current_card = cards_in_container[i].value
 		var previous_card = cards_in_container[i - 1].value
 		if current_card < previous_card:
-			print_debug("cards_array[%d] = %d < cards_array[%d] = %d" % [i, current_card, i - 1, previous_card])
+			logger.log_info("cards_array[%d] = %d < cards_array[%d] = %d" % [i, current_card, i - 1, previous_card])
 			sorted_correctly = false
 			break
 	if not sorted_correctly:
-		print("Cards not sorted correctly!")
+		logger.log_warning("Cards not sorted correctly!")
 	return sorted_correctly
 	# Calculate the time taken
 
@@ -519,7 +543,7 @@ func check_player_buffer_contiguity() -> bool:
 	var buffer_values = []
 	for slot in slots:
 		if slot.occupied_by == null:
-			print_debug("Buffer not full")
+			logger.log_info("Buffer not full")
 			return false # Buffer not full
 		buffer_values.append(slot.occupied_by.value)
 
