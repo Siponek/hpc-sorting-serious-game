@@ -44,6 +44,7 @@ text = "Player Buffer (slots):"
 
 [node name="BufferSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/buttons_width = 20
 min_value = 1.0
 max_value = 20.0
 value = 5.0
@@ -54,6 +55,7 @@ text = "Amount of Cards to Sort:"
 
 [node name="CardCountSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/buttons_width = 20
 min_value = 2.0
 value = 9.0
 allow_greater = true
@@ -64,6 +66,7 @@ text = "Range of Card Values:"
 
 [node name="CardRangeSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/buttons_width = 20
 min_value = 10.0
 value = 100.0
 allow_greater = true
