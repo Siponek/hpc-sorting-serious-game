@@ -9,6 +9,7 @@ class Scripts:
 	const CONNECTION_MANAGER = "res://scenes/Multiplayer/connection_manager.gd"
 	const CONSTANTS = "res://scenes/scripts/constants.gd"
 	const DRAG_STATE = "res://scenes/scripts/drag_state.gd"
+	const FINISH_GAME_SCRIPT = "res://scenes/CardScene/scripts/finish_game_script.gd"
 	const LOGGER = "res://lib/logger/logger.gd"
 	const MAIN_MENU_OPTIONS = "res://scenes/MainMenuScene/main_menu_options.gd"
 	const MULTIPLAYER_CARD_MANAGER = "res://scenes/Multiplayer/MultiplayerGame/multiplayer_card_manager.gd"

@@ -1,6 +1,6 @@
 extends Node
-
 var current_scene: Node = null
+@onready var logger := Logger.get_logger(self)
 
 func _ready():
 	var root = get_tree().root
@@ -26,7 +26,7 @@ func goto_scene(res_path):
 			"text_size": 18, # [optional] Text (font) size // experimental (warning!)
 			"use_font": true # [optional] Use custom ToastParty font // experimental (warning!)
 		})
-		print("Error: Scene path does not exist: " + res_path)
+		logger.log_error("Scene path does not exist: " + res_path)
 		return
 	_deferred_goto_scene.call_deferred(res_path)
 

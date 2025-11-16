@@ -1,35 +1,109 @@
-[gd_scene load_steps=2 format=3 uid="uid://dsix5r7ccx5yb"]
+[gd_scene load_steps=9 format=3 uid="uid://dsix5r7ccx5yb"]
 
 [ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_jwrws"]
 
-[node name="FinishGameScene" type="Panel"]
-custom_minimum_size = Vector2(300, 300)
-offset_right = 50.0
+[sub_resource type="Gradient" id="Gradient_jwrws"]
+offsets = PackedFloat32Array(0.0377358, 0.437943, 0.760638)
+colors = PackedColorArray(0, 0.986285, 0.704669, 1, 0.372549, 1, 1, 1, 0.717647, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ic8ip"]
+gradient = SubResource("Gradient_jwrws")
+width = 32
+repeat = 1
+
+[sub_resource type="Gradient" id="Gradient_ic8ip"]
+offsets = PackedFloat32Array(0, 0.533835, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.787315, 0.261605, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_mquqo"]
+gradient = SubResource("Gradient_ic8ip")
+
+[sub_resource type="Curve" id="Curve_jwrws"]
+_data = [Vector2(0.217949, 0.991198), 0.0, 0.0, 0, 0, Vector2(0.564103, 0.335477), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveXYZTexture" id="CurveXYZTexture_ic8ip"]
+curve_y = SubResource("Curve_jwrws")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_jwrws"]
+lifetime_randomness = 0.21
+particle_flag_disable_z = true
+emission_shape = 4
+emission_point_count = 2
+angle_min = 1.07288e-05
+angle_max = 25.0
+inherit_velocity_ratio = 0.165
+direction = Vector3(0, -1, 0)
+spread = 100.0
+initial_velocity_max = 279.11
+angular_velocity_min = -36.99
+angular_velocity_max = 113.42
+directional_velocity_min = -200.0
+directional_velocity_max = 0.999984
+directional_velocity_curve = SubResource("CurveXYZTexture_ic8ip")
+gravity = Vector3(0, 150, 0)
+color_initial_ramp = SubResource("GradientTexture1D_mquqo")
+
+[node name="CanvasLayer" type="CanvasLayer"]
+
+[node name="FinishGameScene" type="Window" parent="."]
+initial_position = 1
+size = Vector2i(300, 350)
+visible = false
 theme = ExtResource("1_jwrws")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-layout_mode = 1
+[node name="Panel" type="Panel" parent="FinishGameScene"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="FinishGameScene"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="FinishGameScene/VBoxContainer"]
 layout_mode = 2
 text = "Congratulations,
 What a success"
 horizontal_alignment = 1
 
-[node name="Label2" type="Label" parent="VBoxContainer"]
+[node name="TimeLabel" type="Label" parent="FinishGameScene/VBoxContainer"]
 layout_mode = 2
 text = "Your time: N/A"
 horizontal_alignment = 1
 
-[node name="ResetGameButton" type="Button" parent="VBoxContainer"]
+[node name="MovesLabel" type="Label" parent="FinishGameScene/VBoxContainer"]
+layout_mode = 2
+text = "Amount of moves: N/A"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="FinishGameScene/VBoxContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme = ExtResource("1_jwrws")
+
+[node name="ResetGameButton" type="Button" parent="FinishGameScene/VBoxContainer"]
 layout_mode = 2
 text = "Reset the game"
 
-[node name="ExitToMainMenuButton" type="Button" parent="VBoxContainer"]
+[node name="ExitToMainMenuButton" type="Button" parent="FinishGameScene/VBoxContainer"]
 layout_mode = 2
 text = "Exit to main menu"
+
+[node name="ConfettiParticles" type="GPUParticles2D" parent="."]
+position = Vector2(578, 336)
+amount = 55
+texture = SubResource("GradientTexture2D_ic8ip")
+lifetime = 5.0
+explosiveness = 0.8
+randomness = 0.34
+visibility_rect = Rect2(-600, -400, 1200, 800)
+local_coords = true
+draw_order = 0
+process_material = SubResource("ParticleProcessMaterial_jwrws")

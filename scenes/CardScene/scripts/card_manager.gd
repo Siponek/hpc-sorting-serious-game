@@ -39,6 +39,7 @@ var card_colors: Array[Color] = [
 const card_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_MAIN)
 const swap_button_scene: PackedScene = preload(ProjectFiles.Scenes.SWAP_BTN)
 const card_slot_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_SLOT)
+const finish_game_scene: PackedScene = preload(ProjectFiles.Scenes.FINISH_GAME_SCENE)
 
 @onready var show_sorted_button: Button = get_node("./../RightSideButtonsContainer/ShowSortedCardsButton")
 @onready var button_container: HBoxContainer = $SwapButtonPanel/CenterContainer/SwapButtonContainer
@@ -182,28 +183,34 @@ func fill_card_container(_card_instances_array: Array, _card_container: Node = n
 func _validate_node_references() -> bool:
 	var all_valid = true
 	if not scroll_container_node:
-		printerr("CardManager: scroll_container_node not found. Path: $CardPanel/ScrollContainer")
+		logger.log_error("CardManager: scroll_container_node not found. Path: $CardPanel/ScrollContainer")
 		all_valid = false
 	if not card_container:
-		printerr("CardManager: card_container not found. Path: $CardPanel/ScrollContainer/MarginContainer/CardContainer")
+		logger.log_error("CardManager: card_container not found. Path: $CardPanel/ScrollContainer/MarginContainer/CardContainer")
 		all_valid = false
 	if not slot_container:
-		printerr("CardManager: slot_container not found. Path: $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer")
+		logger.log_error("CardManager: slot_container not found. Path: $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer")
 		all_valid = false
 	if not timer_node:
-		printerr("CardManager: timer_node not found. Path: ./../TopBar/TimerPanel")
+		logger.log_error("CardManager: timer_node not found. Path: ./../TopBar/TimerPanel")
 		all_valid = false
 	if not sorted_cards_container:
-		printerr("CardManager: sorted_cards_container not found. Path: ./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer")
+		logger.log_error("CardManager: sorted_cards_container not found. Path: ./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer")
 		all_valid = false
 	if not sorted_cards_panel:
-		printerr("CardManager: sorted_cards_panel not found. Path: ./../SortedCardsPanel")
+		logger.log_error("CardManager: sorted_cards_panel not found. Path: ./../SortedCardsPanel")
 		all_valid = false
 	if not show_sorted_button:
-		printerr("CardManager: show_sorted_button not found. Path: ./../RightSideButtonsContainer/ShowSortedCardsButton")
+		logger.log_error("CardManager: show_sorted_button not found. Path: ./../RightSideButtonsContainer/ShowSortedCardsButton")
 		all_valid = false
 	if not button_container:
-		printerr("CardManager: button_container (for swap buttons) not found. Path: $SwapButtonPanel/CenterContainer/SwapButtonContainer")
+		logger.log_error("CardManager: button_container (for swap buttons) not found. Path: $SwapButtonPanel/CenterContainer/SwapButtonContainer")
+		all_valid = false
+	if not var_tree:
+		logger.log_error("CardManager: var_tree not found. Path: ./../CanvasLayer/VarTree")
+		all_valid = false
+	if not finish_game_scene:
+		logger.log_error("CardManager: finish_game_scene PackedScene not loaded properly.")
 		all_valid = false
 
 	return all_valid
@@ -359,20 +366,15 @@ func _on_card_placed_in_container(dropped_card: Card = null, was_in_buffer: bool
 	if not timer_node.timer_started:
 		timer_node.start_timer()
 	if check_sorting_order():
-		var timer_node_time: int = timer_node.getCurrentTime()
-		var seconds = int(timer_node_time) % 60
-		var minutes = int(float(timer_node_time) / 60)
-		var time_string = "%02d:%02d" % [minutes, seconds]
-
-		var text_to_show = "Cards are sortedsuccessfully in %s with %d moves! 👍" % [time_string, move_count]
+		# Just show a hint that they can finish
 		ToastParty.show({
-			"text": text_to_show, # Text (emojis can be used)
-			"bgcolor": Color(0, 0, 0, 0.7), # Background Color
-			"color": Color(1, 1, 1, 1), # Text Color
-			"gravity": "top", # top or bottom
-			"direction": "left", # left or center or right
-			"text_size": 18, # [optional] Text (font) size // experimental (warning!)
-			"use_font": true # [optional] Use custom ToastParty font // experimental (warning!)
+			"text": "Cards are sorted! Press 'Finish Game' to complete! 🎉",
+			"bgcolor": Color(0.2, 0.8, 0.2, 0.8),
+			"color": Color(1, 1, 1, 1),
+			"gravity": "bottom",
+			"direction": "center",
+			"text_size": 16,
+			"use_font": true
 		})
 
 func _on_card_placed_in_slot(card, slot):
@@ -387,41 +389,107 @@ func _on_card_placed_in_slot(card, slot):
 		card.set_can_drag(true)
 
 	if check_sorting_order():
-		var time_string = timer_node.getCurrentTimeAsString()
-		var text_to_show = "Cards are sortedsuccessfully in %s with %d moves! 👍" % [time_string, move_count]
 		ToastParty.show({
-			"text": text_to_show, # Text (emojis can be used)
-			"bgcolor": Color(0, 0, 0, 0.7), # Background Color
-			"color": Color(1, 1, 1, 1), # Text Color
-			"gravity": "top", # top or bottom
-			"direction": "left", # left or center or right
-			"text_size": 18, # [optional] Text (font) size // experimental (warning!)
-			"use_font": true # [optional] Use custom ToastParty font // experimental (warning!)
+			"text": "Cards are sorted! Press 'Finish Game' to complete! 🎉",
+			"bgcolor": Color(0.2, 0.8, 0.2, 0.8),
+			"color": Color(1, 1, 1, 1),
+			"gravity": "bottom",
+			"direction": "center",
+			"text_size": 16,
+			"use_font": true
 		})
 
 func _on_show_sorted_cards_button_pressed() -> void:
-	var text_to_show = "Cards are sorted! 👍"
-	if !check_sorting_order():
-		text_to_show = "Cards are NOT sorted! 😒"
-	if !sorted_cards_panel.visible:
+	var cards_are_sorted = check_sorting_order()
+	
+	if cards_are_sorted:
+		# Cards are sorted - finish the game
+		_finish_game()
+	else:
+		# Cards not sorted - show/hide the sorted reference
+		_toggle_sorted_cards_panel()
+
+func _finish_game() -> void:
+	"""Called when player finishes the game (cards are sorted)"""
+	# Stop the timer
+	if timer_node:
+		timer_node.stop_timer()
+	else:
+		logger.log_warning("timer_node is null in _finish_game()")
+	
+	# Get final time and move count
+	var final_time_string = timer_node.getCurrentTimeAsString()
+	var final_move_count = move_count
+	
+	logger.log_info("Game finished! Time: ", final_time_string, " Moves: ", final_move_count)
+	
+	# Show finish game scene
+	_show_finish_game_scene(final_time_string, final_move_count)
+
+func _show_finish_game_scene(time_string: String, moves: int) -> void:
+	"""Load and display the finish game scene"""
+	if not finish_game_scene:
+		logger.log_error("CardManager: Failed to load FinishGameScene.tscn")
+		_show_completion_toast(time_string, moves)
+		return
+	
+	# Instantiate the scene
+	var finish_instance = finish_game_scene.instantiate()
+
+	# If the finish scene has methods to set time/moves, call them
+	if finish_instance.has_method("set_game_stats"):
+		finish_instance.set_game_stats(time_string, moves)
+	elif finish_instance.has_method("set_time"):
+		finish_instance.set_time(time_string)
+		if finish_instance.has_method("set_moves"):
+			finish_instance.set_moves(moves)
+	
+	# Add to the scene tree (as a popup or overlay)
+	# Assuming you want it as an overlay on top of everything
+	get_tree().root.add_child(finish_instance)
+	
+	# If it's a Window or popup, show it
+	if finish_instance is Window:
+		finish_instance.popup_centered()
+	elif finish_instance.has_method("show"):
+		finish_instance.show()
+
+func _show_completion_toast(time_string: String, moves: int) -> void:
+	"""Fallback: Show completion message as toast"""
+	var text_to_show = "Cards sorted successfully in %s with %d moves! 👍" % [time_string, moves]
+	ToastParty.show({
+		"text": text_to_show,
+		"bgcolor": Color(0, 0, 0, 0.7),
+		"color": Color(1, 1, 1, 1),
+		"gravity": "top",
+		"direction": "center",
+		"text_size": 20,
+		"use_font": true
+	})
+
+func _toggle_sorted_cards_panel() -> void:
+	"""Toggle the sorted cards reference panel"""
+	var text_to_show = "Cards are NOT sorted! 😒"
+	
+	if not sorted_cards_panel.visible:
 		ToastParty.show({
-			"text": text_to_show, # Text (emojis can be used)
-			"bgcolor": Color(0, 0, 0, 0.7), # Background Color
-			"color": Color(1, 1, 1, 1), # Text Color
-			"gravity": "top", # top or bottom
-			"direction": "left", # left or center or right
-			"text_size": 18, # [optional] Text (font) size // experimental (warning!)
-			"use_font": true # [optional] Use custom ToastParty font // experimental (warning!)
+			"text": text_to_show,
+			"bgcolor": Color(0, 0, 0, 0.7),
+			"color": Color(1, 1, 1, 1),
+			"gravity": "top",
+			"direction": "left",
+			"text_size": 18,
+			"use_font": true
 		})
+	
 	# Toggle visibility
 	sorted_cards_panel.visible = not sorted_cards_panel.visible
-
+	
+	# Update button text
 	if sorted_cards_panel.visible:
-		show_sorted_button.text = "Hide Sorted Cards" # Update button text
-
+		show_sorted_button.text = "Hide Sorted Cards"
 	else:
-		# show_sorted_button.text = "Show Sorted Cards" # Reset button text
-		show_sorted_button.text = "Finish game!" # Reset button text
+		show_sorted_button.text = "Finish Game!"
 
 func _setup_button_glow_animation(button: Button):
 	# Define base and glow colors
