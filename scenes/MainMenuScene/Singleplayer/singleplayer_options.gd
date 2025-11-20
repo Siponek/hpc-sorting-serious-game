@@ -1,5 +1,6 @@
 extends Window
 
+
 func _on_start_button_pressed() -> void:
 	# Get values from the SpinBoxes
 	var buffer_slots_count = $MarginContainer/VBoxContainer/BufferSpinBox.value
@@ -12,6 +13,6 @@ func _on_start_button_pressed() -> void:
 	Settings.player_buffer_count = int(buffer_slots_count)
 	Settings.cards_count = int(cards_count)
 	Settings.card_value_range = int(card_range)
-	
+
 	# Then switch to the singleplayer game scene
-	SceneManager.goto_scene("res://scenes/singleplayer_scene.tscn")
+	SceneManager.goto_scene(ProjectFiles.Scenes.SINGLEPLAYER_SCENE)

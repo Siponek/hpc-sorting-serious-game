@@ -1,5 +1,5 @@
 {
-    "godotTools.editorPath.godot4": "\"C:\\Users\\szink\\Desktop\\Godot Engine\\4.4\\Godot_v4.4-stable_mono_win64_console.exe\"",
+    "godotTools.editorPath.godot4": "\"C:\\Users\\szink\\Desktop\\Godot Engine\\4.4.1\\Godot_v4.4.1-stable_win64_console.exe\"",
     "godotTools.inlayHints.gdscript": true,
     "gdscript_formatter.line_size": 68,
     "godotTools.formatter.denseFunctionParameters": true,
@@ -8,5 +8,11 @@
     // Insert spaces when pressing Tab.
     "editor.insertSpaces": true,
     // When opening a file, `editor.tabSize` and `editor.insertSpaces` will be detected based on the file contents.
-    "editor.detectIndentation": true
+    "editor.detectIndentation": true,
+    "search.exclude": {
+        "**/addons": true, // Exclude the addons
+        "**/git-submodules": true, // Exclude the git-submodules folder
+        "**/.git": true // Exclude the .git folder
+    },
+    "better-comments.highlightPlainText": true
 }

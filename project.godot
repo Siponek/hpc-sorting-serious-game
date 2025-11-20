@@ -10,7 +10,8 @@ config_version=5
 
 [GD-Sync]
 
-version="0.10"
+version="0.13"
+protectedMode=false
 
 [application]
 
@@ -22,6 +23,7 @@ config/windows_native_icon="res://icon.ico"
 
 [autoload]
 
+Logger="*res://lib/logger/logger.gd"
 Constants="*res://scenes/scripts/constants.gd"
 SceneManager="*res://scene_manager.gd"
 Settings="*res://settings.gd"
@@ -40,8 +42,6 @@ project/assembly_name="hpc-sorting-serious-game"
 [editor]
 
 run/main_run_args="game_debug_id=1"
-version_control/plugin_name="GitPlugin"
-version_control/autoload_on_startup=true
 
 [editor_plugins]
 

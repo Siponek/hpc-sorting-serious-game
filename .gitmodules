@@ -1,0 +1,3 @@
+[submodule "git-submodules/GD-Sync"]
+	path = git-submodules/GD-Sync
+	url = https://github.com/GD-Sync/GD-Sync.git
