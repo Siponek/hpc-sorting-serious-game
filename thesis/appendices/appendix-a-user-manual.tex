@@ -1,0 +1,315 @@
+%----------------------------------------------------------------------------------------
+% Appendix A: User Manual
+%----------------------------------------------------------------------------------------
+
+\section{Introduction}
+\label{app:a:introduction}
+
+This user manual provides comprehensive instructions for installing, configuring, and playing the HPC Sorting Serious Game. It is intended for students, educators, and anyone interested in learning about parallel computing through interactive gameplay.
+
+%----------------------------------------------------------------------------------------
+\section{System Requirements}
+\label{app:a:system-requirements}
+
+\subsection{Minimum Requirements}
+
+\begin{itemize}
+    \item \textbf{Operating System}: Android 7.0 (API level 24) or higher
+    \item \textbf{RAM}: 2 GB minimum
+    \item \textbf{Storage}: 50 MB free space
+    \item \textbf{Screen}: 5-inch display or larger
+    \item \textbf{Graphics}: OpenGL ES 3.0 support
+    \item \textbf{Network}: WiFi or mobile data (for multiplayer mode only)
+\end{itemize}
+
+\subsection{Recommended Requirements}
+
+\begin{itemize}
+    \item Android 9.0 or higher
+    \item 4 GB RAM
+    \item 5.5--6.5 inch display
+    \item Stable WiFi connection for multiplayer
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Installation}
+\label{app:a:installation}
+
+\subsection{Installing from APK}
+
+\begin{enumerate}
+    \item Download the APK file from the official repository or distribution site
+    \item Navigate to the APK file using your device's file manager
+    \item Tap the APK file to begin installation
+    \item If prompted, allow installation from unknown sources in Settings
+    \item Follow the on-screen installation prompts
+    \item Launch the app from your app drawer
+\end{enumerate}
+
+\subsection{Installing from Google Play (Future)}
+
+Once published to Google Play Store:
+\begin{enumerate}
+    \item Open Google Play Store app
+    \item Search for "HPC Sorting Serious Game"
+    \item Tap "Install"
+    \item Wait for download and installation to complete
+    \item Tap "Open" to launch
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\section{Getting Started}
+\label{app:a:getting-started}
+
+\subsection{First Launch}
+
+On first launch, you will see the main menu with options:
+\begin{itemize}
+    \item \textbf{Single Player}: Practice sorting alone (OpenMP simulation)
+    \item \textbf{Multiplayer}: Join or host a game with others (MPI simulation)
+    \item \textbf{Settings}: Configure game options
+    \item \textbf{About}: Information about the game and credits
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Single-Player Mode}
+\label{app:a:singleplayer-mode}
+
+\subsection{Starting a Single-Player Game}
+
+\begin{enumerate}
+    \item Tap "Single Player" from the main menu
+    \item Configure game settings:
+          \begin{itemize}
+              \item Number of cards: 10--200 (recommended: 50 for beginners)
+              \item Difficulty: Easy, Medium, Hard
+          \end{itemize}
+    \item Tap "Start Game"
+\end{enumerate}
+
+\subsection{Gameplay}
+
+\paragraph{Objective:}
+Sort all cards in ascending order in the main container as quickly as possible.
+
+\paragraph{Controls:}
+\begin{itemize}
+    \item \textbf{Drag}: Long-press on a card and drag to move it
+    \item \textbf{Drop}: Release finger to drop card in desired location
+    \item \textbf{Scroll}: Swipe vertically to scroll through cards
+    \item \textbf{Zoom}: Pinch to zoom in/out (if enabled)
+\end{itemize}
+
+\paragraph{Using Buffers:}
+\begin{itemize}
+    \item Each player has 2--3 private buffer zones
+    \item Drag cards into buffers for temporary storage
+    \item Sort cards within buffers before merging back
+    \item Buffers simulate thread-local storage in parallel computing
+\end{itemize}
+
+\paragraph{Winning:}
+\begin{itemize}
+    \item Game completes when all cards are in correct ascending order
+    \item Victory screen shows completion time and number of moves
+    \item Try to minimize both time and moves for better performance
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Multiplayer Mode}
+\label{app:a:multiplayer-mode}
+
+\subsection{Creating a Game}
+
+\begin{enumerate}
+    \item Tap "Multiplayer" from the main menu
+    \item Tap "Create Game"
+    \item Configure settings:
+          \begin{itemize}
+              \item Number of players: 2--4
+              \item Number of cards: 10--200
+              \item Game mode: Cooperative or Competitive
+          \end{itemize}
+    \item A unique room code will be generated
+    \item Share this code with other players
+    \item Wait for players to join
+    \item Once all players are ready, tap "Start Game"
+\end{enumerate}
+
+\subsection{Joining a Game}
+
+\begin{enumerate}
+    \item Tap "Multiplayer" from the main menu
+    \item Tap "Join Game"
+    \item Enter the room code provided by the host
+    \item Tap "Join"
+    \item Wait in the lobby for the host to start the game
+\end{enumerate}
+
+\subsection{Multiplayer Gameplay}
+
+\paragraph{Card Distribution:}
+\begin{itemize}
+    \item Cards are divided among players (simulating MPI data distribution)
+    \item Each player sees their own cards and shared areas
+    \item Other players' private buffers are hidden
+\end{itemize}
+
+\paragraph{Collaboration:}
+\begin{itemize}
+    \item Players must coordinate to sort all cards
+    \item Cards can be passed between players (message passing)
+    \item Communication and strategy are key to success
+    \item Network latency simulates communication overhead in HPC
+\end{itemize}
+
+\paragraph{Winning Together:}
+\begin{itemize}
+    \item Team wins when all cards across all players are sorted
+    \item Final merge phase combines sorted sequences
+    \item Victory screen shows team performance metrics
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Settings}
+\label{app:a:settings}
+
+\subsection{Game Settings}
+
+\begin{itemize}
+    \item \textbf{Default Card Count}: Set preferred number of cards for quick start
+    \item \textbf{Difficulty}: Choose default difficulty level
+    \item \textbf{Theme}: Light or dark mode
+\end{itemize}
+
+\subsection{Audio Settings}
+
+\begin{itemize}
+    \item \textbf{Sound Effects}: Enable/disable gameplay sounds
+    \item \textbf{Volume}: Adjust volume level
+\end{itemize}
+
+\subsection{Display Settings}
+
+\begin{itemize}
+    \item \textbf{Card Size}: Adjust card display size
+    \item \textbf{Orientation}: Portrait, landscape, or auto
+    \item \textbf{Visual Effects}: Enable/disable animations
+\end{itemize}
+
+\subsection{Network Settings}
+
+\begin{itemize}
+    \item \textbf{Connection Type}: WiFi preferred, mobile data, or either
+    \item \textbf{Signaling Server}: Configure custom server (advanced)
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Tips and Strategies}
+\label{app:a:tips-strategies}
+
+\subsection{Efficient Sorting Strategies}
+
+\begin{enumerate}
+    \item \textbf{Divide and Conquer}: Use buffers to sort smaller subsets of cards
+    \item \textbf{Merge Sorted Sequences}: Maintain sorted order within buffers, then merge
+    \item \textbf{Minimize Moves}: Think before moving; avoid unnecessary rearrangements
+    \item \textbf{Identify Patterns}: Look for already-sorted subsequences
+\end{enumerate}
+
+\subsection{Multiplayer Coordination}
+
+\begin{enumerate}
+    \item \textbf{Communicate}: Use external communication (voice, text) to coordinate
+    \item \textbf{Divide Responsibility}: Assign value ranges to each player
+    \item \textbf{Minimize Passing}: Reduce card exchanges to reduce overhead
+    \item \textbf{Plan Ahead}: Discuss strategy before starting
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\section{Troubleshooting}
+\label{app:a:troubleshooting}
+
+\subsection{Common Issues and Solutions}
+
+\paragraph{Game Won't Launch:}
+\begin{itemize}
+    \item Verify Android version meets minimum requirements
+    \item Ensure sufficient free storage space
+    \item Try restarting device
+    \item Reinstall the app if necessary
+\end{itemize}
+
+\paragraph{Performance Issues (Lag):}
+\begin{itemize}
+    \item Reduce number of cards
+    \item Disable visual effects in settings
+    \item Close background apps
+    \item Ensure device is not overheating
+\end{itemize}
+
+\paragraph{Cannot Connect to Multiplayer:}
+\begin{itemize}
+    \item Verify internet connection is active
+    \item Check that both players are using the same game version
+    \item Try switching between WiFi and mobile data
+    \item Verify firewall/network settings allow connections
+    \item Re-enter room code carefully
+\end{itemize}
+
+\paragraph{Multiplayer Lag or Disconnections:}
+\begin{itemize}
+    \item Switch to more stable network connection
+    \item Move closer to WiFi router
+    \item Reduce number of players
+    \item Check that signaling server is reachable
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Educational Use}
+\label{app:a:educational-use}
+
+\subsection{For Students}
+
+\begin{itemize}
+    \item Play single-player mode first to understand mechanics
+    \item Observe how buffers help organize your sorting work
+    \item Notice how coordination becomes harder with more players
+    \item Reflect on how game concepts relate to parallel programming
+    \item Experiment with different strategies and compare performance
+\end{itemize}
+
+\subsection{For Instructors}
+
+\begin{itemize}
+    \item Use as pre-lecture icebreaker to introduce HPC concepts
+    \item Facilitate discussion after gameplay about parallel computing
+    \item Ask students to identify real-world parallels (threads, processes)
+    \item Connect game mechanics to OpenMP and MPI programming models
+    \item Use performance metrics to discuss speedup and scalability
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Support and Resources}
+\label{app:a:support}
+
+\subsection{Getting Help}
+
+\begin{itemize}
+    \item \textbf{GitHub Repository}: \texttt{https://github.com/[username]/hpc-sorting-serious-game}
+    \item \textbf{Issue Tracker}: Report bugs and request features on GitHub Issues
+    \item \textbf{Documentation}: Additional documentation in the repository wiki
+    \item \textbf{Contact}: Szymon Zinkowicz - \texttt{[email]}
+\end{itemize}
+
+\subsection{Contributing}
+
+The project is open-source (MIT license). Contributions are welcome:
+\begin{itemize}
+    \item Report bugs and suggest features via GitHub Issues
+    \item Submit pull requests with improvements
+    \item Contribute documentation and educational resources
+    \item Share feedback from classroom use
+\end{itemize}
+
+%----------------------------------------------------------------------------------------

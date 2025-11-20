@@ -1,0 +1,369 @@
+\chapter{Implementation}
+\label{ch:implementation}
+
+This chapter describes the detailed technical implementation of the HPC Sorting Serious Game, covering both single-player and multiplayer modes, key algorithms, code structure, and mobile-specific optimizations.
+
+%----------------------------------------------------------------------------------------
+\section{Development Environment Setup}
+\label{sec:dev-environment-setup}
+
+%----------------------------------------------------------------------------------------
+\subsection{Project Structure}
+\label{subsec:project-structure}
+
+The project follows Godot's standard directory structure with additional organization for plugins and resources:
+
+\begin{lstlisting}[caption={Project directory structure}, language=bash]
+hpc-sorting-serious-game/
+|-- scenes/              # Game scenes
+|   |-- main_menu.tscn
+|   |-- lobby.tscn
+|   |-- singleplayer.tscn
+|   |-- multiplayer.tscn
+|-- scripts/             # GDScript source files
+|   |-- card.gd
+|   |-- card_manager.gd
+|   |-- buffer.gd
+|   |-- lobby_manager.gd
+|-- resources/           # Assets and resources
+|   |-- textures/
+|   |-- fonts/
+|   |-- audio/
+|-- addons/              # Third-party plugins
+|   |-- GD-Sync/
+|   |-- ToastParty/
+|   |-- Logger/
+|-- project.godot        # Godot project configuration
+\end{lstlisting}
+
+%----------------------------------------------------------------------------------------
+\section{Core Components Implementation}
+\label{sec:core-components}
+
+%----------------------------------------------------------------------------------------
+\subsection{Card Component}
+\label{subsec:card-component}
+
+The Card component represents an individual playing card and handles rendering, interaction, and state management.
+
+\paragraph{Key Responsibilities:}
+\begin{itemize}
+    \item Display card number and visual state
+    \item Handle drag-and-drop interactions
+    \item Manage selection and highlighting
+    \item Emit signals for game logic coordination
+\end{itemize}
+
+\paragraph{Implementation Details:}
+
+\begin{lstlisting}[caption={Card component structure (card.gd)}, label={lst:card-structure}]
+extends Control
+class_name Card
+
+signal card_selected(card: Card)
+signal card_dragged(card: Card, position: Vector2)
+signal card_dropped(card: Card, target)
+
+var card_value: int
+var original_position: Vector2
+var is_dragging: bool = false
+var is_selected: bool = false
+
+func _ready():
+    # Initialize card visuals
+    update_display()
+
+func update_display():
+    # Update label with card value
+    $Label.text = str(card_value)
+    # Update visual state based on flags
+    if is_selected:
+        modulate = Color.YELLOW
+    else:
+        modulate = Color.WHITE
+\end{lstlisting}
+
+%----------------------------------------------------------------------------------------
+\subsection{Card Manager}
+\label{subsec:card-manager}
+
+The Card Manager is responsible for creating, shuffling, and managing the collection of cards.
+
+\paragraph{Key Responsibilities:}
+\begin{itemize}
+    \item Generate card instances
+    \item Shuffle and distribute cards
+    \item Validate sorting correctness
+    \item Manage card ownership in multiplayer
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Buffer System}
+\label{subsec:buffer-system}
+
+Buffers represent thread-local storage (OpenMP) or process-local memory (MPI).
+
+\paragraph{Implementation:}
+\begin{itemize}
+    \item Each player has 2-3 buffer zones
+    \item Cards can be dragged into buffers
+    \item Buffers maintain sorted or unsorted card lists
+    \item Visibility controlled based on game mode
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Single-Player Mode Implementation}
+\label{sec:singleplayer-implementation}
+
+%----------------------------------------------------------------------------------------
+\subsection{Game Initialization}
+\label{subsec:game-initialization}
+
+Steps for initializing a single-player game:
+\begin{enumerate}
+    \item Load singleplayer scene
+    \item Generate specified number of cards
+    \item Shuffle cards randomly
+    \item Place cards in main container
+    \item Initialize buffers
+    \item Start timer
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\subsection{Drag-and-Drop System}
+\label{subsec:drag-drop-system}
+
+The drag-and-drop system is crucial for mobile touch interaction.
+
+\paragraph{Touch Event Handling:}
+\begin{itemize}
+    \item \texttt{\_input(event)}: Detects touch/mouse events
+    \item \texttt{\_process(delta)}: Updates card position during drag
+    \item Drop zones detect overlap with dragged cards
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Sorting Validation}
+\label{subsec:sorting-validation}
+
+Algorithm to check if cards are sorted:
+
+\begin{lstlisting}[caption={Sorting validation algorithm}]
+func is_sorted(cards: Array) -> bool:
+    if cards.size() < 2:
+        return true
+
+    for i in range(cards.size() - 1):
+        if cards[i].card_value > cards[i + 1].card_value:
+            return false
+
+    return true
+\end{lstlisting}
+
+%----------------------------------------------------------------------------------------
+\section{Multiplayer Mode Implementation}
+\label{sec:multiplayer-implementation}
+
+%----------------------------------------------------------------------------------------
+\subsection{Lobby System}
+\label{subsec:lobby-system}
+
+The lobby manages room creation, player joining, and game configuration.
+
+\paragraph{Lobby Flow:}
+\begin{enumerate}
+    \item Player creates room or enters room code
+    \item Connection to signaling server
+    \item WebRTC handshake with host
+    \item Players appear in lobby list
+    \item Host configures game settings
+    \item Host starts game
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\subsection{GDSync Integration}
+\label{subsec:gdsync-integration}
+
+GDSync provides high-level networking abstractions.
+
+\paragraph{Key Features Used:}
+\begin{itemize}
+    \item \texttt{@GDSync.sync}: Mark nodes for automatic synchronization
+    \item \texttt{@GDSync.rpc}: Remote procedure calls
+    \item Connection management
+    \item Lobby synchronization
+\end{itemize}
+
+\paragraph{Configuration:}
+
+\begin{lstlisting}[caption={GDSync node configuration}]
+# Mark card container for synchronization
+@GDSync.sync(mode=GDSync.SYNC_MODE.AUTHORITY)
+var card_container: Node
+
+# Remote procedure call for card movement
+@GDSync.rpc(call_local=true)
+func move_card_networked(card_id: int, target_container_id: int):
+    # Move card on all clients
+    var card = get_card_by_id(card_id)
+    var target = get_container_by_id(target_container_id)
+    target.add_child(card)
+\end{lstlisting}
+
+%----------------------------------------------------------------------------------------
+\subsection{State Synchronization}
+\label{subsec:state-synchronization}
+
+Maintaining consistent game state across clients is critical.
+
+\paragraph{Synchronization Strategy:}
+\begin{itemize}
+    \item \textbf{Host-Authoritative}: Host has authority over game state
+    \item \textbf{Client Prediction}: Clients show immediate local updates
+    \item \textbf{Server Reconciliation}: Host sends authoritative updates
+    \item \textbf{Delta Updates}: Only changed data transmitted
+\end{itemize}
+
+\paragraph{Synchronized Data:}
+\begin{itemize}
+    \item Card positions and container ownership
+    \item Player states (connected, ready, playing)
+    \item Timer and move counter
+    \item Game phase (lobby, playing, finished)
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Visibility Management}
+\label{subsec:visibility-management}
+
+In MPI mode, players should not see cards in other players' private buffers.
+
+\paragraph{Implementation:}
+\begin{lstlisting}[caption={Card visibility control}]
+func update_card_visibility():
+    for card in all_cards:
+        if card.is_in_private_buffer():
+            var buffer_owner_id = card.get_buffer_owner()
+            if buffer_owner_id == local_player_id:
+                card.visible = true
+            else:
+                card.visible = false  # Hide other players' cards
+        else:
+            card.visible = true  # Shared container cards visible
+\end{lstlisting}
+
+%----------------------------------------------------------------------------------------
+\section{Mobile Optimizations}
+\label{sec:mobile-optimizations}
+
+%----------------------------------------------------------------------------------------
+\subsection{Performance Optimizations}
+\label{subsec:performance-optimizations}
+
+\paragraph{Rendering Optimizations:}
+\begin{itemize}
+    \item Object pooling for cards (reuse instances)
+    \item Viewport culling (don't render off-screen cards)
+    \item Batch rendering where possible
+    \item Minimize draw calls
+\end{itemize}
+
+\paragraph{Memory Management:}
+\begin{itemize}
+    \item Preload commonly used resources
+    \item Release unused assets
+    \item Texture compression for mobile
+    \item Minimize garbage collection pauses
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Touch Input Optimization}
+\label{subsec:touch-optimization}
+
+\paragraph{Touch Target Sizing:}
+\begin{itemize}
+    \item Minimum 48x48 dp for interactive elements
+    \item Adequate spacing between cards
+    \item Visual feedback for touch events
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Network Optimization}
+\label{subsec:network-optimization}
+
+\paragraph{Data Minimization:}
+\begin{itemize}
+    \item Send only changed data
+    \item Compress network messages
+    \item Batch multiple updates when possible
+    \item Predictive client-side updates
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Debugging and Development Tools}
+\label{sec:debugging-tools}
+
+%----------------------------------------------------------------------------------------
+\subsection{Logger Plugin Integration}
+\label{subsec:logger-integration}
+
+The Logger plugin provides categorized logging for debugging.
+
+\paragraph{Usage Example:}
+\begin{lstlisting}
+Logger.info("Card %d moved to buffer %s" % [card.card_value, buffer.name])
+Logger.warn("Network latency high: %d ms" % latency)
+Logger.error("Failed to synchronize card state")
+\end{lstlisting}
+
+%----------------------------------------------------------------------------------------
+\subsection{Runtime Variable Inspection}
+\label{subsec:vartree}
+
+VarTree plugin allows real-time inspection and modification of variables during gameplay for debugging purposes.
+
+%----------------------------------------------------------------------------------------
+\section{Code Quality and Best Practices}
+\label{sec:code-quality}
+
+%----------------------------------------------------------------------------------------
+\subsection{Code Organization}
+\label{subsec:code-organization}
+
+\paragraph{Principles Followed:}
+\begin{itemize}
+    \item Single Responsibility Principle
+    \item Separation of concerns (UI, logic, networking)
+    \item DRY (Don't Repeat Yourself)
+    \item Clear naming conventions
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Documentation}
+\label{subsec:code-documentation}
+
+All scripts include:
+\begin{itemize}
+    \item File-level documentation describing purpose
+    \item Function documentation with parameters and return values
+    \item Inline comments for complex logic
+    \item Signal documentation
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Summary}
+\label{sec:implementation-summary}
+
+This chapter presented the detailed implementation of the HPC Sorting Serious Game, covering:
+
+\begin{itemize}
+    \item \textbf{Project Structure}: Organization of scenes, scripts, and resources
+    \item \textbf{Core Components}: Card, Card Manager, and Buffer implementations
+    \item \textbf{Single-Player Mode}: Initialization, drag-and-drop, and sorting validation
+    \item \textbf{Multiplayer Mode}: Lobby system, GDSync integration, state synchronization, and visibility management
+    \item \textbf{Mobile Optimizations}: Performance, touch input, and network optimizations
+    \item \textbf{Development Tools}: Debugging and logging utilities
+    \item \textbf{Code Quality}: Organization and documentation practices
+\end{itemize}
+
+The next chapter discusses the problems and challenges encountered during development and the solutions implemented to address them.

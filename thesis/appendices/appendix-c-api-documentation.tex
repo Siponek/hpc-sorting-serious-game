@@ -1,0 +1,435 @@
+%----------------------------------------------------------------------------------------
+% Appendix C: API Documentation
+%----------------------------------------------------------------------------------------
+
+\section{Introduction}
+\label{app:c:introduction}
+
+This appendix documents the key APIs and interfaces used in the HPC Sorting Serious Game, including custom classes, GDSync integration, and plugin APIs. This documentation is intended for developers who wish to extend or modify the game.
+
+%----------------------------------------------------------------------------------------
+\section{Core Game Classes}
+\label{app:c:core-classes}
+
+\subsection{Card Class}
+\label{app:c:card-class}
+
+The Card class represents an individual playing card.
+
+\paragraph{Properties:}
+
+\begin{itemize}
+    \item \texttt{card\_value: int} - The numeric value displayed on the card
+    \item \texttt{card\_id: int} - Unique identifier for networking synchronization
+    \item \texttt{is\_dragging: bool} - Whether the card is currently being dragged
+    \item \texttt{is\_selected: bool} - Whether the card is selected
+    \item \texttt{original\_position: Vector2} - Position before drag operation
+\end{itemize}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{set\_card\_value(value: int)} - Sets the card's displayed value
+    \item \texttt{get\_card\_value() -> int} - Returns the card's value
+    \item \texttt{start\_drag()} - Initiates drag operation
+    \item \texttt{end\_drag()} - Completes drag operation
+    \item \texttt{update\_display()} - Refreshes visual representation
+\end{itemize}
+
+\paragraph{Signals:}
+
+\begin{itemize}
+    \item \texttt{card\_selected(card: Card)} - Emitted when card is selected
+    \item \texttt{card\_dragged(card: Card, position: Vector2)} - Emitted during drag
+    \item \texttt{card\_dropped(card: Card, target: Node)} - Emitted on drop
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{CardManager Class}
+\label{app:c:card-manager-class}
+
+Manages the collection of cards and game logic.
+
+\paragraph{Properties:}
+
+\begin{itemize}
+    \item \texttt{cards: Array[Card]} - Array of all cards in the game
+    \item \texttt{card\_id\_counter: int} - Counter for unique card IDs
+\end{itemize}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{generate\_cards(count: int) -> Array[Card]} - Creates specified number of cards
+    \item \texttt{shuffle\_cards()} - Randomly shuffles the card array
+    \item \texttt{is\_sorted(card\_array: Array) -> bool} - Checks if array is sorted
+    \item \texttt{check\_global\_sorted() -> bool} - Checks if all cards are sorted
+    \item \texttt{get\_card\_by\_id(id: int) -> Card} - Retrieves card by ID
+\end{itemize}
+
+\paragraph{Signals:}
+
+\begin{itemize}
+    \item \texttt{cards\_generated(count: int)} - Emitted after card generation
+    \item \texttt{cards\_shuffled()} - Emitted after shuffling
+    \item \texttt{sorting\_complete()} - Emitted when sorting is finished
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Buffer Class}
+\label{app:c:buffer-class}
+
+Represents a temporary storage area for cards (thread-local storage simulation).
+
+\paragraph{Properties:}
+
+\begin{itemize}
+    \item \texttt{buffer\_id: int} - Unique identifier
+    \item \texttt{owner\_id: int} - ID of owning player (-1 for shared)
+    \item \texttt{contained\_cards: Array[Card]} - Cards currently in buffer
+    \item \texttt{max\_capacity: int} - Maximum number of cards (optional)
+\end{itemize}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{accept\_card(card: Card) -> bool} - Attempts to add card
+    \item \texttt{remove\_card(card: Card)} - Removes card from buffer
+    \item \texttt{get\_cards() -> Array[Card]} - Returns all contained cards
+    \item \texttt{is\_full() -> bool} - Checks if buffer is at capacity
+    \item \texttt{sort\_contents()} - Sorts cards within buffer
+\end{itemize}
+
+\paragraph{Signals:}
+
+\begin{itemize}
+    \item \texttt{card\_added(card: Card)} - Emitted when card added
+    \item \texttt{card\_removed(card: Card)} - Emitted when card removed
+    \item \texttt{buffer\_sorted()} - Emitted after sorting
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Multiplayer Classes}
+\label{app:c:multiplayer-classes}
+
+\subsection{LobbyManager Class}
+\label{app:c:lobby-manager-class}
+
+Manages multiplayer lobby functionality.
+
+\paragraph{Properties:}
+
+\begin{itemize}
+    \item \texttt{players: Dictionary} - Map of player\_id to player\_info
+    \item \texttt{is\_host: bool} - Whether local player is host
+    \item \texttt{room\_code: String} - Unique room identifier
+\end{itemize}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{create\_lobby() -> String} - Creates lobby, returns room code
+    \item \texttt{join\_lobby(code: String) -> bool} - Joins existing lobby
+    \item \texttt{add\_player(player\_id: int, player\_name: String)} - Adds player to lobby
+    \item \texttt{remove\_player(player\_id: int)} - Removes player from lobby
+    \item \texttt{start\_game()} - Initiates game start (host only)
+\end{itemize}
+
+\paragraph{RPCs:}
+
+\begin{itemize}
+    \item \texttt{@rpc rpc\_player\_joined(player\_id: int, player\_name: String)} - Broadcasts player join
+    \item \texttt{@rpc rpc\_player\_left(player\_id: int)} - Broadcasts player leave
+    \item \texttt{@rpc rpc\_start\_game()} - Signals game start to all clients
+\end{itemize}
+
+\paragraph{Signals:}
+
+\begin{itemize}
+    \item \texttt{player\_joined(player\_id: int, player\_name: String)} - Player joined
+    \item \texttt{player\_left(player\_id: int)} - Player left
+    \item \texttt{game\_started()} - Game has started
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{NetworkSync Class}
+\label{app:c:network-sync-class}
+
+Handles state synchronization across clients.
+
+\paragraph{Properties:}
+
+\begin{itemize}
+    \item \texttt{card\_ownership: Dictionary} - Maps card\_id to owner\_player\_id
+    \item \texttt{game\_state: Dictionary} - Global game state data
+\end{itemize}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{@GDSync.rpc sync\_move\_card(card\_id, target\_id, position)} - Syncs card movement
+    \item \texttt{@GDSync.rpc request\_move\_card(card\_id, target\_id)} - Requests validated move
+    \item \texttt{update\_card\_visibility()} - Updates visibility based on ownership
+    \item \texttt{broadcast\_game\_state()} - Sends full state to new clients
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{GDSync Framework API}
+\label{app:c:gdsync-api}
+
+\subsection{Sync Annotations}
+\label{app:c:gdsync-sync}
+
+GDSync provides annotations for automatic synchronization:
+
+\paragraph{@GDSync.sync}
+
+Marks a variable or node for automatic synchronization.
+
+\begin{lstlisting}
+# Synchronize a variable
+@GDSync.sync(mode=GDSync.SYNC_MODE.AUTHORITY)
+var player_position: Vector2
+
+# Synchronize a node
+@GDSync.sync(mode=GDSync.SYNC_MODE.REPLICATED)
+var replicated_node: Node
+\end{lstlisting}
+
+\paragraph{Sync Modes:}
+
+\begin{itemize}
+    \item \texttt{AUTHORITY} - Only authority (usually host) can modify
+    \item \texttt{REPLICATED} - Replicated to all peers
+    \item \texttt{OWNER} - Only owner can modify
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{RPC Annotations}
+\label{app:c:gdsync-rpc}
+
+\paragraph{@GDSync.rpc}
+
+Marks a function for remote procedure call.
+
+\begin{lstlisting}
+# RPC callable by any peer
+@GDSync.rpc(call_local=true)
+func my_networked_function(arg1: int, arg2: String):
+    # Function body
+    pass
+
+# Authority-only RPC
+@GDSync.rpc(call_local=false, authority_only=true)
+func host_only_function():
+    # Only host can call this
+    pass
+\end{lstlisting}
+
+\paragraph{Parameters:}
+
+\begin{itemize}
+    \item \texttt{call\_local: bool} - Whether to also execute locally
+    \item \texttt{authority\_only: bool} - Restrict to authority
+    \item \texttt{reliable: bool} - Use reliable transmission
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Connection Management}
+\label{app:c:gdsync-connection}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{GDSync.create\_server(port: int)} - Creates server
+    \item \texttt{GDSync.connect\_to\_server(address: String, port: int)} - Connects to server
+    \item \texttt{GDSync.disconnect()} - Disconnects from network
+    \item \texttt{GDSync.get\_peers() -> Array} - Returns list of connected peers
+\end{itemize}
+
+\paragraph{Signals:}
+
+\begin{itemize}
+    \item \texttt{peer\_connected(peer\_id: int)} - Peer connected
+    \item \texttt{peer\_disconnected(peer\_id: int)} - Peer disconnected
+    \item \texttt{connection\_failed()} - Connection attempt failed
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Plugin APIs}
+\label{app:c:plugin-apis}
+
+\subsection{ToastParty API}
+\label{app:c:toastparty-api}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{ToastParty.show\_toast(message: String, duration: int)}
+    \item \texttt{ToastParty.show\_toast\_at\_position(message: String, position: Vector2, duration: int)}
+\end{itemize}
+
+\paragraph{Constants:}
+
+\begin{itemize}
+    \item \texttt{LENGTH\_SHORT} - 2 seconds
+    \item \texttt{LENGTH\_LONG} - 5 seconds
+    \item \texttt{TYPE\_INFO} - Informational toast
+    \item \texttt{TYPE\_SUCCESS} - Success toast (green)
+    \item \texttt{TYPE\_ERROR} - Error toast (red)
+    \item \texttt{TYPE\_WARNING} - Warning toast (yellow)
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Logger API}
+\label{app:c:logger-api}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{Logger.debug(message: String)} - Debug-level logging
+    \item \texttt{Logger.info(message: String)} - Info-level logging
+    \item \texttt{Logger.warn(message: String)} - Warning-level logging
+    \item \texttt{Logger.error(message: String)} - Error-level logging
+\end{itemize}
+
+\paragraph{Configuration:}
+
+\begin{itemize}
+    \item \texttt{Logger.set\_log\_level(level: int)} - Set minimum log level
+    \item \texttt{Logger.enable\_file\_logging(path: String)} - Log to file
+    \item \texttt{Logger.add\_filter(tag: String)} - Filter log messages
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Utility APIs}
+\label{app:c:utility-apis}
+
+\subsection{Profiler API}
+\label{app:c:profiler-api}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{Profiler.start\_timer(label: String)} - Start timing
+    \item \texttt{Profiler.end\_timer(label: String) -> float} - End timing, return elapsed ms
+    \item \texttt{Profiler.measure\_fps() -> float} - Get current FPS
+    \item \texttt{Profiler.get\_memory\_usage() -> int} - Get memory usage in bytes
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Config Manager API}
+\label{app:c:config-api}
+
+\paragraph{Methods:}
+
+\begin{itemize}
+    \item \texttt{Config.get\_value(section: String, key: String, default: Variant) -> Variant}
+    \item \texttt{Config.set\_value(section: String, key: String, value: Variant)}
+    \item \texttt{Config.save\_config()} - Save configuration to disk
+    \item \texttt{Config.load\_config()} - Load configuration from disk
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Event System}
+\label{app:c:event-system}
+
+\subsection{Global Events}
+\label{app:c:global-events}
+
+The game uses an event bus for decoupled communication.
+
+\paragraph{Usage:}
+
+\begin{lstlisting}
+# Emit global event
+EventBus.emit("game_started", {"players": 4})
+
+# Listen for event
+EventBus.connect("game_started", _on_game_started)
+
+func _on_game_started(data: Dictionary):
+    print("Game started with ", data["players"], " players")
+\end{lstlisting}
+
+\paragraph{Common Events:}
+
+\begin{itemize}
+    \item \texttt{game\_started} - Game has begun
+    \item \texttt{game\_ended} - Game has concluded
+    \item \texttt{player\_joined} - Player joined lobby
+    \item \texttt{player\_left} - Player left game
+    \item \texttt{card\_moved} - Card was moved
+    \item \texttt{sorting\_complete} - Sorting finished
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Extension Points}
+\label{app:c:extension-points}
+
+\subsection{Custom Game Modes}
+\label{app:c:custom-game-modes}
+
+To create custom game modes, extend the \texttt{GameMode} base class:
+
+\begin{lstlisting}
+extends GameMode
+class_name MyCustomMode
+
+func _init():
+    mode_name = "My Custom Mode"
+    mode_description = "A custom game variant"
+
+func setup_game():
+    # Custom initialization logic
+    pass
+
+func validate_move(card: Card, target: Node) -> bool:
+    # Custom move validation
+    return true
+
+func check_win_condition() -> bool:
+    # Custom win condition
+    return false
+\end{lstlisting}
+
+%----------------------------------------------------------------------------------------
+\subsection{Custom Card Types}
+\label{app:c:custom-card-types}
+
+Extend the Card class for custom card behavior:
+
+\begin{lstlisting}
+extends Card
+class_name SpecialCard
+
+@export var special_ability: String = ""
+
+func activate_ability():
+    match special_ability:
+        "double_value":
+            card_value *= 2
+        "wildcard":
+            # Can match any value
+            pass
+    update_display()
+\end{lstlisting}
+
+%----------------------------------------------------------------------------------------
+\section{Development Tools}
+\label{app:c:dev-tools}
+
+\subsection{Debug Commands}
+\label{app:c:debug-commands}
+
+Console commands for development:
+
+\begin{itemize}
+    \item \texttt{/spawn\_cards <count>} - Generate cards
+    \item \texttt{/sort\_all} - Automatically sort all cards
+    \item \texttt{/reset\_game} - Reset game state
+    \item \texttt{/show\_network\_stats} - Display network statistics
+    \item \texttt{/toggle\_debug\_ui} - Show/hide debug information
+\end{itemize}
+
+%----------------------------------------------------------------------------------------

@@ -1,0 +1,468 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+%----------------------------------------------------------------------------------------
+\section{Context and Motivation}
+\label{sec:context-motivation}
+
+%----------------------------------------------------------------------------------------
+\subsection{The Challenge of Teaching High-Performance Computing}
+\label{subsec:hpc-challenge}
+
+High-Performance Computing (HPC) has become an indispensable tool in modern computational science, powering everything from weather forecasting and molecular dynamics simulations to machine learning and big data analytics. From climate modeling and drug discovery to financial simulations and artificial intelligence, parallel computing techniques are fundamental to advancing scientific knowledge and technological innovation. As computational problems grow in scale and complexity, the ability to write efficient parallel programs has transitioned from a specialized skill to a fundamental competency for software engineers and computational scientists.
+
+However, teaching parallel computing concepts presents unique pedagogical challenges. Traditional approaches, such as lectures and textbook exercises, often struggle to convey the dynamic, interactive nature of parallel processes. Students frequently find it difficult to visualize how multiple threads or processes interact, communicate, and coordinate to solve problems efficiently.
+
+The principal challenges in HPC education include:
+
+\begin{enumerate}
+	\item \textbf{Abstraction Gap}: Parallel computing involves concepts like threads, processes, synchronization, and message passing that are inherently abstract. Students often struggle to visualize how multiple execution units interact, communicate, and coordinate.
+
+	\item \textbf{Cognitive Load}: Understanding parallel algorithms requires simultaneous consideration of multiple execution flows, shared resources, race conditions, and synchronization primitives—a significant cognitive burden for learners.
+
+	\item \textbf{Limited Immediate Feedback}: Traditional programming assignments in HPC courses often involve writing code, submitting to a cluster, waiting for results, and debugging—a slow feedback loop that impedes learning.
+
+	\item \textbf{Lack of Visualization}: Parallel processes are inherently concurrent and difficult to observe in real-time. Traditional debugging tools show only snapshots of program state, making it hard to understand the flow of parallel execution.
+
+	\item \textbf{High Entry Barrier}: Setting up HPC environments, compiling parallel programs, and debugging distributed systems requires significant technical expertise that can distract from learning core concepts.
+
+	\item \textbf{Lack of Intuitive Mental Models}: Unlike sequential programming, where the execution model maps naturally to step-by-step thinking, parallel programming requires different mental models that are harder to internalize.
+\end{enumerate}
+
+The abstract nature of concepts like race conditions, synchronization barriers, message passing, ``shared memory'' vs. ``distributed memory,'' ``data parallelism'' vs. ``task parallelism,'' and ``synchronization overhead'' benefit from concrete, interactive demonstrations.
+
+Moreover, parallel programming paradigms like OpenMP (Open Multi-Processing)
+%and MPI (Message Passing Interface)
+require students to think differently about algorithm design. In OpenMP, programmers must consider how to decompose problems into independent tasks that can execute simultaneously while sharing memory.
+%In MPI, they must understand how to distribute data across processes that cannot directly access each other's memory and must communicate explicitly through message passing.
+
+%----------------------------------------------------------------------------------------
+\subsection{Traditional Teaching Methods vs. Serious Games}
+\label{subsec:traditional-vs-games}
+
+Traditional HPC education typically relies on several well-established approaches:
+
+\begin{itemize}
+	\item \textbf{Lecture-based instruction}: Professors explain concepts using slides, diagrams, and pseudocode
+	\item \textbf{Textbook exercises}: Students work through theoretical problems
+	\item \textbf{Programming assignments}: Implementation tasks on academic clusters or multicore machines
+	\item \textbf{Performance profiling}: Analysis of speedup, efficiency, and scalability
+\end{itemize}
+
+While these methods provide theoretical foundations, they often fail to engage students emotionally or provide immediate, intuitive understanding of parallel execution dynamics. Traditional teaching methods (lectures, static code examples) may not sufficiently engage students, leading to superficial understanding without deep conceptual mastery.
+
+\textbf{Serious games}—games designed with a primary purpose beyond entertainment—have emerged as a powerful educational tool across various domains. By leveraging game mechanics such as immediate feedback, progressive challenges, and interactive exploration, serious games can make complex concepts more accessible and engaging.
+
+Educational games offer several pedagogical advantages:
+
+\begin{itemize}
+	\item \textbf{Provide Immediate Feedback}: Players see the consequences of their actions instantly, enabling rapid learning cycles
+	\item \textbf{Create Engaging Experiences}: Game mechanics tap into intrinsic motivation, making learning enjoyable
+	\item \textbf{Enable Active Learning}: Players learn by doing, not just reading or watching
+	\item \textbf{Visualize Abstract Concepts}: Game representations make invisible processes visible
+	\item \textbf{Support Experimentation}: Safe environments for trial and error without real-world consequences
+	\item \textbf{Visualize Parallel Execution}: Show multiple processes or threads working simultaneously in real-time
+	\item \textbf{Lower the Entry Barrier}: Abstract away complex setup and focus on core concepts
+	\item \textbf{Increase Engagement}: Make learning fun and motivating through game mechanics
+	\item \textbf{Enable Experimentation}: Let students try different approaches safely without expensive computational resources
+\end{itemize}
+
+In the context of HPC education, serious games can transform abstract parallelization strategies into tangible, manipulable activities. Instead of imagining threads operating on shared data, students can physically (or virtually) manipulate game elements that represent computation and data.
+
+%----------------------------------------------------------------------------------------
+\subsection{Physical Teaching Experiments as Inspiration}
+\label{subsec:physical-experiments}
+
+The pedagogical approach underlying this thesis stems from real-world classroom experiments conducted by Professor Daniele D'Agostino to teach parallel computing concepts in a tangible, memorable way.
+
+\subsubsection{OpenMP Simulation (Shared Memory Parallelism)}
+In one experiment, approximately 50 numbered cards were placed on a desk, and three students were asked to sort them collaboratively in an ``OpenMP fashion''—meaning no verbal communication, simulating independent threads operating on shared data. Each student could:
+
+\begin{itemize}
+	\item View all cards (representing shared memory accessible to all threads)
+	\item Move cards in the main workspace (representing shared data manipulation)
+	\item Use a private area for local reordering (representing thread-local storage)
+	\item Merge their locally sorted subarrays back into the main array (representing synchronization and merging phases)
+\end{itemize}
+
+This exercise effectively demonstrated:
+\begin{itemize}
+	\item How threads can work independently without explicit communication
+	\item The challenges of coordinating work without synchronization primitives
+	\item The concept of private vs. shared data in parallel computing
+	\item The merge phase characteristic of parallel sorting algorithms
+\end{itemize}
+
+\subsubsection{MPI Simulation (Distributed Memory Parallelism)}
+In another experiment, students were positioned at different desks in the classroom (simulating distributed computational nodes), each receiving a subset of cards. They sorted their local subsets independently, then physically walked to a ``master'' student's desk to deliver their lowest card—simulating MPI message passing. The master student collected cards from all processes and merged them into a globally sorted order.
+
+This exercise illustrated:
+\begin{itemize}
+	\item Distributed data ownership (each process has its own memory space)
+	\item Explicit message passing for communication between processes
+	\item The master-worker pattern common in parallel algorithms
+	\item Network communication overhead (walking takes time, analogous to network latency)
+\end{itemize}
+
+These physical activities were highly effective at conveying parallel computing concepts in a tangible way. Students reported better intuitive understanding and found the exercises memorable. However, these exercises face limitations:
+
+\begin{itemize}
+	\item \textbf{Scalability}: Limited by classroom size and number of students
+	\item \textbf{Repeatability}: Difficult to reproduce outside specific classroom settings
+	\item \textbf{Flexibility}: Hard to vary parameters (number of cards, processes, etc.)
+	\item \textbf{Accessibility}: Requires physical presence and synchronous participation
+\end{itemize}
+
+This thesis aims to capture that pedagogical effectiveness in a scalable, digital format accessible on mobile and desktop devices, enabling students worldwide to experience similar learning benefits without the constraints of physical classrooms.
+
+%----------------------------------------------------------------------------------------
+\subsection{Web-First Approach}
+\label{subsec:web-first}
+
+Modern students are increasingly comfortable with web-based applications, using browsers as primary computing platforms for learning and communication. A web-first educational game offers several strategic advantages:
+
+\begin{itemize}
+	\item \textbf{Accessibility}: Students can access the game from any device with a web browser—laptops, tablets, or smartphones—without installation
+	\item \textbf{Cross-Platform}: Works on Windows, macOS, Linux, Android, and iOS without platform-specific builds
+	\item \textbf{Ease of Deployment}: Instant updates and no app store approval processes
+	\item \textbf{Collaboration}: Web technologies naturally support multiplayer experiences through WebRTC and WebSockets
+	\item \textbf{Low Barrier to Entry}: No downloads, installations, or software licenses required
+	\item \textbf{Portability}: Learning can occur outside traditional classroom settings on any internet-connected device
+\end{itemize}
+
+However, developing educational games for web platforms presents unique technical challenges, particularly when implementing multiplayer functionality that must maintain state consistency across multiple devices with varying network conditions and screen sizes. These challenges include:
+
+\begin{itemize}
+	\item Displaying numerous interactive elements (50+ cards) on small screens
+	\item Implementing responsive touch-based drag-and-drop interactions
+	\item Maintaining real-time synchronization with limited bandwidth
+	\item Ensuring acceptable performance on resource-constrained devices
+	\item Handling variable network latency and potential disconnections
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{The Gap Between Theory and Practice}
+\label{subsec:theory-practice-gap}
+
+Despite the availability of parallel programming frameworks like OpenMP and MPI, students often complete HPC courses without developing strong intuition for critical concepts:
+
+\begin{itemize}
+	\item When to use shared memory vs. distributed memory approaches
+	\item How to decompose problems for parallel execution
+	\item The performance implications of different synchronization strategies
+	\item The trade-offs between communication overhead and parallel speedup
+	\item How load balancing affects overall performance
+	\item The impact of data locality and cache coherence
+\end{itemize}
+
+Educational games can bridge this theory-practice gap by providing:
+
+\begin{itemize}
+	\item \textbf{Low-stakes experimentation}: Students can try different strategies without breaking expensive computational clusters or wasting limited computing time allocations
+	\item \textbf{Visual representations}: Seeing cards move between buffers and containers makes abstract data movement concrete and comprehensible
+	\item \textbf{Performance feedback}: Timing measurements and move counting provide immediate, quantifiable metrics that encourage algorithmic thinking
+	\item \textbf{Collaborative learning}: Multiplayer mode enables peer learning, discussion, and strategy sharing
+	\item \textbf{Iterative refinement}: Students can quickly replay scenarios with different approaches, fostering experimentation
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Problem Statement}
+\label{sec:problem-statement}
+
+This thesis addresses the following comprehensive research problem:
+
+\begin{quote}
+	\textit{How can we design and implement an effective serious game for mobile platforms that teaches fundamental High-Performance Computing concepts (specifically OpenMP and MPI paradigms) through interactive card-sorting gameplay while overcoming the technical challenges of multiplayer state synchronization and mobile UI/UX constraints?}
+\end{quote}
+
+This overarching problem can be decomposed into several interrelated sub-problems:
+
+\subsection{Educational Problem}
+\label{subsec:educational-problem}
+
+\begin{itemize}
+	\item How can abstract parallel computing concepts be mapped to concrete, understandable game mechanics?
+	\item How can a game effectively differentiate between shared-memory (OpenMP) and distributed-memory (MPI) paradigms?
+	\item What game mechanics best illustrate concepts like parallelism, data distribution, synchronization, speedup, scalability, and communication overhead?
+	\item How can the game provide meaningful learning without oversimplifying or creating misleading mental models?
+\end{itemize}
+
+\subsection{Technical Problem}
+\label{subsec:technical-problem}
+
+\begin{itemize}
+	\item How can we implement real-time multiplayer gameplay on mobile devices with acceptable latency?
+	\item How can we maintain consistent game state across multiple clients with potentially unreliable network connections?
+	\item How can we display and manipulate numerous cards (potentially 50--200) on small mobile screens effectively?
+	\item What networking architecture and synchronization framework best supports educational multiplayer gaming?
+	\item How can we handle client disconnections and reconnections gracefully?
+\end{itemize}
+
+\subsection{Design Problem}
+\label{subsec:design-problem}
+
+\begin{itemize}
+	\item How can we balance educational effectiveness with engagement and playability?
+	\item How can we design intuitive touch-based interactions for complex drag-and-drop operations?
+	\item How can we provide appropriate real-time feedback to reinforce learning objectives?
+	\item What visual design supports both usability and educational clarity?
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{Research Objectives}
+\label{sec:objectives}
+
+The primary objective of this thesis is to develop a functional serious game prototype that demonstrates the feasibility and effectiveness of teaching HPC concepts through mobile gaming. This work aims to create an open-source platform suitable for future educational research and publication in conferences and scientific journals.
+
+%----------------------------------------------------------------------------------------
+\subsection{Primary Objectives}
+\label{subsec:primary-objectives}
+
+\begin{enumerate}
+	\item \textbf{Develop an Interactive Serious Game}: Create a game that uses card sorting as a metaphor for parallel sorting algorithms, accurately mapping game mechanics to OpenMP and MPI paradigms.
+
+	\item \textbf{Implement Web-First Functionality}: Develop the game primarily as a web application that runs in browsers, with responsive design that works across different screen sizes, devices, and orientations, ensuring accessibility for students worldwide.
+
+	\item \textbf{Create Multiplayer Capability}: Implement real-time, peer-to-peer multiplayer functionality that enables multiple players (2--4) to collaborate or compete, simulating distributed computing scenarios with explicit message passing.
+
+	\item \textbf{Ensure Educational Effectiveness}: Design gameplay that clearly communicates HPC concepts—speedup, scalability, communication overhead, parallelism patterns—and helps players understand the fundamental differences between parallel programming models.
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\subsection{Secondary Objectives}
+\label{subsec:secondary-objectives}
+
+\begin{enumerate}
+	\setcounter{enumi}{4}
+
+	\item \textbf{Evaluate Technical Feasibility}: Assess the challenges and solutions for multiplayer game development on mobile platforms, particularly regarding real-time state synchronization using the GDSync framework and WebRTC communication.
+
+	\item \textbf{Document Development Process}: Provide comprehensive documentation of technology choices, implementation challenges (especially framework issues), and solutions to guide future developers of educational games.
+
+	\item \textbf{Create Extensible Architecture}: Design the system to allow future additions of more sorting algorithms, HPC concepts (barriers, race conditions, load balancing), and platform support (iOS, web).
+
+	\item \textbf{Assess User Experience}: Gather insights into usability, engagement, and educational effectiveness through testing and iteration, preparing materials for publication.
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\subsection{Tertiary Objectives}
+\label{subsec:tertiary-objectives}
+
+\begin{enumerate}
+	\setcounter{enumi}{8}
+
+	\item Evaluate technical performance on real Android devices (frame rates, network latency, battery usage)
+	\item Gather preliminary feedback on educational effectiveness through informal testing
+	\item Document design patterns and lessons learned for the serious games community
+	\item Prepare materials for publication at relevant conferences and in scientific journals
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\section{Proposed Solution: HPC Sorting Serious Game}
+\label{sec:proposed-solution}
+
+This thesis presents the \textbf{HPC Sorting Serious Game}, a web-first educational game that teaches parallel computing through an interactive card-sorting experience. The game uses a simple yet effective metaphor: sorting numbered cards represents sorting data in parallel computing systems. By manipulating virtual cards, students gain hands-on experience with parallelization strategies without the complexity of actual parallel programming.
+
+%----------------------------------------------------------------------------------------
+\subsection{Core Concept}
+\label{subsec:core-concept}
+
+The game presents players with a deck of numbered cards that must be sorted in ascending order. The fundamental mechanics differ based on the educational mode, each designed to simulate a specific parallel computing paradigm:
+
+\subsubsection{Single-Player Mode (OpenMP Simulation):}
+Represents shared-memory parallelism where multiple threads cooperate on a single address space:
+
+\begin{itemize}
+	\item Players receive all cards in a shared visible area (representing shared memory accessible to all threads)
+	\item Players can use private ``buffer zones'' to temporarily store and locally sort subsets of cards (representing thread-local storage and private variables)
+	\item Multiple players (simulating threads) work simultaneously without explicit communication requirements (representing OpenMP's implicit synchronization model)
+	\item Players can access any card at any time (representing shared memory access patterns)
+	\item No forced turn-taking occurs (representing the independent, concurrent nature of threads)
+\end{itemize}
+
+This mode teaches:
+\begin{itemize}
+	\item Work decomposition strategies
+	\item The concept of private vs. shared data
+	\item Local sorting and global merging patterns
+	\item Independence of parallel threads
+	\item Merge-based parallel sorting algorithms
+\end{itemize}
+
+\subsubsection{Multiplayer Mode (MPI Simulation)}
+Represents distributed-memory parallelism where processes have separate address spaces and communicate explicitly:
+
+\begin{itemize}
+	\item Each player receives a different subset of cards (representing data distribution across processes)
+	\item Players cannot directly see cards held by other players (representing separate memory spaces and lack of shared memory)
+	\item Players must explicitly exchange cards or information (representing MPI message-passing operations like \texttt{MPI\_Send} and \texttt{MPI\_Recv})
+	\item A master player or coordinator may collect sorted results (representing \texttt{MPI\_Gather} and reduction operations)
+	\item Communication overhead is visible through network latency (representing the cost of inter-process communication)
+\end{itemize}
+
+This mode teaches:
+\begin{itemize}
+	\item Data distribution and ownership concepts
+	\item Explicit communication requirements
+	\item The master-worker programming pattern
+	\item Message-passing overhead and latency
+	\item Collective communication operations
+	\item Load balancing challenges
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\subsection{Key Features}
+\label{subsec:key-features}
+
+The game incorporates several features designed to enhance both educational effectiveness and user engagement:
+
+\begin{enumerate}
+	\item \textbf{Intuitive Touch Interface}: Drag-and-drop mechanics optimized for mobile touchscreens with visual feedback during interactions
+
+	\item \textbf{Real-Time Multiplayer}: WebRTC-based peer-to-peer communication for low-latency gameplay without dedicated servers
+
+	\item \textbf{Visual Feedback}: Color-coded cards, smooth animations, and toast notifications to guide players and provide immediate feedback
+
+	\item \textbf{Performance Tracking}: Timer and move counter to encourage algorithmic efficiency and enable comparison of different strategies
+
+	\item \textbf{Scalable Difficulty}: Support for variable numbers of cards (10--200) and players (2--4), allowing progressive complexity
+
+	\item \textbf{No Authentication Required}: Direct gameplay without registration or login barriers, reducing friction for educational use
+
+	\item \textbf{Open Source}: Full source code available on GitHub for educational and research purposes
+
+	\item \textbf{Cross-Platform Potential}: Built with Godot Engine, enabling future deployment to iOS, web, and desktop platforms
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\subsection{Technology Stack}
+\label{subsec:technology-stack}
+
+The game is built using carefully selected open-source technologies:
+
+\begin{itemize}
+	\item \textbf{Godot Engine 4.x}: Open-source, lightweight game engine with excellent 2D capabilities and mobile support. Chosen for its simplicity, active community, and lack of licensing costs.
+
+	\item \textbf{GDScript}: Python-like scripting language for rapid development. Selected for its ease of learning (relevant for students who may examine the source code) and tight integration with Godot.
+
+	\item \textbf{GDSync Framework}: Multiplayer state synchronization framework for Godot, providing high-level abstractions for remote function calls and node replication.
+
+	\item \textbf{WebRTC/NodeWebSockets}: Real-time communication protocols enabling peer-to-peer networking without dedicated servers, reducing infrastructure requirements.
+
+	\item \textbf{Supporting Plugins}:
+	      \begin{itemize}
+		      \item ToastParty: User notification system for feedback
+		      \item Logger: Debugging and development tool
+		      \item VarTree: Runtime variable inspection for development
+		      \item Scene-Selector: Scene management utilities
+	      \end{itemize}
+\end{itemize}
+
+The rationale for these technology choices is detailed in Chapter~\ref{ch:methodology}.
+
+%----------------------------------------------------------------------------------------
+\subsection{Pedagogical Mapping}
+\label{subsec:pedagogical-mapping}
+
+Table~\ref{tab:pedagogical-mapping} illustrates how game mechanics map to HPC concepts, ensuring educational fidelity:
+
+\begin{table}[htbp]
+	\centering
+	\caption{Mapping of HPC concepts to game mechanics}
+	\label{tab:pedagogical-mapping}
+	\begin{tabular}{@{}ll@{}}
+		\toprule
+		\textbf{HPC Concept}          & \textbf{Game Mechanic}                    \\
+		\midrule
+		OpenMP Parallel Region        & Single-player game session                \\
+		Shared Memory                 & Main card container visible to all        \\
+		Thread-Local Storage          & Private buffer zones                      \\
+		Thread Independence           & No forced turn-taking, free card movement \\
+		Work Distribution             & Choosing which cards to sort              \\
+		Parallel Sorting (Merge Sort) & Sorting in buffers, then merging          \\
+		\midrule
+		MPI Process                   & Individual player in multiplayer mode     \\
+		Distributed Memory            & Each player's private buffers             \\
+		Message Passing               & Moving cards between players              \\
+		Master-Worker Pattern         & One player coordinates final merging      \\
+		Communication Overhead        & Network latency for card exchanges        \\
+		Synchronization               & Coordinating who works on which cards     \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+%----------------------------------------------------------------------------------------
+\section{Thesis Contributions}
+\label{sec:contributions}
+
+This thesis makes several contributions to the fields of HPC education, serious game development, and mobile multiplayer architecture:
+
+%----------------------------------------------------------------------------------------
+\subsection{Pedagogical Contributions}
+\label{subsec:pedagogical-contributions}
+
+\begin{enumerate}
+	\item \textbf{Novel Educational Approach}: Introduces a game-based method for teaching parallel computing that emphasizes hands-on, interactive learning over passive instruction, directly inspired by successful physical classroom experiments.
+
+	\item \textbf{Clear Paradigm Differentiation}: Provides distinct gameplay modes that clearly illustrate the fundamental differences between shared-memory (OpenMP) and distributed-memory (MPI) parallel programming paradigms.
+
+	\item \textbf{Accessible Learning Tool}: Creates a freely available, open-source educational resource that requires no specialized hardware, expensive licenses, or complex setup procedures.
+
+	\item \textbf{Validated Pedagogical Mapping}: Demonstrates a concrete mapping between game mechanics and HPC concepts, validated through the lens of established classroom teaching methods.
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\subsection{Technical Contributions}
+\label{subsec:technical-contributions}
+
+\begin{enumerate}
+	\setcounter{enumi}{4}
+
+	\item \textbf{Mobile Multiplayer Architecture}: Demonstrates effective patterns for implementing real-time multiplayer educational games on mobile platforms using peer-to-peer networking.
+
+	\item \textbf{State Synchronization Solutions}: Documents approaches and solutions for maintaining consistency across multiple clients in educational gaming contexts, particularly handling private state (player buffers) alongside shared state (main card container).
+
+	\item \textbf{Design Patterns for Godot}: Provides reusable patterns for serious game development using Godot Engine, including component architecture, scene management, and signal-based communication.
+
+	\item \textbf{GDSync Framework Integration}: Contributes documentation and workarounds for the GDSync framework, including identification and resolution of framework issues, with contributions to the open-source project.
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\subsection{Practical Contributions}
+\label{subsec:practical-contributions}
+
+\begin{enumerate}
+	\setcounter{enumi}{8}
+
+	\item \textbf{Working Prototype}: Delivers a functional, deployable game that can be immediately used in educational settings for teaching HPC concepts.
+
+	\item \textbf{Comprehensive Documentation}: Provides detailed documentation of challenges encountered and solutions implemented, serving as a practical guide for future developers of educational multiplayer games.
+
+	\item \textbf{Extensible Framework}: Creates an architecture that can be extended with additional sorting algorithms, HPC concepts (synchronization barriers, race conditions, load balancing), and platform support (iOS, web, desktop).
+
+	\item \textbf{Open-Source Contribution}: Makes the complete codebase publicly available on GitHub, enabling other educators and researchers to build upon this work.
+\end{enumerate}
+
+%----------------------------------------------------------------------------------------
+\section{Thesis Organization}
+\label{sec:thesis-organization}
+
+The remainder of this thesis is organized as follows:
+
+\textbf{Chapter~\ref{ch:background}: Background and Literature Review} provides comprehensive context on parallel computing fundamentals (OpenMP and MPI), serious games in computer science education, mobile game development challenges, and multiplayer architecture patterns. It reviews related work in educational games and HPC teaching tools, identifying gaps that this thesis addresses.
+
+\textbf{Chapter~\ref{ch:methodology}: Methodology} describes the research approach (Design Science Research methodology), comprehensive requirements analysis (educational, functional, and non-functional), and detailed justification for technology selections (Godot Engine, GDScript, GDSync, WebRTC). It explains the game design methodology for both OpenMP and MPI simulations and outlines the iterative development process.
+
+\textbf{Chapter~\ref{ch:architecture}: System Design and Architecture} presents the high-level architecture of the game system, including detailed scene structure (Main Menu, Lobby, Single-Player, Multiplayer), core component design (Card Manager, Card Component, Buffer System, Timer), multiplayer architecture with host-authoritative state management, GDSync integration patterns, mobile UI/UX design considerations, and comprehensive data flow diagrams.
+
+\textbf{Chapter~\ref{ch:implementation}: Implementation} details the technical implementation, including development environment setup, single-player implementation (card generation, layout, drag-and-drop, buffer zones, sorting validation), multiplayer implementation (GDSync setup, lobby system, state synchronization logic, conflict resolution), code structure and design patterns, mobile-specific optimizations, and debugging tools integration.
+
+\textbf{Chapter~\ref{ch:problems}: Problems and Challenges} provides an honest and comprehensive analysis of difficulties encountered during development, including technology selection trade-offs, GDSync framework issues (protected mode blocking, documentation gaps, GitHub issue resolution), multiplayer synchronization challenges (card order synchronization, timing issues, different client views), mobile UI/UX constraints (displaying many cards, touch interaction precision), state management complexity, performance challenges, testing difficulties, and lessons learned with recommendations for future developers.
+
+\textbf{Chapter~\ref{ch:results}: Results and Evaluation} presents the completed system features with screenshots and demonstrations, technical performance metrics (frame rates, network latency, memory usage, scalability), platform compatibility assessment, comparison with initial requirements, discussion of known limitations, and preliminary evaluation of educational effectiveness (if user studies were conducted).
+
+\textbf{Chapter~\ref{ch:conclusion}: Conclusion and Future Work} summarizes the contributions of this thesis, reflects on how research questions were answered, discusses implications for HPC education and serious game development, outlines comprehensive future work directions (short-term improvements, feature extensions, platform expansions, educational enhancements, research directions), describes publication plans for conferences and journals, and provides final remarks on the potential impact of this work.
+
+\textbf{Appendices} provide supplementary materials including a detailed user manual (installation, gameplay instructions, controls reference), key code listings (algorithms, class definitions, configuration files), API documentation (GDSync usage, plugin APIs), and study materials (if applicable).
+
+%----------------------------------------------------------------------------------------
