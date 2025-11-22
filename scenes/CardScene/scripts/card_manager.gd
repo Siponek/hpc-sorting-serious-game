@@ -15,6 +15,9 @@ var move_count: int = 0
 var is_animating = false
 # Dirty hack to not add multiple var_tree entries
 var _var_tree_mounted: bool = false
+# Finish window management
+var finish_window_open: bool = false
+var finish_window_instance: Node = null
 # TODO would be cool to add coloring/theme selection to main menu,
 # so players can choose if they want rainbow or now
 
@@ -411,6 +414,18 @@ func _on_show_sorted_cards_button_pressed() -> void:
 
 func _finish_game() -> void:
 	"""Called when player finishes the game (cards are sorted)"""
+	# Prevent multiple windows - check both flag and instance validity
+	if finish_window_open or (finish_window_instance and is_instance_valid(finish_window_instance)):
+		logger.log_warning("Finish window already open, ignoring duplicate request")
+		return
+
+	# Mark window as open IMMEDIATELY to prevent race conditions
+	finish_window_open = true
+
+	# Disable the button to prevent multiple clicks
+	if show_sorted_button:
+		show_sorted_button.disabled = true
+
 	# Stop the timer
 	if timer_node:
 		timer_node.stop_timer()
@@ -435,6 +450,15 @@ func _show_finish_game_scene(time_string: String, moves: int, finishing_player_i
 
 	# Instantiate the scene
 	var finish_instance = finish_game_scene.instantiate()
+
+	# Store reference for cleanup
+	finish_window_instance = finish_instance
+
+	# Connect to window close signal
+	if finish_instance.has_signal("window_closed"):
+		finish_instance.window_closed.connect(_on_finish_window_closed)
+	else:
+		logger.log_warning("FinishGameScene missing window_closed signal")
 
 	# Add to tree first so @onready variables are initialized
 	get_tree().root.add_child(finish_instance)
@@ -595,6 +619,23 @@ func check_sorting_order() -> bool:
 	return sorted_correctly
 	# Calculate the time taken
 
+func _on_finish_window_closed():
+	"""Handle finish window closing - reset state and re-enable button"""
+	logger.log_info("Finish window closed, resetting state")
+
+	finish_window_open = false
+	finish_window_instance = null
+
+	# Re-enable the finish button
+	if show_sorted_button:
+		show_sorted_button.disabled = false
+
+func _exit_tree():
+	"""Clean up finish window when scene exits"""
+	if finish_window_instance and is_instance_valid(finish_window_instance):
+		logger.log_info("Scene exiting, cleaning up finish window")
+		finish_window_instance.queue_free()
+		finish_window_instance = null
 
 func check_player_buffer_contiguity() -> bool:
 	# Build a list of all card values from your cards_array array

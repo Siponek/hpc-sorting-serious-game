@@ -77,7 +77,7 @@ func leave_current_lobby():
 		emit_signal("lobby_closed")
 		_reset_lobby_state()
 	else:
-		logger.log_info("Not in a lobby to leave.")
+		logger.log_warning("Not in a lobby to leave.")
 
 func get_player_list() -> Dictionary:
 	return connected_clients.duplicate(true)

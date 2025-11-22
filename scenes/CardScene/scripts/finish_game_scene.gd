@@ -1,5 +1,8 @@
 extends CanvasLayer
 
+# Signal emitted when window is closed
+signal window_closed
+
 @onready var window: Window = $FinishGameWindow
 @onready var title_label: Label = $FinishGameWindow/VBoxContainer/TitleLabel
 @onready var time_label: Label = $FinishGameWindow/VBoxContainer/TimeLabel
@@ -73,6 +76,9 @@ func _on_reset_button_pressed() -> void:
 	"""Reset the game"""
 	logger.log_info("Reset button pressed")
 
+	# Emit signal before closing
+	window_closed.emit()
+
 	# Find the card manager in the scene tree
 	var card_manager = _find_card_manager()
 
@@ -89,12 +95,12 @@ func _on_exit_button_pressed() -> void:
 	"""Exit to main menu"""
 	logger.log_info("Exit to main menu pressed")
 
+	# Emit signal before closing
+	window_closed.emit()
+
 	# If multiplayer, handle cleanup
 	if Settings.is_multiplayer:
-		# TODO: Add proper multiplayer cleanup if needed
-		# ConnectionManager.leave_lobby() or similar
-		pass
-
+		ConnectionManager.leave_current_lobby()
 	# Navigate to main menu
 	get_tree().change_scene_to_file("res://scenes/MainMenuScene/menu_scene.tscn")
 
@@ -103,6 +109,8 @@ func _on_exit_button_pressed() -> void:
 
 func _on_close_requested() -> void:
 	"""Handle window close button"""
+	# Emit signal before closing
+	window_closed.emit()
 	queue_free()
 
 func _find_card_manager() -> Node:

@@ -105,7 +105,7 @@ text = "Exit to main menu"
 [node name="ConfettiParticles" type="GPUParticles2D" parent="."]
 position = Vector2(578, 336)
 emitting = false
-amount = 55
+amount = 1000
 texture = SubResource("GradientTexture2D_ic8ip")
 lifetime = 5.0
 one_shot = true

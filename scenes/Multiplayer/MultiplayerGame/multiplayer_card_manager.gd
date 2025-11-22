@@ -428,6 +428,18 @@ func sync_timer_state(action: String):
 # Override parent's _finish_game to add multiplayer synchronization
 func _finish_game() -> void:
 	"""Override: Called when player finishes the game (cards are sorted)"""
+	# Prevent multiple windows - inherited from parent
+	if finish_window_open or (finish_window_instance and is_instance_valid(finish_window_instance)):
+		logger.log_warning("Finish window already open, ignoring duplicate request")
+		return
+
+	# Mark window as open IMMEDIATELY to prevent race conditions
+	finish_window_open = true
+
+	# Disable the button to prevent multiple clicks
+	if show_sorted_button:
+		show_sorted_button.disabled = true
+
 	# Stop MY timer
 	if timer_node:
 		timer_node.stop_timer()
