@@ -5,9 +5,9 @@ const label_lobby_name_path: NodePath = "MarginContainer/VBoxContainer2/GridCont
 const start_game_button_path: NodePath = "MarginContainer/VBoxContainer2/HBoxContainer/StartGameButton"
 @onready var player_container: Node = $MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby # Ensure this path is correct
 @onready var player_lobby_spawner: NodeInstantiator = $NodeInstantiator
-@onready var options_buffer_slots_count = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/BufferSpinBox.value
-@onready var options_cards_count = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardCountSpinBox.value
-@onready var options_card_range = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardRangeSpinBox.value
+@onready var buffer_spinbox: SpinBox = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/BufferSpinBox
+@onready var card_count_spinbox: SpinBox = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardCountSpinBox
+@onready var card_range_spinbox: SpinBox = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardRangeSpinBox
 @onready var options_container = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions
 @onready var logger = Logger.get_logger(self)
 
@@ -32,6 +32,7 @@ func _ready():
 	GDSync.expose_func(self.clear_player_list_ui)
 	GDSync.expose_func(self.transition_to_multiplayer_game)
 	GDSync.expose_func(self.sync_game_settings)
+	GDSync.expose_func(self.sync_option_changed)
 	# Initial population of the lobby
 	# The lobby_id should be set by the scene that creates this one,
 	# or this scene should fetch it from ConnectionManager.
@@ -47,18 +48,20 @@ func _ready():
 			"text": "You are the host of this lobby! (ID: " + str(ConnectionManager.get_my_client_id()) + ")",
 			"bgcolor": Color.GREEN, # ...
 		})
+		# Connect value_changed signals for host to broadcast changes
+		buffer_spinbox.value_changed.connect(_on_buffer_changed)
+		card_count_spinbox.value_changed.connect(_on_card_count_changed)
+		card_range_spinbox.value_changed.connect(_on_card_range_changed)
 	else:
 		ToastParty.show({
 			"text": "Joined lobby: " + current_lobby_id + " (My ID: " + str(ConnectionManager.get_my_client_id()) + ")",
 			"bgcolor": Color.DARK_GREEN, # ...
 		})
 		start_game_button.visible = false
-		# TODO make changes to spixboxes update on player side too
-		# make every field in options_container non-editable for clients
-		# we can make the clients change their settings later ;>
-		for child in options_container.get_children():
-			if child is SpinBox:
-				child.editable = false
+		# Make SpinBoxes read-only for clients
+		buffer_spinbox.editable = false
+		card_count_spinbox.editable = false
+		card_range_spinbox.editable = false
 
 func set_lobby_id(id: String) -> void:
 	self.get_node(label_lobby_name_path).text = "Lobby ID: " + id
@@ -99,7 +102,7 @@ func _on_cm_player_left(client_id: int):
 func _on_cm_player_list_updated(players_map: Dictionary):
 	# logger.log_info("Player list updated event from CM. Players: ", players_map.size())
 	self.clear_player_list_ui()
-	GDSync.call_func(clear_player_list_ui, [])
+	GDSync.call_func(self.clear_player_list_ui, [])
 	if ConnectionManager.am_i_host():
 		update_player_list_ui(players_map)
 
@@ -125,8 +128,8 @@ func update_player_list_ui(players_map: Dictionary):
 		client_ui_instance.determine_and_set_color(actual_host_id, client_id)
 		await get_tree().process_frame
 		# if client_id != actual_host_id:
-		# 	print("Its me mario: " + str(client_id))
-		# 	GDSync.call_func_on(client_id, print, ["Its me Mario" + str(client_id) + "! "])
+		# 	logger.log_info("Its me mario: " + str(client_id))
+		# 	GDSync.call_func_on(client_id, logger.log_info, ["Its me Mario" + str(client_id) + "! "])
 		# 	GDSync.call_func_on(client_id, client_ui_instance.setup_player_display, [client_id, player_data])
 		# 	GDSync.call_func_on(client_id, client_ui_instance.determine_and_set_color, [actual_host_id, client_id])
 		# else:
@@ -160,34 +163,34 @@ func _on_start_game_button_pressed() -> void:
 			"text": "Host is starting the game...",
 			"bgcolor": Color.BLUE
 		}])
-		
-		# First, sync game settings to all clients
-		var game_settings = {
-			"buffer_slots": int(options_buffer_slots_count),
-			"cards_count": int(options_cards_count),
-			"card_range": int(options_card_range)
+
+		# Read current values from SpinBoxes
+		var game_settings := {
+			"buffer_slots": int(buffer_spinbox.value),
+			"cards_count": int(card_count_spinbox.value),
+			"card_range": int(card_range_spinbox.value)
 		}
-		
+
 		logger.log_info("Broadcasting settings:")
-		print("  - Buffer slots: ", game_settings.buffer_slots)
-		print("  - Cards count: ", game_settings.cards_count)
-		print("  - Card range: ", game_settings.card_range)
-		
+		logger.log_info("  - Buffer slots: ", game_settings.buffer_slots)
+		logger.log_info("  - Cards count: ", game_settings.cards_count)
+		logger.log_info("  - Card range: ", game_settings.card_range)
+
 		# Broadcast settings to all clients
 		GDSync.call_func(self.sync_game_settings, [game_settings])
-		
+
 		# Apply settings locally for host
 		sync_game_settings(game_settings)
-		
+
 		# Wait to ensure settings are synced
 		await get_tree().create_timer(0.5).timeout
-		
+
 		# Then transition everyone to game
 		GDSync.call_func(self.prepare_for_game_transition, [])
 		prepare_for_game_transition()
-		
+
 		await get_tree().create_timer(1.0).timeout
-		
+
 		# Transition all players
 		GDSync.call_func(self.transition_to_multiplayer_game, [])
 		transition_to_multiplayer_game()
@@ -197,16 +200,39 @@ func _on_start_game_button_pressed() -> void:
 func sync_game_settings(settings: Dictionary):
 	"""Apply game settings received from host"""
 	logger.log_info("Syncing game settings: ", settings)
-	
+
 	Settings.player_buffer_count = settings.buffer_slots
 	Settings.cards_count = settings.cards_count
 	Settings.card_value_range = settings.card_range
 	Settings.is_multiplayer = true
-	
+
 	logger.log_info("Settings applied:")
-	print("  - Buffer count: ", Settings.player_buffer_count)
-	print("  - Cards count: ", Settings.cards_count)
-	print("  - Card range: ", Settings.card_value_range)
+	logger.log_info("  - Buffer count: ", Settings.player_buffer_count)
+	logger.log_info("  - Cards count: ", Settings.cards_count)
+	logger.log_info("  - Card range: ", Settings.card_value_range)
+
+func sync_option_changed(option_name: String, new_value: int):
+	"""Sync option changes from host to all clients"""
+	logger.log_info("Syncing option change: ", option_name, " = ", new_value)
+	match option_name:
+		"buffer_slots":
+			buffer_spinbox.value = new_value
+		"cards_count":
+			card_count_spinbox.value = new_value
+		"card_range":
+			card_range_spinbox.value = new_value
+
+func _on_buffer_changed(new_value: float):
+	"""Broadcast buffer slots change to all clients"""
+	GDSync.call_func(self.sync_option_changed, ["buffer_slots", int(new_value)])
+
+func _on_card_count_changed(new_value: float):
+	"""Broadcast card count change to all clients"""
+	GDSync.call_func(self.sync_option_changed, ["cards_count", int(new_value)])
+
+func _on_card_range_changed(new_value: float):
+	"""Broadcast card range change to all clients"""
+	GDSync.call_func(self.sync_option_changed, ["card_range", int(new_value)])
 
 func prepare_for_game_transition() -> void:
 	# Prepare data, show loading indicator, etc.
