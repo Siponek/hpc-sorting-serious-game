@@ -66,7 +66,8 @@ func _update_title_for_player(player_id: int) -> void:
 		title_label.text = "Congratulations!\nWhat a success!"
 		return
 
-	title_label.text = "Game Finished!\nPlayer " + str(player_id) + " clicked finish game! Congratulations!"
+	title_label.text = "Game Finished!
+	Player " + str(player_id) + "\n" + "clicked finish game!\nCongratulations!"
 
 func _on_reset_button_pressed() -> void:
 	"""Reset the game"""
