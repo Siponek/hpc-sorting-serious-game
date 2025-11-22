@@ -9,6 +9,7 @@ class Scripts:
 	const CONNECTION_MANAGER = "res://scenes/Multiplayer/connection_manager.gd"
 	const CONSTANTS = "res://scenes/scripts/constants.gd"
 	const DRAG_STATE = "res://scenes/scripts/drag_state.gd"
+	const FINISH_GAME_SCENE = "res://scenes/CardScene/scripts/finish_game_scene.gd"
 	const FINISH_GAME_SCRIPT = "res://scenes/CardScene/scripts/finish_game_script.gd"
 	const LOGGER = "res://lib/logger/logger.gd"
 	const MAIN_MENU_OPTIONS = "res://scenes/MainMenuScene/main_menu_options.gd"
@@ -50,10 +51,9 @@ class Resources:
 	const PLAY_SVG_802978C_6F_452_DDE_0C_40917B_7989F_9A_2D = "res://.godot/imported/play.svg-802978c6f452dde0c40917b7989f9a2d.res"
 
 class Images:
-	const GD_SYNC_PROTECTED = "res://GDSync-protected.png"
-	const ICON = "res://icon.png"
+	const GD_SYNC_PROTECTED = "res://thesis/resources/images/GDSync-protected.png"
+	const ICON = "res://icon/icon.png"
 	const THEME_COLORS = "res://res/theme-colors.jpg"
-	const VAR_TREE_PREVIEW = "res://var_tree_preview.png"
 	const WEB_EXPORT_144X_144 = "res://exports/web-export/web-export.144x144.png"
 	const WEB_EXPORT_180X_180 = "res://exports/web-export/web-export.180x180.png"
 	const WEB_EXPORT_512X_512 = "res://exports/web-export/web-export.512x512.png"
