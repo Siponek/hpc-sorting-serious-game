@@ -42,7 +42,6 @@ func _ready():
 	GDSync.expose_var(self, "actual_lobby_host_id")
 # --- Public API Methods ---
 func start_hosting_lobby(lobby_name: String, _password: String = "", _is_public: bool = true, _player_limit: int = 0):
-	# logger.log_info("Attempting to create lobby: ", lobby_name)
 	# GDSync.lobby_create(lobby_name, passw password, is_public, player_limit)
 	GDSync.lobby_create(lobby_name)
 

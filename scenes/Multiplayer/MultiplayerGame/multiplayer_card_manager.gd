@@ -67,6 +67,7 @@ func setup_multiplayer_sync():
 	GDSync.expose_func(self.sync_card_entered_buffer)
 	GDSync.expose_func(self.sync_card_left_buffer)
 	GDSync.expose_func(self.sync_timer_state)
+	GDSync.expose_func(self.sync_game_finished)
 
 	logger.log_info("Sync functions exposed")
 
@@ -423,3 +424,40 @@ func sync_timer_state(action: String):
 		timer_node.stop_timer()
 	elif action == "reset" and timer_node:
 		timer_node.reset_timer()
+
+# Override parent's _finish_game to add multiplayer synchronization
+func _finish_game() -> void:
+	"""Override: Called when player finishes the game (cards are sorted)"""
+	# Stop MY timer
+	if timer_node:
+		timer_node.stop_timer()
+	else:
+		logger.log_warning("timer_node is null in _finish_game()")
+
+	# Get final time and move count
+	var final_time_string = timer_node.getCurrentTimeAsString() if timer_node else "N/A"
+	var final_move_count = move_count
+
+	logger.log_info("Game finished! Time: ", final_time_string, " Moves: ", final_move_count)
+
+	# Broadcast to ALL clients that game is finished
+	GDSync.call_func(self.sync_game_finished, [
+		my_client_id,
+		final_time_string,
+		final_move_count
+	])
+
+	# Show MY finish screen (will also show to others via sync)
+	_show_finish_game_scene(final_time_string, final_move_count, my_client_id)
+
+func sync_game_finished(finishing_player_id: int, time_string: String, moves: int):
+	"""All clients receive this when ANY player finishes"""
+	logger.log_info("Player ", finishing_player_id, " finished the game! Time: ", time_string, " Moves: ", moves)
+
+	# Stop everyone's timer
+	if timer_node and timer_node.timer_started:
+		timer_node.stop_timer()
+		logger.log_info("Timer stopped for all players")
+
+	# Show finish screen with the winning player's stats
+	_show_finish_game_scene(time_string, moves, finishing_player_id)

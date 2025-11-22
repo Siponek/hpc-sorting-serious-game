@@ -108,6 +108,7 @@ theme_type_variation = &"ActionSidePanelButton"
 text = "Finish game"
 
 [node name="RestartGameButton" type="Button" parent="RightSideButtonsContainer"]
+visible = false
 layout_mode = 2
 theme = ExtResource("1_ly61b")
 theme_type_variation = &"ActionSidePanelButton"
@@ -155,6 +156,8 @@ size_flags_vertical = 3
 theme_override_constants/separation = 0
 alignment = 1
 script = ExtResource("3_s36k4")
+button_spacing = null
+card_spacing = null
 
 [node name="SwapButtonPanel" type="PanelContainer" parent="VBoxContainer"]
 visible = false
