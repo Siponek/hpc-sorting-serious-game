@@ -1,6 +1,5 @@
 extends Node
 
-
 # Screen resolution constants
 const SCREEN_WIDTH: int = 1151
 const SCREEN_HEIGHT: int = 649
@@ -16,10 +15,12 @@ const DEBUG_MODE: bool = true
 var arguments = {}
 const DEFAULT_MULTIPLAYER_PORT: int = 7777
 var logger := Logger.get_logger_by_name("constants-init")
-var _game_debug_id: String = "" # Cache the parsed ID
+var _game_debug_id: String = ""  # Cache the parsed ID
+
 
 func _ready():
 	parse_game_debug_id()
+
 
 func parse_game_debug_id() -> void:
 	var temp = OS.get_cmdline_args()
@@ -39,8 +40,10 @@ func parse_game_debug_id() -> void:
 	else:
 		logger.log_warning("No game_debug_id found in arguments")
 
+
 func get_game_debug_id() -> String:
 	return _game_debug_id
+
 
 func get_multiplayer_port() -> int:
 	if arguments.has("port"):
