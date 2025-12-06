@@ -7,6 +7,3 @@ addons/**git**
 # Ignore link to submodule
 addons/GD-Sync
 
-# temporary ingore of exports
-exports
-
