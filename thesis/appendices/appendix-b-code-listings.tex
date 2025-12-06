@@ -1,13 +1,24 @@
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 % Appendix B: Code Listings
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
+
+% Set default language for all listings in this file
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    mathescape=false
+}
 
 \section{Introduction}
 \label{app:b:introduction}
 
 This appendix provides key code listings from the HPC Sorting Serious Game implementation. Complete source code is available in the open-source repository.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Core Game Logic}
 \label{app:b:core-logic}
 
@@ -108,11 +119,11 @@ func get_card_value() -> int:
     return card_value
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Card Manager}
 \label{app:b:card-manager}
 
-\begin{lstlisting}[caption={Card Manager script (card_manager.gd)}]
+\begin{lstlisting}[caption={Card Manager script (card\_manager.gd)}]
 extends Node
 class_name CardManager
 
@@ -173,14 +184,14 @@ func get_card_by_id(id: int) -> Card:
     return null
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Multiplayer Networking}
 \label{app:b:multiplayer-networking}
 
 \subsection{Lobby Manager}
 \label{app:b:lobby-manager}
 
-\begin{lstlisting}[caption={Lobby Manager script (lobby_manager.gd)}]
+\begin{lstlisting}[caption={Lobby Manager script (lobby\_manager.gd)}]
 extends Node
 class_name LobbyManager
 
@@ -265,7 +276,7 @@ func start_game():
     game_started.emit()
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{State Synchronization}
 \label{app:b:state-sync}
 
@@ -327,7 +338,7 @@ func is_valid_move(card_id: int, target_id: int) -> bool:
     return true
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{UI Components}
 \label{app:b:ui-components}
 
@@ -352,7 +363,7 @@ ToastParty.show_toast_at_position(
 )
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Utility Functions}
 \label{app:b:utilities}
 
@@ -382,7 +393,7 @@ func measure_fps() -> float:
     return Engine.get_frames_per_second()
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Configuration Files}
 \label{app:b:configuration}
 
@@ -411,7 +422,7 @@ renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Build and Export}
 \label{app:b:build-export}
 
@@ -432,4 +443,4 @@ Key export settings for Android:
     \item \textbf{Export Mode}: Release (optimized)
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------

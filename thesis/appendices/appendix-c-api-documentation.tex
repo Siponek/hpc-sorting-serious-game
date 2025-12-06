@@ -1,13 +1,13 @@
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 % Appendix C: API Documentation
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \section{Introduction}
 \label{app:c:introduction}
 
 This appendix documents the key APIs and interfaces used in the HPC Sorting Serious Game, including custom classes, GDSync integration, and plugin APIs. This documentation is intended for developers who wish to extend or modify the game.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Core Game Classes}
 \label{app:c:core-classes}
 
@@ -44,7 +44,7 @@ The Card class represents an individual playing card.
     \item \texttt{card\_dropped(card: Card, target: Node)} - Emitted on drop
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{CardManager Class}
 \label{app:c:card-manager-class}
 
@@ -75,7 +75,7 @@ Manages the collection of cards and game logic.
     \item \texttt{sorting\_complete()} - Emitted when sorting is finished
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Buffer Class}
 \label{app:c:buffer-class}
 
@@ -108,7 +108,7 @@ Represents a temporary storage area for cards (thread-local storage simulation).
     \item \texttt{buffer\_sorted()} - Emitted after sorting
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Multiplayer Classes}
 \label{app:c:multiplayer-classes}
 
@@ -151,7 +151,7 @@ Manages multiplayer lobby functionality.
     \item \texttt{game\_started()} - Game has started
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{NetworkSync Class}
 \label{app:c:network-sync-class}
 
@@ -173,7 +173,7 @@ Handles state synchronization across clients.
     \item \texttt{broadcast\_game\_state()} - Sends full state to new clients
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{GDSync Framework API}
 \label{app:c:gdsync-api}
 
@@ -204,7 +204,7 @@ var replicated_node: Node
     \item \texttt{OWNER} - Only owner can modify
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{RPC Annotations}
 \label{app:c:gdsync-rpc}
 
@@ -234,7 +234,7 @@ func host_only_function():
     \item \texttt{reliable: bool} - Use reliable transmission
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Connection Management}
 \label{app:c:gdsync-connection}
 
@@ -255,7 +255,7 @@ func host_only_function():
     \item \texttt{connection\_failed()} - Connection attempt failed
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Plugin APIs}
 \label{app:c:plugin-apis}
 
@@ -280,7 +280,7 @@ func host_only_function():
     \item \texttt{TYPE\_WARNING} - Warning toast (yellow)
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Logger API}
 \label{app:c:logger-api}
 
@@ -301,7 +301,7 @@ func host_only_function():
     \item \texttt{Logger.add\_filter(tag: String)} - Filter log messages
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Utility APIs}
 \label{app:c:utility-apis}
 
@@ -317,7 +317,7 @@ func host_only_function():
     \item \texttt{Profiler.get\_memory\_usage() -> int} - Get memory usage in bytes
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Config Manager API}
 \label{app:c:config-api}
 
@@ -330,7 +330,7 @@ func host_only_function():
     \item \texttt{Config.load\_config()} - Load configuration from disk
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Event System}
 \label{app:c:event-system}
 
@@ -363,7 +363,7 @@ func _on_game_started(data: Dictionary):
     \item \texttt{sorting\_complete} - Sorting finished
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Extension Points}
 \label{app:c:extension-points}
 
@@ -393,7 +393,7 @@ func check_win_condition() -> bool:
     return false
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Custom Card Types}
 \label{app:c:custom-card-types}
 
@@ -415,7 +415,7 @@ func activate_ability():
     update_display()
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Development Tools}
 \label{app:c:dev-tools}
 
@@ -432,4 +432,4 @@ Console commands for development:
     \item \texttt{/toggle\_debug\_ui} - Show/hide debug information
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------

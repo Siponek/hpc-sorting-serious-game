@@ -3,27 +3,27 @@
 
 This final chapter summarizes the contributions of this thesis, reflects on how the research questions were answered, discusses implications for HPC education and serious game development, and outlines comprehensive directions for future work.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Summary of Contributions}
 \label{sec:summary-contributions}
 
 This thesis presented the design, implementation, and evaluation of the HPC Sorting Serious Game, a web-first educational tool for teaching parallel computing concepts through interactive card-sorting gameplay.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Primary Contributions}
 \label{subsec:primary-contributions}
 
 The main contributions of this work include:
 
-\paragraph{1. Novel Pedagogical Approach}
+\paragraph*{1. Novel Pedagogical Approach}
 
 \begin{itemize}
-    \item Digital transformation of Professor D'Agostino's successful physical classroom experiments into a scalable, accessible mobile application
-    \item Systematic mapping of HPC concepts (OpenMP shared memory, MPI distributed memory) to concrete, manipulable game mechanics
+    \item Digital transformation of Professor D'Agostino's successful physical classroom experiments into a scalable, accessible web-based application
+    \item Systematic mapping of HPC concepts (specifically OpenMP shared-memory parallelism and sequential vs. parallel execution) to concrete, manipulable game mechanics
     \item Demonstration that serious games can serve as effective icebreakers for teaching abstract parallel computing concepts
 \end{itemize}
 
-\paragraph{2. Technical Implementation}
+\paragraph*{2. Technical Implementation}
 
 \begin{itemize}
     \item Functional serious game prototype demonstrating real-time multiplayer synchronization on mobile platforms
@@ -32,7 +32,7 @@ The main contributions of this work include:
     \item Mobile UI/UX design patterns for displaying and manipulating numerous interactive elements on small screens
 \end{itemize}
 
-\paragraph{3. Documentation and Knowledge Transfer}
+\paragraph*{3. Documentation and Knowledge Transfer}
 
 \begin{itemize}
     \item Comprehensive documentation of technical challenges (especially GDSync framework issues) and solutions
@@ -41,7 +41,7 @@ The main contributions of this work include:
     \item Contributions to GDSync project documentation and issue resolution
 \end{itemize}
 
-\paragraph{4. Preliminary Validation}
+\paragraph*{4. Preliminary Validation}
 
 \begin{itemize}
     \item Demonstration of technical feasibility through performance metrics and compatibility testing
@@ -49,17 +49,17 @@ The main contributions of this work include:
     \item Evidence suggesting educational value as supplementary/introductory tool for HPC education
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Research Questions Revisited}
 \label{sec:research-questions}
 
 Returning to the research problem stated in Chapter~\ref{ch:introduction}:
 
 \begin{quote}
-    \textit{How can we design and implement an effective serious game for mobile platforms that teaches fundamental High-Performance Computing concepts (specifically OpenMP and MPI paradigms) through interactive card-sorting gameplay while overcoming the technical challenges of multiplayer state synchronization and mobile UI/UX constraints?}
+    \textit{How can we design and implement an effective serious game for web platforms that teaches fundamental High-Performance Computing concepts (specifically OpenMP shared-memory parallelism and sequential vs. parallel execution) through interactive card-sorting gameplay while overcoming the technical challenges of multiplayer state synchronization and responsive UI/UX constraints?}
 \end{quote}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Addressing the Educational Problem}
 \label{subsec:educational-problem-answered}
 
@@ -69,15 +69,15 @@ Returning to the research problem stated in Chapter~\ref{ch:introduction}:
 \begin{itemize}
     \item Card-sorting as metaphor for data manipulation
     \item Shared container representing shared memory (OpenMP)
-    \item Private buffers representing thread-local or distributed memory
-    \item Card exchanges representing message passing (MPI)
-    \item Network latency representing communication overhead
+    \item Private buffers representing thread-local storage (OpenMP)
+    \item Card movement between shared container and private buffers representing memory access patterns
+    \item Network latency representing synchronization and communication overhead
     \item Timer and move counter representing performance metrics
 \end{itemize}
 
 This mapping was validated through recognition by HPC-experienced participants and engagement by HPC-novice participants.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Addressing the Technical Problem}
 \label{subsec:technical-problem-answered}
 
@@ -92,7 +92,7 @@ This mapping was validated through recognition by HPC-experienced participants a
     \item Target 60 FPS achieved for typical scenarios on mid-range devices
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Addressing the Design Problem}
 \label{subsec:design-problem-answered}
 
@@ -109,17 +109,17 @@ This mapping was validated through recognition by HPC-experienced participants a
 
 However, the design can be improved with better onboarding and educational scaffolding for learners without prior HPC exposure.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Implications}
 \label{sec:implications}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{For HPC Education}
 \label{subsec:implications-hpc-education}
 
 This work has several implications for teaching parallel computing:
 
-\paragraph{Complementary Tool, Not Replacement:}
+\paragraph*{Complementary Tool, Not Replacement:}
 
 Serious games are most valuable as \textbf{complementary tools} alongside traditional instruction:
 \begin{itemize}
@@ -129,7 +129,7 @@ Serious games are most valuable as \textbf{complementary tools} alongside tradit
     \item Deploy as discussion starter for deeper exploration
 \end{itemize}
 
-\paragraph{Accessibility Matters:}
+\paragraph*{Accessibility Matters:}
 
 Web-first design significantly enhances accessibility:
 \begin{itemize}
@@ -140,7 +140,7 @@ Web-first design significantly enhances accessibility:
     \item Reduces barriers to entry for HPC education
 \end{itemize}
 
-\paragraph{Visualization Is Powerful:}
+\paragraph*{Visualization Is Powerful:}
 
 Making abstract concepts visible and manipulable:
 \begin{itemize}
@@ -150,13 +150,13 @@ Making abstract concepts visible and manipulable:
     \item Makes HPC concepts less intimidating
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{For Serious Game Development}
 \label{subsec:implications-serious-games}
 
 This work offers insights for developers of educational multiplayer games:
 
-\paragraph{Framework Selection is Critical:}
+\paragraph*{Framework Selection is Critical:}
 
 \begin{itemize}
     \item Thoroughly evaluate frameworks before committing
@@ -165,7 +165,7 @@ This work offers insights for developers of educational multiplayer games:
     \item Engage with framework maintainers proactively
 \end{itemize}
 
-\paragraph{Multiplayer Adds Complexity:}
+\paragraph*{Multiplayer Adds Complexity:}
 
 \begin{itemize}
     \item Start with single-player; add multiplayer incrementally
@@ -174,7 +174,7 @@ This work offers insights for developers of educational multiplayer games:
     \item Network variability must be designed for, not retrofitted
 \end{itemize}
 
-\paragraph{Mobile Constraints Are Real:}
+\paragraph*{Mobile Constraints Are Real:}
 
 \begin{itemize}
     \item Design for small screens and touch input from the start
@@ -183,26 +183,26 @@ This work offers insights for developers of educational multiplayer games:
     \item Test on diverse devices, not just flagship models
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Future Work}
 \label{sec:future-work}
 
 Numerous opportunities exist for extending and improving this work.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Short-Term Enhancements}
 \label{subsec:short-term-enhancements}
 
 Improvements that could be implemented in 1--3 months:
 
-\paragraph{Onboarding and Tutorial:}
+\paragraph*{Onboarding and Tutorial:}
 \begin{itemize}
     \item Interactive tutorial explaining game mechanics
     \item Tooltips and contextual hints for first-time users
     \item Guided first playthrough highlighting key concepts
 \end{itemize}
 
-\paragraph{Educational Overlay:}
+\paragraph*{Educational Overlay:}
 \begin{itemize}
     \item Optional explanations connecting gameplay to HPC concepts
     \item Pop-up definitions of terms (thread, process, synchronization)
@@ -210,7 +210,7 @@ Improvements that could be implemented in 1--3 months:
     \item Links to additional resources for deeper learning
 \end{itemize}
 
-\paragraph{Enhanced Feedback:}
+\paragraph*{Enhanced Feedback:}
 \begin{itemize}
     \item Player activity indicators showing what others are doing
     \item Visual representation of communication patterns
@@ -218,26 +218,26 @@ Improvements that could be implemented in 1--3 months:
     \item Suggestions for improvement
 \end{itemize}
 
-\paragraph{iOS Support:}
+\paragraph*{iOS Support:}
 \begin{itemize}
     \item Export to iOS using Godot's iOS templates
     \item Address Apple App Store requirements
     \item Test on iPhone and iPad devices
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Medium-Term Extensions}
 \label{subsec:medium-term-extensions}
 
 Enhancements requiring 3--6 months of development:
 
-\paragraph{Additional Game Modes:}
+\paragraph*{Additional Game Modes:}
 
 \begin{enumerate}
     \item \textbf{Algorithm-Specific Modes}: Demonstrate specific parallel sorting algorithms
           \begin{itemize}
               \item Parallel merge sort
-              \item Sample sort (MPI-style)
+              \item Sample sort (distributed-memory style, future MPI extension)
               \item Bitonic sort
           \end{itemize}
 
@@ -257,7 +257,7 @@ Enhancements requiring 3--6 months of development:
           \end{itemize}
 \end{enumerate}
 
-\paragraph{Enhanced Analytics:}
+\paragraph*{Enhanced Analytics:}
 
 \begin{itemize}
     \item Detailed performance metrics (speedup, efficiency, scalability)
@@ -266,7 +266,7 @@ Enhancements requiring 3--6 months of development:
     \item Progress tracking across multiple sessions
 \end{itemize}
 
-\paragraph{Web Export:}
+\paragraph*{Web Export:}
 
 \begin{itemize}
     \item HTML5 export for browser-based play
@@ -275,7 +275,7 @@ Enhancements requiring 3--6 months of development:
     \item Cross-platform multiplayer (mobile + web)
 \end{itemize}
 
-\paragraph{Instructor Dashboard:}
+\paragraph*{Instructor Dashboard:}
 
 \begin{itemize}
     \item Classroom management interface
@@ -284,13 +284,13 @@ Enhancements requiring 3--6 months of development:
     \item Customizable game parameters and scenarios
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Long-Term Research Directions}
 \label{subsec:long-term-research}
 
 Research directions requiring 6+ months and potential collaborations:
 
-\paragraph{Formal Educational Evaluation:}
+\paragraph*{Formal Educational Evaluation:}
 
 Conduct rigorous educational research to assess learning outcomes:
 
@@ -302,7 +302,7 @@ Conduct rigorous educational research to assess learning outcomes:
     \item \textbf{Publication}: Results submitted to CS education conferences (SIGCSE, ICER)
 \end{itemize}
 
-\paragraph{Learning Analytics Integration:}
+\paragraph*{Learning Analytics Integration:}
 
 \begin{itemize}
     \item Instrument game to collect detailed interaction data
@@ -312,7 +312,7 @@ Conduct rigorous educational research to assess learning outcomes:
     \item Research publication in learning analytics venues (LAK, EDM)
 \end{itemize}
 
-\paragraph{GPU Parallelism Extension:}
+\paragraph*{GPU Parallelism Extension:}
 
 Extend game to cover GPU computing concepts (CUDA, OpenCL):
 
@@ -323,18 +323,19 @@ Extend game to cover GPU computing concepts (CUDA, OpenCL):
     \item Divergence and bank conflict demonstrations
 \end{itemize}
 
-\paragraph{Hybrid Parallelism:}
+\paragraph*{Distributed Memory Extension (MPI):}
 
-Simulate hybrid MPI+OpenMP programming:
+Future extension to simulate MPI distributed-memory programming:
 
 \begin{itemize}
-    \item Multiple "nodes" (groups of players)
-    \item Shared memory within nodes, message passing between nodes
-    \item Hierarchical parallelism concepts
+    \item Separate player "nodes" with isolated memory spaces
+    \item Explicit message passing between nodes (simulating MPI\_Send/MPI\_Recv)
+    \item Support for hybrid MPI+OpenMP programming models
+    \item Hierarchical parallelism with shared memory within nodes
     \item Load balancing across heterogeneous resources
 \end{itemize}
 
-\paragraph{AI-Assisted Learning:}
+\paragraph*{AI-Assisted Learning:}
 
 Integrate AI to enhance educational effectiveness:
 
@@ -345,11 +346,11 @@ Integrate AI to enhance educational effectiveness:
     \item Natural language explanations of concepts
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Community and Ecosystem Development}
 \label{subsec:community-development}
 
-\paragraph{Open Source Community Building:}
+\paragraph*{Open Source Community Building:}
 
 \begin{itemize}
     \item Publish to GitHub with comprehensive documentation
@@ -359,7 +360,7 @@ Integrate AI to enhance educational effectiveness:
     \item Maintain active development and support
 \end{itemize}
 
-\paragraph{Educational Resource Development:}
+\paragraph*{Educational Resource Development:}
 
 \begin{itemize}
     \item Instructor guides with lesson plans
@@ -369,7 +370,7 @@ Integrate AI to enhance educational effectiveness:
     \item Curriculum modules incorporating the game
 \end{itemize}
 
-\paragraph{Conference and Journal Publications:}
+\paragraph*{Conference and Journal Publications:}
 
 Disseminate findings to relevant research communities:
 
@@ -389,11 +390,11 @@ Potential paper topics:
     \item Pedagogical mapping from physical to digital activities
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Limitations and Reflections}
 \label{sec:limitations-reflections}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Methodological Limitations}
 \label{subsec:methodological-limitations}
 
@@ -415,11 +416,11 @@ Potential paper topics:
     \item Limited integration with formal educational contexts
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Reflections on the Development Process}
 \label{subsec:development-reflections}
 
-\paragraph{What Worked Well:}
+\paragraph*{What Worked Well:}
 
 \begin{itemize}
     \item Iterative development allowed course correction
@@ -429,7 +430,7 @@ Potential paper topics:
     \item Informal testing surfaced usability issues early
 \end{itemize}
 
-\paragraph{What Could Be Improved:}
+\paragraph*{What Could Be Improved:}
 
 \begin{itemize}
     \item Earlier, more frequent testing with target users
@@ -439,7 +440,7 @@ Potential paper topics:
     \item More structured approach to educational validation
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Concluding Remarks}
 \label{sec:concluding-remarks}
 
@@ -461,10 +462,11 @@ As parallel computing becomes increasingly fundamental to modern software engine
 
 The author hopes this work inspires further research and development in educational technologies for HPC and serves as a useful resource for educators, students, and game developers interested in the serious games domain.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Final Thoughts}
 \label{sec:final-thoughts}
 
+\[To be written last, after all revisions are complete.\]
 Teaching parallel computing remains challenging, but it need not be boring or inaccessible. By combining pedagogical insight, technical innovation, and game design principles, we can create learning experiences that are both effective and enjoyable.
 
 The journey from physical card-sorting experiments in a classroom to a digital multiplayer mobile game demonstrates the potential for technology to scale and extend proven teaching methods. While the game developed in this thesis is far from perfect, it represents a meaningful contribution to the ongoing effort to make HPC education more engaging and accessible.
@@ -478,4 +480,4 @@ As we look to the future, the convergence of mobile computing, cloud infrastruct
     \textit{— Ancient Proverb}
 \end{center}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------

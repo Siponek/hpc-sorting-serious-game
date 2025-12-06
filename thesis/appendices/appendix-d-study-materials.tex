@@ -1,13 +1,13 @@
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 % Appendix D: Study Materials
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \section{Introduction}
 \label{app:d:introduction}
 
-This appendix provides educational materials to help students and instructors connect the HPC Sorting Serious Game to formal parallel computing concepts. It includes learning objectives, discussion questions, exercises, and connections to OpenMP and MPI programming.
+This appendix provides educational materials to help students and instructors connect the HPC Sorting Serious Game to formal parallel computing concepts. It includes learning objectives, discussion questions, exercises, and connections to OpenMP programming and sequential vs. parallel execution.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Learning Objectives}
 \label{app:d:learning-objectives}
 
@@ -16,38 +16,39 @@ This appendix provides educational materials to help students and instructors co
 After playing the game, students should be able to:
 
 \begin{enumerate}
-    \item \textbf{Define Parallelism}: Explain what it means to perform multiple tasks simultaneously
-    \item \textbf{Identify Parallel Paradigms}: Distinguish between shared-memory and distributed-memory parallelism
-    \item \textbf{Understand Speedup}: Describe how parallel execution can reduce total execution time
-    \item \textbf{Recognize Communication Costs}: Explain that coordination between parallel workers has overhead
-    \item \textbf{Appreciate Load Balancing}: Understand the importance of distributing work evenly
+    \item \textbf{Define Parallelism}: Explain what it means to perform multiple tasks at the same time
+    \item \textbf{Understand Teamwork Benefits}: Describe how working together can finish tasks faster
+    \item \textbf{Recognize Coordination Challenges}: Explain that working together requires communication and planning
+    \item \textbf{Appreciate Fair Work Distribution}: Understand why it's important that everyone has about the same amount of work
+    \item \textbf{Identify When Teamwork Helps}: Recognize that some tasks benefit from multiple workers more than others
 \end{enumerate}
 
-\subsection{OpenMP Concepts (Single-Player Mode)}
+\subsection{Sequential Execution Concepts (Single-Player Mode)}
 
 Students should understand:
 
 \begin{enumerate}
-    \item Threads share a common memory space
-    \item Each thread can have private (local) data
-    \item Synchronization is implicit or managed by programmer
-    \item Work can be divided among threads
+    \item A single process executes all operations sequentially
+    \item No parallelism or concurrency
+    \item Simple but potentially slower for large datasets
+    \item Baseline for comparison with parallel execution
+    \item All data is accessible directly without coordination
+\end{enumerate}
+
+\subsection{OpenMP Concepts (Multiplayer Mode)}
+
+Students should understand:
+
+\begin{enumerate}
+    \item Multiple threads share a common memory space
+    \item Each thread can have private (local) data in buffers
+    \item Threads work collaboratively on shared data
+    \item Synchronization occurs through shared container access
+    \item Work is divided among threads for parallel execution
     \item Final merge combines results from parallel execution
 \end{enumerate}
 
-\subsection{MPI Concepts (Multiplayer Mode)}
-
-Students should understand:
-
-\begin{enumerate}
-    \item Processes have separate memory spaces
-    \item Communication requires explicit message passing
-    \item Data must be distributed across processes
-    \item Communication has latency costs
-    \item Coordination patterns (master-worker, collective operations)
-\end{enumerate}
-
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Discussion Questions}
 \label{app:d:discussion-questions}
 
@@ -99,208 +100,150 @@ Bridge from game to formal concepts:
     \item When might communication costs outweigh parallelism benefits?
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Classroom Activities}
 \label{app:d:classroom-activities}
 
 \subsection{Activity 1: Strategy Competition}
 
-\paragraph{Objective:} Compare different sorting strategies and analyze performance.
+\paragraph{Objective:} Compare different ways to sort cards and see which works best.
 
 \paragraph{Instructions:}
 \begin{enumerate}
     \item Divide class into teams of 2--3 students
-    \item Each team plays the game with the same configuration (e.g., 50 cards)
-    \item Teams develop and document their strategy
-    \item Compare completion times and move counts
-    \item Discuss which strategies were most efficient and why
+    \item Each team plays the game with the same settings (e.g., 50 cards, 3 players)
+    \item Teams write down their strategy: How will you divide the work? Will you help each other?
+    \item Compare completion times between teams
+    \item Discuss which strategies worked well and why
 \end{enumerate}
 
 \paragraph{Discussion:}
 \begin{itemize}
-    \item Which strategy was fastest? Why?
-    \item Which strategy used fewest moves? Are time and moves correlated?
-    \item How do efficient sorting algorithms (merge sort, quick sort) relate to the strategies used?
+    \item Which strategy was fastest? Why do you think it worked better?
+    \item Did teams that divided work evenly finish faster?
+    \item What problems did your team face during the game?
+    \item If you played again, what would you do differently?
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
-\subsection{Activity 2: Scalability Experiment}
+%-----------------------------------------------------------------------
+\subsection{Activity 2: Does More Players Mean Faster?}
 
-\paragraph{Objective:} Investigate how performance changes with problem size and parallelism degree.
+\paragraph{Objective:} Investigate how adding more players affects completion time.
 
 \paragraph{Instructions:}
 \begin{enumerate}
-    \item Students play multiplayer mode with different configurations:
+    \item Students play multiplayer mode with different numbers of players:
           \begin{itemize}
               \item 2 players, 50 cards
               \item 3 players, 50 cards
               \item 4 players, 50 cards
-              \item 2 players, 100 cards
-              \item 4 players, 100 cards
           \end{itemize}
     \item Record completion times for each configuration
-    \item Plot speedup: $\text{Speedup} = \frac{T_1}{T_n}$ where $T_n$ is time with $n$ players
-    \item Discuss whether speedup is linear
+    \item Create a simple chart showing number of players vs. time
+    \item Discuss the results
 \end{enumerate}
 
 \paragraph{Analysis Questions:}
 \begin{itemize}
-    \item Does doubling the number of players halve the time?
-    \item What factors prevent perfect linear speedup?
-    \item How does this relate to Amdahl's Law?
+    \item Does doubling the number of players cut the time in half?
+    \item What makes it hard to keep getting faster as you add more players?
+    \item Can you think of tasks where adding more people doesn't help much?
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
-\subsection{Activity 3: Communication Overhead}
+%-----------------------------------------------------------------------
+\subsection{Activity 3: Working Together vs. Working Separately}
 
-\paragraph{Objective:} Understand the cost of communication in distributed systems.
+\paragraph{Objective:} Understand when it's better to work together versus work separately.
 
 \paragraph{Instructions:}
 \begin{enumerate}
     \item Play multiplayer mode with different strategies:
           \begin{itemize}
-              \item \textbf{Strategy A}: Minimize card passing (each player sorts their cards independently, final merge only)
-              \item \textbf{Strategy B}: Frequent card passing (players exchange cards often to balance work)
+              \item \textbf{Strategy A}: Each player sorts their own cards independently, then combine at the end
+              \item \textbf{Strategy B}: Players frequently pass cards to each other to help balance the work
           \end{itemize}
-    \item Record time and number of card exchanges
-    \item Compare strategies
+    \item Record your time and count how many times cards were passed between players
+    \item Compare which strategy was faster
 \end{enumerate}
 
 \paragraph{Discussion:}
 \begin{itemize}
     \item Which strategy was faster?
-    \item What is the trade-off between load balancing and communication?
-    \item How does network latency (simulated by passing time) affect the optimal strategy?
-    \item How does this relate to MPI programming considerations?
+    \item Does passing cards between players take time? How much?
+    \item When is it worth the time to pass cards to another player?
+    \item Can you think of real-world situations where coordination takes more time than it saves?
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Exercises}
 \label{app:d:exercises}
 
-\subsection{Exercise 1: Parallel Algorithm Design}
+These exercises are designed for students aged 12-16 with no prior programming experience. They focus on understanding concepts through the game rather than technical implementation.
+
+\subsection{Exercise 1: Comparing Single and Multiple Players}
 
 \paragraph{Task:}
 
-Design a parallel sorting algorithm for $N$ cards with $P$ players.
-
-\paragraph{Questions:}
-\begin{enumerate}
-    \item How would you distribute the cards among players?
-    \item What sorting algorithm would each player use locally?
-    \item How would you merge the sorted results?
-    \item What is the theoretical time complexity?
-    \item What assumptions are you making about communication costs?
-\end{enumerate}
-
-\paragraph{Pseudocode:}
-
-Write pseudocode for your algorithm in both OpenMP-style (shared memory) and MPI-style (message passing).
-
-%----------------------------------------------------------------------------------------
-\subsection{Exercise 2: Performance Modeling}
-
-\paragraph{Task:}
-
-Model the expected performance of parallel sorting.
-
-\paragraph{Given:}
+Play the game twice with the same number of cards (e.g., 30 cards):
 \begin{itemize}
-    \item Serial sorting time: $T_{\text{serial}} = O(N \log N)$
-    \item Number of processes: $P$
-    \item Communication time per message: $t_{\text{comm}}$
+    \item First time: Single-player mode
+    \item Second time: Multiplayer mode with 2-3 friends
 \end{itemize}
 
 \paragraph{Questions:}
 \begin{enumerate}
-    \item What is the theoretical parallel time assuming perfect load balance?
-    \item How many communication operations are needed?
-    \item Express total parallel time including communication overhead
-    \item Under what conditions does parallelization provide benefit?
+    \item Which mode finished faster?
+    \item Was multiplayer always faster? If not, why not?
+    \item What made working together harder than working alone?
+    \item If you added more players, would it keep getting faster forever? Why or why not?
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
-\subsection{Exercise 3: OpenMP Implementation}
+%-----------------------------------------------------------------------
+\subsection{Exercise 2: Finding the Best Team Size}
 
 \paragraph{Task:}
 
-Write OpenMP code to parallelize a sorting algorithm.
-
-\paragraph{Code Template:}
-
-\begin{lstlisting}[language=C++]
-#include <omp.h>
-#include <algorithm>
-#include <vector>
-
-void parallel_sort(std::vector<int>& data, int num_threads) {
-    int n = data.size();
-
-    #pragma omp parallel num_threads(num_threads)
-    {
-        // TODO: Implement parallel sorting
-        // 1. Divide data among threads
-        // 2. Sort local portion
-        // 3. Merge sorted portions
-    }
-}
-\end{lstlisting}
-
-\paragraph{Requirements:}
+Try sorting 50 cards with different numbers of players and record your time:
 \begin{itemize}
-    \item Use OpenMP directives for parallelization
-    \item Each thread sorts a portion of the array
-    \item Implement a parallel merge phase
-    \item Compare performance with serial sorting
+    \item 1 player (you alone)
+    \item 2 players
+    \item 3 players
+    \item 4 players
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
-\subsection{Exercise 4: MPI Implementation}
+\paragraph{Questions:}
+\begin{enumerate}
+    \item Which team size was fastest?
+    \item Did more players always mean faster sorting?
+    \item What problems happened when you had too many players?
+    \item Can you think of real-world situations where having too many helpers makes things slower?
+\end{enumerate}
+
+%-----------------------------------------------------------------------
+\subsection{Exercise 3: Dividing the Work}
 
 \paragraph{Task:}
 
-Write MPI code to sort data distributed across processes.
-
-\paragraph{Code Template:}
-
-\begin{lstlisting}[language=C++]
-#include <mpi.h>
-#include <vector>
-#include <algorithm>
-
-void mpi_sort(std::vector<int>& local_data) {
-    int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-    // TODO: Implement MPI sorting
-    // 1. Sort local data
-    // 2. Exchange data with other processes
-    // 3. Merge to produce globally sorted result
-}
-
-int main(int argc, char** argv) {
-    MPI_Init(&argc, &argv);
-
-    // Generate or distribute data
-    std::vector<int> local_data = get_local_data();
-
-    mpi_sort(local_data);
-
-    MPI_Finalize();
-    return 0;
-}
-\end{lstlisting}
-
-\paragraph{Requirements:}
+Play multiplayer mode and try two different strategies:
 \begin{itemize}
-    \item Use MPI communication primitives (\texttt{MPI\_Send}, \texttt{MPI\_Recv}, \texttt{MPI\_Gather})
-    \item Implement sample sort or merge-based approach
-    \item Handle data distribution and collection
-    \item Measure and report speedup
+    \item \textbf{Strategy A}: Each player takes an equal number of cards at the start and sorts them
+    \item \textbf{Strategy B}: Players help whoever has the most cards remaining
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+\paragraph{Questions:}
+\begin{enumerate}
+    \item Which strategy felt easier to coordinate?
+    \item Which strategy finished faster?
+    \item What happens if one player is much faster than the others?
+    \item How does this relate to group projects in school?
+\end{enumerate}
+
+%-----------------------------------------------------------------------
+% Note: Advanced exercises involving complexity analysis, OpenMP code implementation,
+% and performance modeling are not appropriate for the target age group (12-16 years old).
+% Those concepts should be introduced in undergraduate computer science courses.
+
+%-----------------------------------------------------------------------
 \section{Conceptual Mappings}
 \label{app:d:conceptual-mappings}
 
@@ -311,42 +254,26 @@ int main(int argc, char** argv) {
     \caption{Detailed game-to-OpenMP concept mapping}
     \begin{tabular}{@{}p{4cm}p{5cm}p{5cm}@{}}
         \toprule
-        \textbf{Game Element}         & \textbf{OpenMP Concept}           & \textbf{Code Example}                 \\
+        \textbf{Game Element} & \textbf{OpenMP Concept} & \textbf{Code Example}          \\
         \midrule
-        Single-player session         & Parallel region                   & \texttt{\#pragma omp parallel}        \\
-        Main card container           & Shared array                      & Global array variable                 \\
-        Buffer zones                  & Thread-private storage            & \texttt{private(buffer)}              \\
-        No forced turn-taking         & Independent threads               & No explicit synchronization           \\
-        Sorting within buffer         & Local computation                 & Serial code in parallel region        \\
-        Merging back to main          & Reduction/merge                   & \texttt{\#pragma omp critical}        \\
-        Completion check              & Barrier synchronization           & \texttt{\#pragma omp barrier}         \\
+        Single-player session & Parallel region         & \texttt{\#pragma omp parallel} \\
+        Main card container   & Shared array            & Global array variable          \\
+        Buffer zones          & Thread-private storage  & \texttt{private(buffer)}       \\
+        No forced turn-taking & Independent threads     & No explicit synchronization    \\
+        Sorting within buffer & Local computation       & Serial code in parallel region \\
+        Merging back to main  & Reduction/merge         & \texttt{\#pragma omp critical} \\
+        Completion check      & Barrier synchronization & \texttt{\#pragma omp barrier}  \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-%----------------------------------------------------------------------------------------
-\subsection{Game to MPI}
+%-----------------------------------------------------------------------
+% Table D.2: Game-to-MPI mapping REMOVED
+% The game does not implement MPI distributed-memory concepts.
+% Only OpenMP shared-memory parallelism is covered.
+% See Chapter 8 (Future Work) for potential MPI extension.
 
-\begin{table}[htbp]
-    \centering
-    \caption{Detailed game-to-MPI concept mapping}
-    \begin{tabular}{@{}p{4cm}p{5cm}p{5cm}@{}}
-        \toprule
-        \textbf{Game Element}    & \textbf{MPI Concept}          & \textbf{Code Example}                \\
-        \midrule
-        Individual player        & MPI process                   & Identified by rank                   \\
-        Player's cards           & Local data                    & Local array per process              \\
-        Private buffers          & Process-private memory        & Variables not shared                 \\
-        Passing cards            & Message passing               & \texttt{MPI\_Send/MPI\_Recv}         \\
-        Network delay            & Communication latency         & Inherent in message passing          \\
-        Host player              & Master process (rank 0)       & \texttt{if (rank == 0)}              \\
-        Final merge              & MPI\_Gather                   & \texttt{MPI\_Gather(...)}            \\
-        Completion broadcast     & MPI\_Bcast                    & \texttt{MPI\_Bcast(...)}             \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Assessment Rubric}
 \label{app:d:assessment-rubric}
 
@@ -365,7 +292,7 @@ For instructors wishing to grade student understanding:
 
 \begin{itemize}
     \item (15 pts) Designs reasonable parallel sorting strategy
-    \item (15 pts) Implements parallel sorting code (OpenMP or MPI)
+    \item (15 pts) Implements parallel sorting code (OpenMP)
 \end{itemize}
 
 \subsection{Analysis and Reflection (30 points)}
@@ -376,7 +303,7 @@ For instructors wishing to grade student understanding:
     \item (10 pts) Reflects on limitations and trade-offs
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Additional Resources}
 \label{app:d:additional-resources}
 
@@ -385,15 +312,15 @@ For instructors wishing to grade student understanding:
 \begin{enumerate}
     \item Pacheco, P. (2011). \textit{An Introduction to Parallel Programming}. Morgan Kaufmann.
     \item OpenMP Architecture Review Board. (2021). \textit{OpenMP Application Programming Interface}.
-    \item Message Passing Interface Forum. (2021). \textit{MPI: A Message-Passing Interface Standard}.
+    \item Chapman, B., Jost, G., \& Van Der Pas, R. (2007). \textit{Using OpenMP: Portable Shared Memory Parallel Programming}. MIT Press.
 \end{enumerate}
 
 \subsection{Online Resources}
 
 \begin{itemize}
     \item OpenMP Tutorials: \texttt{https://www.openmp.org/resources/tutorials-articles/}
-    \item MPI Tutorial: \texttt{https://mpitutorial.com/}
     \item Parallel Computing Course Materials: \texttt{https://www.cs.cmu.edu/~15418/}
+    \item Lawrence Livermore National Lab OpenMP Tutorial: \texttt{https://hpc.llnl.gov/tuts/openMP/}
 \end{itemize}
 
 \subsection{Hands-On Practice}
@@ -405,7 +332,7 @@ For instructors wishing to grade student understanding:
     \item Experiment with HPC clusters (if available)
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Instructor Notes}
 \label{app:d:instructor-notes}
 
@@ -446,4 +373,4 @@ Be prepared to address:
     \item \textbf{"The game perfectly simulates HPC"}: Clarify simplifications and abstractions
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------

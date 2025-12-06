@@ -9,18 +9,20 @@
 % License: MIT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\documentclass{./class/masterthesis}
+\documentclass[twoside]{./class/masterthesis}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	PACKAGES
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
+\usepackage{csquotes}
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage[table, dvipsnames]{xcolor}
+\usepackage[backend=biber,style=ieee,sorting=none,natbib=true]{biblatex}
 \usepackage{hyperref}
 \usepackage{subcaption}
 \usepackage{caption}
@@ -34,11 +36,11 @@
 \usepackage{geometry}
 \usepackage{titlesec}
 \usepackage{tocloft}
-\usepackage[backend=biber,style=ieee,sorting=none,natbib=true]{biblatex}
+\usepackage{mdframed}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	GEOMETRY
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \geometry{
 	top=3cm,
@@ -48,9 +50,9 @@
 	headheight=15pt
 }
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	HYPERREF SETUP
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \hypersetup{
 	colorlinks=true,
@@ -62,9 +64,9 @@
 	pdftitle={HPC Sorting Serious Game: A Web-First Educational Approach},
 }
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	CODE LISTING SETUP
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -88,14 +90,15 @@
     showstringspaces=false,
     showtabs=false,
     tabsize=4,
-    language=Python % GDScript is Python-like
+    language=Python, % GDScript is Python-like
+    mathescape=false
 }
 
 \lstset{style=gdscript}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	HEADERS AND FOOTERS
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -112,23 +115,23 @@
 	\renewcommand{\headrulewidth}{0pt}
 }
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	TITLE FORMATTING
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \titleformat{\chapter}[display]
 {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
 \titlespacing*{\chapter}{0pt}{0pt}{40pt}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	BIBLIOGRAPHY
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \addbibresource{references.bib}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	CUSTOM MACROS
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 % Convenient macros for frequently used terms
 \newcommand*\openmp{OpenMP}
@@ -136,9 +139,9 @@
 \newcommand*\gdscript{GDScript}
 \newcommand*\hpc{HPC}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	BEGIN DOCUMENT
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \begin{document}
 
@@ -151,9 +154,9 @@
 % Generate title page using masterthesis.cls
 \maketitle
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	DEDICATION (Optional)
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 % Uncomment and personalize the dedication below:
 % TODO: Decide on dedication text
@@ -167,34 +170,28 @@
 % \dedication{\textit{To my parents}}
 % \dedication{\textit{To my friends,\\for their encouragement and understanding}}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	ABSTRACT
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-High-Performance Computing (HPC) and parallel programming remain challenging topics in computer science education, often requiring students to grasp abstract concepts without tangible, interactive experiences. Serious games provide pathways for learners to develop intuition about concepts that are new to them, acting as engaging ice-breaker activities that lead to deeper questions and discussions, allowing instructors to uncover misconceptions and clarify understanding.
+High-Performance Computing (HPC) and parallel programming pose significant pedagogical challenges, requiring students to internalize abstractions without tangible interactive experiences. Serious games facilitate intuitive understanding through engagement, surfacing misconceptions and enabling targeted instruction.
 
-This thesis presents the design, implementation, and evaluation of an innovative educational serious game that teaches fundamental parallel computing paradigms—specifically OpenMP (shared memory).
-%and MPI (distributed memory)—through an interactive card-sorting mechanic on mobile devices.
-The game transforms abstract parallel computing concepts into concrete, manipulable interactions: players sort cards collaboratively in multiplayer mode
-%(simulating MPI message passing) or individually 
-with private buffer zones (simulating OpenMP shared memory with thread-local storage).
+This thesis presents an educational serious game teaching fundamental parallel computing paradigms—specifically OpenMP (shared memory)—through interactive card-sorting mechanics on mobile devices. The game materializes abstract concepts through concrete manipulation: players sort cards collaboratively in multiplayer mode with private buffer zones, simulating OpenMP shared memory with thread-local storage. Students cooperate via a web interface to minimize sorting time under constraints, learning speedup, scalability, communication overhead, multithreading, and message passing.
 
-The goal is to enable students to cooperate via a Web-based interface to sort a set of cards in the shortest time within given conditions, thereby learning basic HPC concepts such as speedup, scalability, and communication overheads, as well as parallel programming paradigms including multithreading and message passing.
+Implemented using Godot Engine with web export capabilities, this work resolves pedagogical and technical constraints in web-based educational multiplayer games. Development encompassed platform identification supporting extensible networking and prototype iteration.
 
-By implementing this game using the Godot Engine and GDScript with web export capabilities, this work addresses both pedagogical and technical challenges inherent in creating educational multiplayer games for web browsers. The development process required identifying a proper platform supporting extensible development with networking capabilities, followed by developing a working prototype.
-
-Key contributions include: (1) a novel pedagogical mapping between card-sorting mechanics and HPC paradigms based on physical classroom experiments, (2) implementation of robust multiplayer state synchronization for educational purposes using the GDSync framework, (3) solutions to responsive UI/UX challenges for displaying and manipulating numerous interactive elements (50+ cards) across different screen sizes in web browsers, (4) comprehensive documentation of technical challenges encountered and solutions implemented, particularly regarding the GDSync framework and multiplayer synchronization issues, and (5) an open-source, extensible platform for future HPC education research suitable for publication in conferences and scientific journals.
+Key contributions include: (1) novel pedagogical mapping between card-sorting mechanics and HPC paradigms derived from physical classroom experiments, (2) robust multiplayer state synchronization for educational purposes using GDSync, (3) responsive UI/UX solutions for manipulating 50+ interactive elements across screen sizes in web browsers, (4) comprehensive documentation of technical challenges and solutions regarding GDSync and multiplayer synchronization, and (5) an open-source, extensible platform for HPC education research suitable for conference publication and scientific journals.
 
 \textbf{Keywords:} Serious Games, High-Performance Computing, Parallel Computing Education, OpenMP,
 %MPI, 
 Mobile Game Development, Multiplayer Synchronization, Godot Engine, GDScript, Card Sorting, Educational Technology
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	ACKNOWLEDGEMENTS
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
@@ -207,37 +204,37 @@ Special thanks to the Godot Engine community and the developers of the GDSync fr
 
 Finally, I thank my family and friends for their encouragement and patience during the completion of this work.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %	TABLE OF CONTENTS
-%-----------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \tableofcontents
 \listoffigures
 \listoftables
 \lstlistoflistings
 
-%----------------------------------------------------------------------------------------
+
 %	MAIN CONTENT
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \input{chapters/01-introduction}
 \input{chapters/02-background}
 \input{chapters/03-methodology}
 \input{chapters/04-architecture}
-% \input{chapters/05-implementation}
-% \input{chapters/06-problems}
-% \input{chapters/07-results}
+\input{chapters/05-implementation}
+\input{chapters/06-problems}
+\input{chapters/07-results}
 \input{chapters/08-conclusion}
 
-%----------------------------------------------------------------------------------------
+
 %	BIBLIOGRAPHY
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \printbibliography[heading=bibintoc]
 
-%----------------------------------------------------------------------------------------
+
 %	APPENDICES
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \appendix
 
@@ -253,6 +250,6 @@ Finally, I thank my family and friends for their encouragement and patience duri
 \chapter{Study Materials}
 \input{appendices/appendix-d-study-materials}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \end{document}

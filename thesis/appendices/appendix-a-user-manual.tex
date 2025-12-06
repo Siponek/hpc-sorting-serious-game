@@ -1,13 +1,13 @@
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 % Appendix A: User Manual
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 
 \section{Introduction}
 \label{app:a:introduction}
 
 This user manual provides comprehensive instructions for installing, configuring, and playing the HPC Sorting Serious Game. It is intended for students, educators, and anyone interested in learning about parallel computing through interactive gameplay.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{System Requirements}
 \label{app:a:system-requirements}
 
@@ -31,7 +31,7 @@ This user manual provides comprehensive instructions for installing, configuring
     \item Stable WiFi connection for multiplayer
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Installation}
 \label{app:a:installation}
 
@@ -57,7 +57,7 @@ Once published to Google Play Store:
     \item Tap "Open" to launch
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Getting Started}
 \label{app:a:getting-started}
 
@@ -65,13 +65,13 @@ Once published to Google Play Store:
 
 On first launch, you will see the main menu with options:
 \begin{itemize}
-    \item \textbf{Single Player}: Practice sorting alone (OpenMP simulation)
-    \item \textbf{Multiplayer}: Join or host a game with others (MPI simulation)
+    \item \textbf{Single Player}: Practice sorting alone (sequential execution)
+    \item \textbf{Multiplayer}: Join or host a game with others (OpenMP shared-memory simulation)
     \item \textbf{Settings}: Configure game options
     \item \textbf{About}: Information about the game and credits
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Single-Player Mode}
 \label{app:a:singleplayer-mode}
 
@@ -115,7 +115,7 @@ Sort all cards in ascending order in the main container as quickly as possible.
     \item Try to minimize both time and moves for better performance
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Multiplayer Mode}
 \label{app:a:multiplayer-mode}
 
@@ -148,11 +148,12 @@ Sort all cards in ascending order in the main container as quickly as possible.
 
 \subsection{Multiplayer Gameplay}
 
-\paragraph{Card Distribution:}
+\paragraph{Shared Memory Access:}
 \begin{itemize}
-    \item Cards are divided among players (simulating MPI data distribution)
-    \item Each player sees their own cards and shared areas
-    \item Other players' private buffers are hidden
+    \item All cards are visible in the shared container (simulating shared memory)
+    \item Each player has private buffers for local work (thread-local storage)
+    \item Players can access the shared container simultaneously
+    \item Other players' private buffers are not directly visible (simulating thread-private data)
 \end{itemize}
 
 \paragraph{Collaboration:}
@@ -170,7 +171,7 @@ Sort all cards in ascending order in the main container as quickly as possible.
     \item Victory screen shows team performance metrics
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Settings}
 \label{app:a:settings}
 
@@ -204,7 +205,7 @@ Sort all cards in ascending order in the main container as quickly as possible.
     \item \textbf{Signaling Server}: Configure custom server (advanced)
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Tips and Strategies}
 \label{app:a:tips-strategies}
 
@@ -226,7 +227,7 @@ Sort all cards in ascending order in the main container as quickly as possible.
     \item \textbf{Plan Ahead}: Discuss strategy before starting
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Troubleshooting}
 \label{app:a:troubleshooting}
 
@@ -265,7 +266,7 @@ Sort all cards in ascending order in the main container as quickly as possible.
     \item Check that signaling server is reachable
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Educational Use}
 \label{app:a:educational-use}
 
@@ -284,12 +285,12 @@ Sort all cards in ascending order in the main container as quickly as possible.
 \begin{itemize}
     \item Use as pre-lecture icebreaker to introduce HPC concepts
     \item Facilitate discussion after gameplay about parallel computing
-    \item Ask students to identify real-world parallels (threads, processes)
-    \item Connect game mechanics to OpenMP and MPI programming models
+    \item Ask students to identify real-world parallels (threads, shared memory)
+    \item Connect game mechanics to OpenMP programming model and sequential execution
     \item Use performance metrics to discuss speedup and scalability
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Support and Resources}
 \label{app:a:support}
 
@@ -312,4 +313,4 @@ The project is open-source (MIT license). Contributions are welcome:
     \item Share feedback from classroom use
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------

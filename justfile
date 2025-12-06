@@ -1,23 +1,37 @@
 # This justfile works with windows
 set windows-powershell := true
 
-### Adding library submodule GD-Sync for Godot project synchronization
-### Reason being that the library is contantly updated, so having it as a submodule makes it easier to update
-### Than it is to have it as an addon in Godot
-### Usage: just update-gd-sync-windows
+# Import formatter recipes
+import 'justfiles/formatter.justfile'
+
+# Import thesis compilation recipes
+import 'justfiles/thesis.justfile'
+
+# Import web export recipes
+import 'justfiles/web-export.justfile'
 
 default:
     @just --list
 
+# Dependencies & Submodules
+# -------------------------
+
+# Update GD-Sync submodule
+[group('dependencies')]
 update-gd-sync:
     git submodule update --init --recursive
 
-### Link the submodule to addons folder for godot. Will reimport stuff in engine when editor is opened, so be patient
+# Link the submodule to addons folder for Godot (Windows). Will reimport stuff in engine when editor is opened, so be patient
+[group('dependencies')]
 update-gd-sync-windows: update-gd-sync delete-gd-sync-link
     @New-Item -ItemType SymbolicLink -Path addons/GD-Sync -Target git-submodules/GD-Sync/addons/GD-Sync
 
+# Verify GD-Sync symbolic link is correctly set up
+[group('dependencies')]
 verify-gd-sync-link:
     @$item = Get-Item addons/GD-Sync; if ($item.Attributes -match "ReparsePoint") { Write-Host "✓ GD-Sync is correctly linked to: $($item.Target)" -ForegroundColor Green } else { Write-Host "✗ GD-Sync is not a symbolic link" -ForegroundColor Red }
 
+# Delete GD-Sync symbolic link
+[group('dependencies')]
 delete-gd-sync-link:
     @if (Test-Path addons/GD-Sync) { Remove-Item addons/GD-Sync -Recurse -Force; Write-Host "✓ GD-Sync symbolic link deleted" -ForegroundColor Green } else { Write-Host "✗ GD-Sync symbolic link does not exist" -ForegroundColor Red }

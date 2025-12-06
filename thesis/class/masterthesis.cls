@@ -11,7 +11,7 @@
 %%
 
 \NeedsTeXFormat{LaTeX2e}[1994/12/01]
-\ProvidesClass{masterthesis}[2018/10/18 v1.0]
+\ProvidesClass{./class/masterthesis}[2018/10/18 v1.0]
 
 %%
 %% --- Initial Code ---
@@ -279,7 +279,8 @@
 %%
 %% Quotations are supposed to be in single-space, so we will
 %% explicitly redefine the quotation env. to support this.
-%% And introduce a citetext env. which can add an attribution.
+%% And introduce a quotewithcite env. which can add an attribution.
+%% (renamed from citetext to avoid conflict with biblatex natbib)
 %%
 
 \renewenvironment{quotation}
@@ -287,7 +288,7 @@
     {\end{quote}}
 
 \newcommand{\citationname}{}
-\newenvironment{citetext}[1]
+\newenvironment{quotewithcite}[1]
 {\thispagestyle{empty}
   \renewcommand{\citationname}{#1}
   \begin{quote}\singlespace

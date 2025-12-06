@@ -15,6 +15,9 @@ var move_count: int = 0
 var is_animating = false
 # Dirty hack to not add multiple var_tree entries
 var _var_tree_mounted: bool = false
+# Finish window management
+var finish_window_open: bool = false
+var finish_window_instance: Node = null
 # TODO would be cool to add coloring/theme selection to main menu,
 # so players can choose if they want rainbow or now
 
@@ -401,7 +404,7 @@ func _on_card_placed_in_slot(card, slot):
 
 func _on_show_sorted_cards_button_pressed() -> void:
 	var cards_are_sorted = check_sorting_order()
-	
+
 	if cards_are_sorted:
 		# Cards are sorted - finish the game
 		_finish_game()
@@ -411,48 +414,60 @@ func _on_show_sorted_cards_button_pressed() -> void:
 
 func _finish_game() -> void:
 	"""Called when player finishes the game (cards are sorted)"""
+	# Prevent multiple windows - check both flag and instance validity
+	if finish_window_open or (finish_window_instance and is_instance_valid(finish_window_instance)):
+		logger.log_warning("Finish window already open, ignoring duplicate request")
+		return
+
+	# Mark window as open IMMEDIATELY to prevent race conditions
+	finish_window_open = true
+
+	# Disable the button to prevent multiple clicks
+	if show_sorted_button:
+		show_sorted_button.disabled = true
+
 	# Stop the timer
 	if timer_node:
 		timer_node.stop_timer()
 	else:
 		logger.log_warning("timer_node is null in _finish_game()")
-	
+
 	# Get final time and move count
 	var final_time_string = timer_node.getCurrentTimeAsString()
 	var final_move_count = move_count
-	
+
 	logger.log_info("Game finished! Time: ", final_time_string, " Moves: ", final_move_count)
-	
+
 	# Show finish game scene
 	_show_finish_game_scene(final_time_string, final_move_count)
 
-func _show_finish_game_scene(time_string: String, moves: int) -> void:
+func _show_finish_game_scene(time_string: String, moves: int, finishing_player_id: int = -1) -> void:
 	"""Load and display the finish game scene"""
 	if not finish_game_scene:
 		logger.log_error("CardManager: Failed to load FinishGameScene.tscn")
 		_show_completion_toast(time_string, moves)
 		return
-	
+
 	# Instantiate the scene
 	var finish_instance = finish_game_scene.instantiate()
 
-	# If the finish scene has methods to set time/moves, call them
-	if finish_instance.has_method("set_game_stats"):
-		finish_instance.set_game_stats(time_string, moves)
-	elif finish_instance.has_method("set_time"):
-		finish_instance.set_time(time_string)
-		if finish_instance.has_method("set_moves"):
-			finish_instance.set_moves(moves)
-	
-	# Add to the scene tree (as a popup or overlay)
-	# Assuming you want it as an overlay on top of everything
+	# Store reference for cleanup
+	finish_window_instance = finish_instance
+
+	# Connect to window close signal
+	if finish_instance.has_signal("window_closed"):
+		finish_instance.window_closed.connect(_on_finish_window_closed)
+	else:
+		logger.log_warning("FinishGameScene missing window_closed signal")
+
+	# Add to tree first so @onready variables are initialized
 	get_tree().root.add_child(finish_instance)
-	
-	# If it's a Window or popup, show it
-	if finish_instance is Window:
-		finish_instance.popup_centered()
-	elif finish_instance.has_method("show"):
-		finish_instance.show()
+	await get_tree().process_frame
+
+	# Now call methods that depend on @onready variables
+	finish_instance.set_game_stats(time_string, moves, finishing_player_id)
+	finish_instance.set_time(time_string)
+	finish_instance.set_moves(moves)
 
 func _show_completion_toast(time_string: String, moves: int) -> void:
 	"""Fallback: Show completion message as toast"""
@@ -470,7 +485,7 @@ func _show_completion_toast(time_string: String, moves: int) -> void:
 func _toggle_sorted_cards_panel() -> void:
 	"""Toggle the sorted cards reference panel"""
 	var text_to_show = "Cards are NOT sorted! 😒"
-	
+
 	if not sorted_cards_panel.visible:
 		ToastParty.show({
 			"text": text_to_show,
@@ -481,10 +496,10 @@ func _toggle_sorted_cards_panel() -> void:
 			"text_size": 18,
 			"use_font": true
 		})
-	
+
 	# Toggle visibility
 	sorted_cards_panel.visible = not sorted_cards_panel.visible
-	
+
 	# Update button text
 	if sorted_cards_panel.visible:
 		show_sorted_button.text = "Hide Sorted Cards"
@@ -604,6 +619,23 @@ func check_sorting_order() -> bool:
 	return sorted_correctly
 	# Calculate the time taken
 
+func _on_finish_window_closed():
+	"""Handle finish window closing - reset state and re-enable button"""
+	logger.log_info("Finish window closed, resetting state")
+
+	finish_window_open = false
+	finish_window_instance = null
+
+	# Re-enable the finish button
+	if show_sorted_button:
+		show_sorted_button.disabled = false
+
+func _exit_tree():
+	"""Clean up finish window when scene exits"""
+	if finish_window_instance and is_instance_valid(finish_window_instance):
+		logger.log_info("Scene exiting, cleaning up finish window")
+		finish_window_instance.queue_free()
+		finish_window_instance = null
 
 func check_player_buffer_contiguity() -> bool:
 	# Build a list of all card values from your cards_array array

@@ -1,19 +1,22 @@
-[gd_scene load_steps=9 format=3 uid="uid://dsix5r7ccx5yb"]
+[gd_scene load_steps=10 format=3 uid="uid://dsix5r7ccx5yb"]
 
 [ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_jwrws"]
+[ext_resource type="Script" uid="uid://dxj1u8a7gsgfd" path="res://scenes/CardScene/scripts/finish_game_scene.gd" id="2_finish"]
 
 [sub_resource type="Gradient" id="Gradient_jwrws"]
-offsets = PackedFloat32Array(0.0377358, 0.437943, 0.760638)
-colors = PackedColorArray(0, 0.986285, 0.704669, 1, 0.372549, 1, 1, 1, 0.717647, 0, 0, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_ic8ip"]
 gradient = SubResource("Gradient_jwrws")
-width = 32
+width = 8
+height = 12
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0.5)
 repeat = 1
 
 [sub_resource type="Gradient" id="Gradient_ic8ip"]
-offsets = PackedFloat32Array(0, 0.533835, 1)
-colors = PackedColorArray(0, 0, 0, 1, 0.787315, 0.261605, 1, 1, 1, 1, 1, 1)
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 0.8, 0.6, 1, 1, 1, 1, 0.3)
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_mquqo"]
 gradient = SubResource("Gradient_ic8ip")
@@ -42,65 +45,70 @@ directional_velocity_min = -200.0
 directional_velocity_max = 0.999984
 directional_velocity_curve = SubResource("CurveXYZTexture_ic8ip")
 gravity = Vector3(0, 150, 0)
+color_ramp = SubResource("GradientTexture1D_mquqo")
 color_initial_ramp = SubResource("GradientTexture1D_mquqo")
+hue_variation_min = -1.0
+hue_variation_max = 1.0
 
 [node name="CanvasLayer" type="CanvasLayer"]
+script = ExtResource("2_finish")
 
-[node name="FinishGameScene" type="Window" parent="."]
+[node name="FinishGameWindow" type="Window" parent="."]
 initial_position = 1
 size = Vector2i(300, 350)
-visible = false
 theme = ExtResource("1_jwrws")
 
-[node name="Panel" type="Panel" parent="FinishGameScene"]
+[node name="Panel" type="Panel" parent="FinishGameWindow"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="FinishGameScene"]
+[node name="VBoxContainer" type="VBoxContainer" parent="FinishGameWindow"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleLabel" type="Label" parent="FinishGameScene/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="FinishGameWindow/VBoxContainer"]
 layout_mode = 2
 text = "Congratulations,
 What a success"
 horizontal_alignment = 1
 
-[node name="TimeLabel" type="Label" parent="FinishGameScene/VBoxContainer"]
+[node name="TimeLabel" type="Label" parent="FinishGameWindow/VBoxContainer"]
 layout_mode = 2
 text = "Your time: N/A"
 horizontal_alignment = 1
 
-[node name="MovesLabel" type="Label" parent="FinishGameScene/VBoxContainer"]
+[node name="MovesLabel" type="Label" parent="FinishGameWindow/VBoxContainer"]
 layout_mode = 2
 text = "Amount of moves: N/A"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="FinishGameScene/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="FinishGameWindow/VBoxContainer"]
 clip_contents = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme = ExtResource("1_jwrws")
 
-[node name="ResetGameButton" type="Button" parent="FinishGameScene/VBoxContainer"]
+[node name="ResetGameButton" type="Button" parent="FinishGameWindow/VBoxContainer"]
 layout_mode = 2
 text = "Reset the game"
 
-[node name="ExitToMainMenuButton" type="Button" parent="FinishGameScene/VBoxContainer"]
+[node name="ExitToMainMenuButton" type="Button" parent="FinishGameWindow/VBoxContainer"]
 layout_mode = 2
 text = "Exit to main menu"
 
 [node name="ConfettiParticles" type="GPUParticles2D" parent="."]
 position = Vector2(578, 336)
-amount = 55
+emitting = false
+amount = 1000
 texture = SubResource("GradientTexture2D_ic8ip")
 lifetime = 5.0
+one_shot = true
 explosiveness = 0.8
 randomness = 0.34
 visibility_rect = Rect2(-600, -400, 1200, 800)

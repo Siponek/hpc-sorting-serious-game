@@ -26,9 +26,10 @@ const kick_button_path: NodePath = "MarginContainer/HBoxContainer/KickPlayerButt
 @onready var logger = Logger.get_logger(self)
 var client_id: int = -1
 
+
 func _ready() -> void:
 	if Engine.is_editor_hint():
-		player_name_label.name = "PlayerNameLabel" # Ensure the label has the correct name in editor
+		player_name_label.name = "PlayerNameLabel"  # Ensure the label has the correct name in editor
 
 	# unsafe :D
 	# GDSync.expose_func(self.setup_player_display)
@@ -37,11 +38,15 @@ func _ready() -> void:
 	# GDSync.expose_func(self.set_player_color)
 	client_id = ConnectionManager.get_my_client_id()
 
+
 # func _multiplayer_ready():
 # 	logger.log_info("Multiplayer ready for client ID: ", client_id)
 
+
 func setup_player_display(id: int, data: Dictionary) -> void:
-	logger.log_info("Setting up player display for ID: ", id, " with data: ", data)
+	logger.log_info(
+		"Setting up player display for ID: ", id, " with data: ", data
+	)
 	# Set root node properties - these will sync automatically
 	self.set_client_id(id)
 	self.set_player_name(data.get("name", "Player " + str(id)))
@@ -52,39 +57,53 @@ func setup_player_display(id: int, data: Dictionary) -> void:
 	else:
 		kick_button.visible = true
 
+
 func set_player_name(_name: String) -> void:
 	if not _name or _name.is_empty():
-		_name = "Player " + str(client_id) # Fallback name if none provided
+		_name = "Player " + str(client_id)  # Fallback name if none provided
 	if !player_name_label:
-		push_error("PlayerInLobby: player_name_label is not found. Ensure the scene structure is correct.")
+		push_error(
+			"PlayerInLobby: player_name_label is not found. Ensure the scene structure is correct."
+		)
 		return
 	self.display_name = _name
+
 
 func set_client_id(id: int) -> void:
 	self.display_client_id = id
 	# Set the button's metadata to the client ID for later reference
 	kick_button.set_meta("client_id", id)
 
+
 func set_player_color(color: Color) -> void:
 	self.display_color = color
 
+
 func print_please():
-	logger.log_info("Please call me with a client ID to set up the player display.")
+	logger.log_info(
+		"Please call me with a client ID to set up the player display."
+	)
 	print("Current client ID: ", client_id)
 
-func determine_and_set_color(actual_host_id: int, remote_client_id: int) -> void:
+
+func determine_and_set_color(
+	actual_host_id: int, remote_client_id: int
+) -> void:
 	var color: Color = Color.WHITE
 	if remote_client_id == actual_host_id:
-		color = Color.AQUAMARINE # Host color
+		color = Color.AQUAMARINE  # Host color
 	elif GDSync.is_gdsync_owner(self):
-		color = Color.LAWN_GREEN # My own color
+		color = Color.LAWN_GREEN  # My own color
 	else:
-		color = Color.GRAY # Default color for other players
+		color = Color.GRAY  # Default color for other players
 	set_player_color(color)
 
+
 func _on_kick_player_button_pressed() -> void:
-	ToastParty.show({
-		"text": "Kick button pressed for player ID: " + str(client_id),
-		"bgcolor": Color.RED,
-		"color": Color.WHITE
-	})
+	ToastParty.show(
+		{
+			"text": "Kick button pressed for player ID: " + str(client_id),
+			"bgcolor": Color.RED,
+			"color": Color.WHITE
+		}
+	)

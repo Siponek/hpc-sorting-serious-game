@@ -55,7 +55,7 @@ text = "Player Buffer (slots):"
 
 [node name="BufferSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
 layout_mode = 2
-tooltip_text = "For now only host can change lobby settings."
+tooltip_text = "Only host can change lobby settings."
 theme_override_constants/buttons_width = 20
 min_value = 1.0
 max_value = 20.0
@@ -69,7 +69,7 @@ text = "Amount of Cards to Sort:"
 
 [node name="CardCountSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
 layout_mode = 2
-tooltip_text = "For now only host can change lobby settings."
+tooltip_text = "Only host can change lobby settings."
 theme_override_constants/buttons_width = 20
 min_value = 2.0
 value = 9.0
@@ -83,7 +83,7 @@ text_overrun_behavior = 4
 
 [node name="CardRangeSpinBox" type="SpinBox" parent="MarginContainer/VBoxContainer2/HBoxContainerCardOptions"]
 layout_mode = 2
-tooltip_text = "For now only host can change lobby settings."
+tooltip_text = "Only host can change lobby settings."
 theme_override_constants/buttons_width = 20
 min_value = 10.0
 value = 100.0

@@ -108,6 +108,7 @@ theme_type_variation = &"ActionSidePanelButton"
 text = "Finish game"
 
 [node name="RestartGameButton" type="Button" parent="RightSideButtonsContainer"]
+visible = false
 layout_mode = 2
 theme = ExtResource("1_ly61b")
 theme_type_variation = &"ActionSidePanelButton"

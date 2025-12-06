@@ -18,8 +18,8 @@ protectedMode=false
 config/name="hpc-sorting-serious-game"
 run/main_scene="res://scenes/MainMenuScene/menu_scene.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
-config/icon="uid://bm7kjaditjipu"
-config/windows_native_icon="res://icon.ico"
+config/icon="uid://bhx8dihqjktvc"
+config/windows_native_icon="res://icon/icon.ico"
 
 [autoload]
 
