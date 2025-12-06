@@ -1,0 +1,189 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% University/School Laboratory Report
+% This is for code review purposes only
+% 
+% Authors:
+% Szymon Zinkowicz
+%
+% License:
+% MIT
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[
+	report, % Paper size, specify a4paper (A4) or letterpaper (US letter)
+	11pt, % Default font size, specify 10pt, 11pt or 12pt
+]{CSUniSchoolLabReport}
+
+\usepackage[table, dvipsnames]{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{subcaption} % To have subfigures available
+\usepackage{caption} % To have caption justification
+\usepackage[export]{adjustbox}
+\usepackage{lipsum} % for mock text
+\usepackage{fancyhdr}
+\usepackage{csvsimple} % for reading csv
+\usepackage{float} % for H in figures
+\usepackage{siunitx} % for SI units and rounding
+\usepackage{pgfplotstable}  % For handling table imports and formatting
+\usepackage{booktabs}       % For professional table formatting
+\usepackage{pgffor}   % For looping constructs
+\usepackage{array,multirow,makecell}
+\usepackage{pdflscape}
+\usepackage{forloop}  % For creating loop-like behavior
+\usepackage{geometry} % For setting the margins
+\usepackage{listings}
+\usepackage{changepage}
+\newcounter{ct}
+\newcommand{\addimage}[1]{%
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{#1}
+    \end{minipage}%
+}
+
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash }b{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash }b{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash }b{#1}}
+
+\sisetup{
+  round-mode = places, % Rounds numbers
+  round-precision = 4, % to 4 decimal places
+}
+\addbibresource{sample.bib} % Bibliography file (located in the same folder as the template)
+% \lstset { %
+%     language=C++,
+%     backgroundcolor=\color{black!5}, % set backgroundcolor
+%     basicstyle=\footnotesize,% basic font setting
+% }
+\hypersetup{
+	colorlinks=true,
+	linktoc=all,
+	linkcolor=blue,
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Mandelbrot Program Performance Analysis}
+\fancyhead[R]{December 28, 2024}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{2pt}
+\renewcommand{\footrulewidth}{1pt}
+\renewcommand{\sectionmark}[1]{\markboth{\thesection. #1}{}}
+\fancyhead[L]{%
+  \begin{tabular}{@{}l@{}}
+  \leftmark\\
+  \rightmark
+  \end{tabular}%
+}
+\setlength{\headheight}{24pt}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{cppstyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=cppstyle}
+%-----------------------------------------------------------------------
+%	Functions ;>
+%-----------------------------------------------------------------------
+
+\newcommand{\getcols}[1]{%
+    \ifx\relax#1\relax\else
+        \csvcoli[\numexpr#1-1]%
+        \getcols
+    \fi
+}
+
+\newcommand{\csvtablecols}[5]{%
+    \begin{table}[H]
+        \centering
+        \rowcolors{3}{white}{lightgray}
+        \csvreader[
+            tabular=|*{3}{c|},
+            table head=\hline \rowcolor{SeaGreen} #3 \\\hline,
+            late after line=\\\hline,
+            before reading={\rowcolors{3}{white}{lightgray}}
+        ]{#1}%
+        {#5}%
+        {\iterations & \resolution & \execTime}
+        \caption{#2}
+    \end{table}
+}
+
+%-----------------------------------------------------------------------
+%	REPORT INFORMATION
+%-----------------------------------------------------------------------
+
+
+
+\begin{document}
+
+\title{Master Thesis \\
+    \large A serious game for \\
+    High Performance Computing} % Title
+\author{Szymon \textsc{Zinkowicz} \\ Matricola number: 5181814} % Author name(s)
+\date{\today} % Date of the report
+
+\maketitle % Insert the title, author, and date using the information specified above
+\thispagestyle{empty}
+
+\begin{center}
+    \vspace{\fill}
+    University of \textsc{Genova} \\
+    \begin{tabular}{l r}
+        Supervisor: & Professor \textsc{Daniele D'agostino} \\
+        Reviewer:   & Professor \textsc{Maura Cerioli}
+    \end{tabular}
+\end{center}
+\pagebreak
+
+
+
+What to include in the thesis:
+\begin{itemize}
+    \item Introduction
+    \item problems
+          \begin{itemize}
+              \item Why godot
+              \item why gdscript
+              \item plugins used
+              \item problems during development
+              \item framework GDSync and intervention from development team, issue on github
+              \item Framework issues
+              \item Problem to sync views of several plays
+          \end{itemize}
+    \item Background and Literature Review
+    \item Methodology
+    \item Implementation
+    \item Results and Discussion
+    \item Conclusion and Future Work
+\end{itemize}
+
+\begin{abstract}
+    Serious games provide pathways for learners to develop intuition about concepts that are new to them. Furthermore, for short-term learning experiences, they act as ice-breaker activities that generally lead to deeper questions and discussions that allow instructors to uncover more concepts and clarify misunderstandings.   The goal of the thesis is the development of a serious game for teaching basic concepts of HPC (i.e. speedup, scalability, overheads) and parallel programming paradigm (i.e. multithreading and message passing) based on the sorting problem. Students will be able to cooperate via a Web interface to sort a set of cards in the shortest time within a set of given conditions. The student is required at first to identify a proper Platform supporting an eXtensible development of such game with proper support to networking activities, then to develop a working prototype.
+    \lipsum[1-2]
+\end{abstract}
+
+
+
+\end{document}

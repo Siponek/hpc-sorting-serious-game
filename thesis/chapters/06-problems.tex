@@ -3,7 +3,7 @@
 
 This chapter provides an honest and comprehensive analysis of the difficulties encountered during the development of the HPC Sorting Serious Game. Understanding these challenges and their solutions is valuable for future developers of educational multiplayer games and contributes to the body of knowledge in serious game development.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Overview}
 \label{sec:problems-overview}
 
@@ -20,17 +20,15 @@ Development of a serious game involving real-time multiplayer synchronization on
 
 This chapter documents these challenges, the approaches taken to address them, and lessons learned that may benefit future projects.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Technology Selection Challenges}
 \label{sec:technology-challenges}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Game Engine Trade-offs}
 \label{subsec:engine-tradeoffs}
 
-\paragraph{Challenge:}
-
-While Godot Engine proved to be a good choice overall, several limitations became apparent during development:
+\textbf{Challenge:} While Godot Engine proved to be a good choice overall, several limitations became apparent during development:
 
 \begin{itemize}
     \item \textbf{Smaller Ecosystem}: Fewer third-party plugins and assets compared to Unity, requiring custom solutions for some features
@@ -39,17 +37,14 @@ While Godot Engine proved to be a good choice overall, several limitations becam
     \item \textbf{Plugin Compatibility}: Some Godot 3.x plugins not yet updated for 4.x
 \end{itemize}
 
-\paragraph{Impact:}
-
-Development time increased due to the need to:
+\textbf{Impact:} Development time increased due to the need to:
 \begin{itemize}
     \item Build custom solutions rather than using existing plugins
     \item Troubleshoot export issues through trial and error
     \item Consult community forums for undocumented features
 \end{itemize}
 
-\paragraph{Mitigation:}
-
+\textbf{Mitigation:}
 \begin{itemize}
     \item Active participation in Godot community (Discord, forums, GitHub)
     \item Contribution to documentation through issue reports and examples
@@ -57,17 +52,13 @@ Development time increased due to the need to:
     \item Careful version management and testing before engine updates
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{GDScript Performance Concerns}
 \label{subsec:gdscript-performance}
 
-\paragraph{Challenge:}
+\textbf{Challenge:} GDScript's interpreted nature raised concerns about performance with 50--200 cards requiring frequent position updates and collision detection.
 
-GDScript's interpreted nature raised concerns about performance with 50--200 cards requiring frequent position updates and collision detection.
-
-\paragraph{Solution:}
-
-Profiling revealed that:
+\textbf{Solution:} Profiling revealed that:
 \begin{itemize}
     \item GDScript performance was acceptable for game logic
     \item Bottlenecks were in rendering and physics, handled by Godot's C++ core
@@ -82,21 +73,21 @@ Optimization strategies:
     \item Profile early and often to identify actual bottlenecks
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{GDSync Framework Challenges}
 \label{sec:gdsync-challenges}
 
 The most significant technical challenges involved the GDSync framework, which, despite its high-level abstractions, presented several issues.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Protected Mode Blocking Issue}
 \label{subsec:protected-mode-issue}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 GDSync's "protected mode" (default) prevented RPC calls from being executed between non-host peers. When Player A tried to call an RPC on Player B's node, the call would be silently dropped or blocked.
 
-\paragraph{Error Manifestation:}
+\paragraph*{Error Manifestation:}
 
 \begin{itemize}
     \item Card movement worked from host to clients but not between clients
@@ -104,7 +95,7 @@ GDSync's "protected mode" (default) prevented RPC calls from being executed betw
     \item Debugging difficult due to lack of visibility into framework internals
 \end{itemize}
 
-\paragraph{Investigation Process:}
+\paragraph*{Investigation Process:}
 
 \begin{enumerate}
     \item Verified RPC syntax was correct according to documentation
@@ -114,7 +105,7 @@ GDSync's "protected mode" (default) prevented RPC calls from being executed betw
     \item Posted issue on GDSync GitHub repository
 \end{enumerate}
 
-\paragraph{Solution:}
+\textbf{Solution:}
 
 \begin{itemize}
     \item Disabled "protected mode" in GDSync configuration
@@ -123,7 +114,7 @@ GDSync's "protected mode" (default) prevented RPC calls from being executed betw
     \item Shared findings with community to help future users
 \end{itemize}
 
-\paragraph{Lesson Learned:}
+\paragraph*{Lesson Learned:}
 
 When using third-party frameworks:
 \begin{itemize}
@@ -133,11 +124,11 @@ When using third-party frameworks:
     \item Engage with framework maintainers early when issues arise
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Incomplete Documentation}
 \label{subsec:gdsync-documentation}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 GDSync documentation covered basic use cases but lacked:
 \begin{itemize}
@@ -148,7 +139,7 @@ GDSync documentation covered basic use cases but lacked:
     \item Migration guide from vanilla Godot networking
 \end{itemize}
 
-\paragraph{Impact:}
+\textbf{Impact:}
 
 \begin{itemize}
     \item Trial-and-error approach required for advanced features
@@ -157,7 +148,7 @@ GDSync documentation covered basic use cases but lacked:
     \item Frustration and consideration of framework replacement
 \end{itemize}
 
-\paragraph{Mitigation:}
+\textbf{Mitigation:}
 
 \begin{itemize}
     \item Created internal documentation of discoveries and workarounds
@@ -166,11 +157,11 @@ GDSync documentation covered basic use cases but lacked:
     \item Built abstraction layer to isolate GDSync-specific code
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Debugging Multiplayer Issues}
 \label{subsec:multiplayer-debugging}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Debugging multiplayer code is inherently difficult:
 \begin{itemize}
@@ -180,7 +171,7 @@ Debugging multiplayer code is inherently difficult:
     \item Limited visibility into remote client state
 \end{itemize}
 
-\paragraph{Solutions Implemented:}
+\paragraph*{Solutions Implemented:}
 
 \begin{enumerate}
     \item \textbf{Multi-Instance Testing}: Launched multiple Godot editor instances on the same machine
@@ -190,15 +181,15 @@ Debugging multiplayer code is inherently difficult:
     \item \textbf{Replay System}: Recorded game events for post-mortem analysis
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Multiplayer Synchronization Challenges}
 \label{sec:sync-challenges}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Card Order Synchronization}
 \label{subsec:card-order-sync}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Maintaining consistent card ordering across clients proved more complex than anticipated. Issues included:
 \begin{itemize}
@@ -207,11 +198,11 @@ Maintaining consistent card ordering across clients proved more complex than ant
     \item Timing differences causing transient inconsistencies
 \end{itemize}
 
-\paragraph{Symptom:}
+\textbf{Symptom:}
 
 Cards appeared in different orders on different clients' screens, even though the underlying data was correct.
 
-\paragraph{Solution:}
+\textbf{Solution:}
 
 \begin{enumerate}
     \item Implemented explicit position indices for cards
@@ -232,11 +223,11 @@ func sync_card_order(card_id: int, new_index: int):
     resort_cards_by_index()
 \end{lstlisting}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Timing and Race Conditions}
 \label{subsec:timing-issues}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Multiplayer systems are susceptible to race conditions:
 \begin{itemize}
@@ -245,7 +236,7 @@ Multiplayer systems are susceptible to race conditions:
     \item Inconsistent state when players join mid-game
 \end{itemize}
 
-\paragraph{Examples:}
+\textbf{Examples:}
 
 \begin{itemize}
     \item Two players drag the same card simultaneously
@@ -253,7 +244,7 @@ Multiplayer systems are susceptible to race conditions:
     \item Card deleted on host but still referenced on client
 \end{itemize}
 
-\paragraph{Solutions:}
+\textbf{Solutions:}
 
 \begin{itemize}
     \item \textbf{Host Authority}: Only host can finalize state changes
@@ -262,19 +253,19 @@ Multiplayer systems are susceptible to race conditions:
     \item \textbf{Defensive Programming}: Check object existence before operations
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Different Client Views}
 \label{subsec:client-views}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
-In MPI mode, different players should see different cards (their private buffers should be hidden from others), but maintaining this selective visibility while synchronizing global state was complex.
+In multiplayer mode (OpenMP simulation), different players should see different cards in private buffers (simulating thread-private data), but maintaining this selective visibility while synchronizing the shared container was complex.
 
-\paragraph{Technical Issue:}
+\paragraph*{Technical Issue:}
 
 GDSync's node replication tries to keep all clients' scene trees identical, but selective visibility required different scene trees per client.
 
-\paragraph{Solution:}
+\textbf{Solution:}
 
 \begin{itemize}
     \item Replicate all cards to all clients (for consistency)
@@ -283,15 +274,15 @@ GDSync's node replication tries to keep all clients' scene trees identical, but 
     \item Synchronize ownership and visibility separately from positions
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Mobile UI/UX Challenges}
 \label{sec:mobile-ux-challenges}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Displaying Many Cards on Small Screens}
 \label{subsec:many-cards-small-screens}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Displaying 50--200 cards on a 5--6 inch mobile screen presents significant layout challenges:
 \begin{itemize}
@@ -300,7 +291,7 @@ Displaying 50--200 cards on a 5--6 inch mobile screen presents significant layou
     \item Layout must work in both portrait and landscape orientations
 \end{itemize}
 
-\paragraph{Solutions Attempted:}
+\paragraph*{Solutions Attempted:}
 
 \begin{enumerate}
     \item \textbf{Grid Layout}: Cards arranged in a grid
@@ -330,11 +321,11 @@ Displaying 50--200 cards on a 5--6 inch mobile screen presents significant layou
           \end{itemize}
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Touch Interaction Precision}
 \label{subsec:touch-precision}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Touch input is less precise than mouse input:
 \begin{itemize}
@@ -343,7 +334,7 @@ Touch input is less precise than mouse input:
     \item Accidental touches and swipes
 \end{itemize}
 
-\paragraph{Solutions:}
+\textbf{Solutions:}
 
 \begin{itemize}
     \item \textbf{Offset Dragging}: Card rendered above finger with offset
@@ -353,15 +344,15 @@ Touch input is less precise than mouse input:
     \item \textbf{Drop Zone Highlighting}: Clear indication of valid drop targets
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Performance on Low-End Devices}
 \label{subsec:lowend-performance}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Not all students have flagship smartphones. The game needed to run acceptably on low-end and mid-range devices from 2018--2020.
 
-\paragraph{Performance Constraints:}
+\paragraph*{Performance Constraints:}
 
 \begin{itemize}
     \item Limited GPU power for rendering many cards
@@ -370,7 +361,7 @@ Not all students have flagship smartphones. The game needed to run acceptably on
     \item Battery life concerns
 \end{itemize}
 
-\paragraph{Optimization Strategies:}
+\paragraph*{Optimization Strategies:}
 
 \begin{itemize}
     \item Reduce draw calls through batching
@@ -380,15 +371,15 @@ Not all students have flagship smartphones. The game needed to run acceptably on
     \item Adjustable quality settings (card detail, effects)
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Testing Challenges}
 \label{sec:testing-challenges}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Multiplayer Testing Complexity}
 \label{subsec:multiplayer-testing}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Testing multiplayer functionality requires:
 \begin{itemize}
@@ -398,7 +389,7 @@ Testing multiplayer functionality requires:
     \item Testing edge cases (disconnections, late joins, etc.)
 \end{itemize}
 
-\paragraph{Approaches:}
+\paragraph*{Approaches:}
 
 \begin{enumerate}
     \item \textbf{Multi-Instance Desktop Testing}: Run multiple Godot instances on development machine
@@ -407,7 +398,7 @@ Testing multiplayer functionality requires:
     \item \textbf{Network Simulation}: Tools to introduce latency and packet loss
 \end{enumerate}
 
-\paragraph{Limitations:}
+\paragraph*{Limitations:}
 
 \begin{itemize}
     \item Automated testing limited for interactive gameplay
@@ -415,11 +406,11 @@ Testing multiplayer functionality requires:
     \item Real-world network conditions vary widely
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Lack of Automated Testing}
 \label{subsec:automated-testing}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Godot's testing ecosystem is less mature than traditional software development frameworks:
 \begin{itemize}
@@ -428,7 +419,7 @@ Godot's testing ecosystem is less mature than traditional software development f
     \item Networking code hard to test in isolation
 \end{itemize}
 
-\paragraph{Approach Taken:}
+\paragraph*{Approach Taken:}
 
 \begin{itemize}
     \item Manual testing with documented test cases
@@ -437,7 +428,7 @@ Godot's testing ecosystem is less mature than traditional software development f
     \item Community feedback as informal usability testing
 \end{itemize}
 
-\paragraph{Future Improvement:}
+\paragraph*{Future Improvement:}
 
 \begin{itemize}
     \item Integrate GUT (Godot Unit Test) framework
@@ -445,27 +436,27 @@ Godot's testing ecosystem is less mature than traditional software development f
     \item Implement continuous integration pipeline
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Educational Design Challenges}
 \label{sec:educational-challenges}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Balancing Accuracy and Playability}
 \label{subsec:accuracy-vs-playability}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Educational games must balance pedagogical accuracy with engaging gameplay. Too much realism can reduce fun; too much simplification can create misconceptions.
 
-\paragraph{Trade-offs Made:}
+\paragraph*{Trade-offs Made:}
 
 \begin{itemize}
-    \item \textbf{Simplified Communication}: Actual MPI message passing is more complex than card exchanges
-    \item \textbf{Abstracted Synchronization}: Real OpenMP requires explicit barriers and locks
-    \item \textbf{Idealized Performance}: Network latency doesn't perfectly model HPC cluster interconnects
+    \item \textbf{Simplified Memory Model}: Actual shared-memory systems have complex cache hierarchies not represented
+    \item \textbf{Abstracted Synchronization}: Real OpenMP requires explicit barriers, locks, and atomic operations
+    \item \textbf{Idealized Performance}: Network latency doesn't perfectly model memory access patterns
 \end{itemize}
 
-\paragraph{Mitigation:}
+\textbf{Mitigation:}
 
 \begin{itemize}
     \item Clear framing: "This is a metaphor, not a simulation"
@@ -474,11 +465,11 @@ Educational games must balance pedagogical accuracy with engaging gameplay. Too 
     \item Progressive difficulty introducing more complexity
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Assessment of Learning Effectiveness}
 \label{subsec:learning-assessment}
 
-\paragraph{Challenge:}
+\textbf{Challenge:}
 
 Demonstrating that the game actually improves learning outcomes requires formal educational research, including:
 \begin{itemize}
@@ -488,7 +479,7 @@ Demonstrating that the game actually improves learning outcomes requires formal 
     \item Long-term retention studies
 \end{itemize}
 
-\paragraph{Limitations:}
+\paragraph*{Limitations:}
 
 Within the scope of this thesis, full educational efficacy studies were not feasible due to:
 \begin{itemize}
@@ -498,15 +489,15 @@ Within the scope of this thesis, full educational efficacy studies were not feas
     \item Complexity of isolating game's effect from other factors
 \end{itemize}
 
-\paragraph{Future Work:}
+\paragraph*{Future Work:}
 
 Formal educational evaluation remains an important direction for future research, as discussed in Chapter~\ref{ch:conclusion}.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Lessons Learned}
 \label{sec:lessons-learned}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Technical Lessons}
 \label{subsec:technical-lessons}
 
@@ -522,7 +513,7 @@ Formal educational evaluation remains an important direction for future research
     \item \textbf{Performance Profiling}: Profile early and often; don't assume where bottlenecks are.
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Design Lessons}
 \label{subsec:design-lessons}
 
@@ -536,7 +527,7 @@ Formal educational evaluation remains an important direction for future research
     \item \textbf{Feedback}: Clear, immediate feedback is critical for learning and engagement.
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Process Lessons}
 \label{subsec:process-lessons}
 
@@ -550,7 +541,7 @@ Formal educational evaluation remains an important direction for future research
     \item \textbf{Community Engagement}: Engaging with open-source communities provided solutions and support.
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Summary}
 \label{sec:problems-summary}
 

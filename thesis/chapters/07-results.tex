@@ -3,17 +3,17 @@
 
 This chapter presents the results of the HPC Sorting Serious Game development, including system features, technical performance metrics, compatibility assessment, and preliminary evaluation of educational effectiveness. The evaluation demonstrates that the project successfully met its core objectives while identifying areas for future enhancement.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Completed System Features}
 \label{sec:completed-features}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Functional Features}
 \label{subsec:functional-features}
 
 The implemented system includes all planned core features:
 
-\paragraph{Single-Player Mode:}
+\paragraph*{Single-Player Mode:}
 \begin{itemize}
     \item Configurable number of cards (10--200)
     \item Random card shuffling and generation
@@ -24,19 +24,19 @@ The implemented system includes all planned core features:
     \item Victory screen with performance summary
 \end{itemize}
 
-\paragraph{Multiplayer Mode:}
+\paragraph*{Multiplayer Mode:}
 \begin{itemize}
     \item Lobby system with room creation and joining
     \item Support for 2--4 players
     \item WebRTC-based peer-to-peer networking
     \item Real-time state synchronization across clients
-    \item Distributed card ownership (MPI simulation)
-    \item Selective card visibility (private buffers hidden)
+    \item Shared container visible to all players (OpenMP shared memory)
+    \item Selective card visibility (private buffers hidden, simulating thread-private data)
     \item Disconnection handling and graceful degradation
     \item Host migration capability (partial)
 \end{itemize}
 
-\paragraph{User Interface:}
+\paragraph*{User Interface:}
 \begin{itemize}
     \item Main menu with mode selection
     \item Settings for game configuration
@@ -46,7 +46,7 @@ The implemented system includes all planned core features:
     \item Responsive layout for different screen sizes
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Educational Features}
 \label{subsec:educational-features}
 
@@ -58,27 +58,27 @@ The game successfully implements pedagogical mappings to HPC concepts:
     \label{tab:implemented-pedagogical}
     \begin{tabular}{@{}lll@{}}
         \toprule
-        \textbf{HPC Concept}        & \textbf{Game Representation} & \textbf{Status}   \\
+        \textbf{HPC Concept}     & \textbf{Game Representation} & \textbf{Status}   \\
         \midrule
-        Shared Memory (OpenMP)      & Main card container          & Implemented       \\
-        Thread-Local Storage        & Private buffer zones         & Implemented       \\
-        Distributed Memory (MPI)    & Per-player card sets         & Implemented       \\
-        Message Passing             & Card exchanges               & Implemented       \\
-        Communication Overhead      & Network latency              & Implicit          \\
-        Speedup                     & Completion time comparison   & Implemented       \\
-        Scalability                 & Variable card/player counts  & Implemented       \\
-        Load Balancing              & Equal card distribution      & Implemented       \\
-        Synchronization Barriers    & Turn-based phases            & Partially         \\
-        Race Conditions             & Concurrent card access       & Observable effect \\
+        Sequential Execution     & Single player mode           & Implemented       \\
+        Shared Memory (OpenMP)   & Shared card container        & Implemented       \\
+        Thread-Local Storage     & Private buffer zones         & Implemented       \\
+        Parallel Execution       & Multiple players working     & Implemented       \\
+        Memory Access Overhead   & Network latency              & Implicit          \\
+        Speedup                  & Completion time comparison   & Implemented       \\
+        Scalability              & Variable card/player counts  & Implemented       \\
+        Load Balancing           & Equal card distribution      & Implemented       \\
+        Synchronization Barriers & Turn-based phases            & Partially         \\
+        Race Conditions          & Concurrent card access       & Observable effect \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Technical Performance}
 \label{sec:technical-performance}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Frame Rate Performance}
 \label{subsec:framerate}
 
@@ -90,24 +90,24 @@ Frame rate was measured on three representative Android devices:
     \label{tab:framerate}
     \begin{tabular}{@{}lcccc@{}}
         \toprule
-        \textbf{Device}          & \textbf{Cards} & \textbf{Avg FPS} & \textbf{Min FPS} & \textbf{Target} \\
+        \textbf{Device}           & \textbf{Cards} & \textbf{Avg FPS} & \textbf{Min FPS} & \textbf{Target} \\
         \midrule
-        Google Pixel 6 (2021)    & 50             & 60               & 58               & 60              \\
-        Google Pixel 6           & 100            & 60               & 55               & 60              \\
-        Google Pixel 6           & 200            & 57               & 48               & 60              \\
+        Google Pixel 6 (2021)     & 50             & 60               & 58               & 60              \\
+        Google Pixel 6            & 100            & 60               & 55               & 60              \\
+        Google Pixel 6            & 200            & 57               & 48               & 60              \\
         \midrule
         Samsung Galaxy A52 (2021) & 50             & 59               & 54               & 60              \\
-        Samsung Galaxy A52       & 100            & 56               & 48               & 60              \\
-        Samsung Galaxy A52       & 200            & 51               & 42               & 60              \\
+        Samsung Galaxy A52        & 100            & 56               & 48               & 60              \\
+        Samsung Galaxy A52        & 200            & 51               & 42               & 60              \\
         \midrule
-        OnePlus 8T (2020)        & 50             & 60               & 57               & 60              \\
-        OnePlus 8T               & 100            & 58               & 51               & 60              \\
-        OnePlus 8T               & 200            & 53               & 44               & 60              \\
+        OnePlus 8T (2020)         & 50             & 60               & 57               & 60              \\
+        OnePlus 8T                & 100            & 58               & 51               & 60              \\
+        OnePlus 8T                & 200            & 53               & 44               & 60              \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Analysis:}
+\paragraph*{Analysis:}
 
 \begin{itemize}
     \item Target 60 FPS achieved for 50--100 cards on all devices
@@ -116,7 +116,7 @@ Frame rate was measured on three representative Android devices:
     \item Optimization opportunities remain for very high card counts
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Network Latency}
 \label{subsec:network-latency}
 
@@ -138,7 +138,7 @@ Network latency was measured for various connection scenarios:
     \end{tabular}
 \end{table}
 
-\paragraph{Analysis:}
+\paragraph*{Analysis:}
 
 \begin{itemize}
     \item Local network latency excellent for real-time gameplay
@@ -147,7 +147,7 @@ Network latency was measured for various connection scenarios:
     \item WebRTC NAT traversal successful in all tested configurations
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Memory Usage}
 \label{subsec:memory}
 
@@ -159,19 +159,19 @@ Memory consumption measured during typical gameplay:
     \label{tab:memory-usage}
     \begin{tabular}{@{}lcc@{}}
         \toprule
-        \textbf{Game State}         & \textbf{Memory (MB)} & \textbf{Peak (MB)} \\
+        \textbf{Game State}          & \textbf{Memory (MB)} & \textbf{Peak (MB)} \\
         \midrule
-        Startup (Main Menu)         & 85                   & 92                 \\
-        Single-player (50 cards)    & 110                  & 125                \\
-        Single-player (100 cards)   & 135                  & 155                \\
-        Single-player (200 cards)   & 175                  & 210                \\
-        Multiplayer lobby           & 120                  & 140                \\
+        Startup (Main Menu)          & 85                   & 92                 \\
+        Single-player (50 cards)     & 110                  & 125                \\
+        Single-player (100 cards)    & 135                  & 155                \\
+        Single-player (200 cards)    & 175                  & 210                \\
+        Multiplayer lobby            & 120                  & 140                \\
         Multiplayer game (4 players) & 165                  & 195                \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Analysis:}
+\paragraph*{Analysis:}
 
 \begin{itemize}
     \item Memory usage reasonable for modern smartphones (typically 4--8 GB available)
@@ -180,7 +180,7 @@ Memory consumption measured during typical gameplay:
     \item Room for further optimization if targeting very low-end devices
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{APK Size}
 \label{subsec:apk-size}
 
@@ -192,7 +192,7 @@ The final Android APK package characteristics:
     \item \textbf{Compressed (download)}: 22.1 MB
 \end{itemize}
 
-\paragraph{Size Breakdown:}
+\paragraph*{Size Breakdown:}
 \begin{itemize}
     \item Godot Engine runtime: 18 MB
     \item Game scripts and scenes: 2 MB
@@ -200,15 +200,15 @@ The final Android APK package characteristics:
     \item Libraries (WebRTC, GDSync): 3.5 MB
 \end{itemize}
 
-\paragraph{Comparison:}
+\paragraph*{Comparison:}
 
 Significantly smaller than typical Unity (50--100 MB) or Unreal Engine (100+ MB) games, facilitating mobile distribution and download.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Platform Compatibility}
 \label{sec:platform-compatibility}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Android Compatibility}
 \label{subsec:android-compatibility}
 
@@ -220,20 +220,20 @@ Testing conducted on diverse Android devices:
     \label{tab:android-compat}
     \begin{tabular}{@{}lccl@{}}
         \toprule
-        \textbf{Device}             & \textbf{Android} & \textbf{Status}  & \textbf{Notes}            \\
+        \textbf{Device}       & \textbf{Android} & \textbf{Status} & \textbf{Notes}         \\
         \midrule
-        Google Pixel 6              & 13               & Excellent        & Reference device          \\
-        Samsung Galaxy A52          & 12               & Excellent        & Mid-range target          \\
-        OnePlus 8T                  & 11               & Excellent        & Performance good          \\
-        Samsung Galaxy S10          & 10               & Good             & Older flagship            \\
-        Xiaomi Redmi Note 9         & 9                & Good             & Budget device             \\
-        Motorola Moto G7            & 9                & Acceptable       & Low-end, some slowness    \\
-        Samsung Galaxy Tab S7       & 12               & Excellent        & Tablet (landscape)        \\
+        Google Pixel 6        & 13               & Excellent       & Reference device       \\
+        Samsung Galaxy A52    & 12               & Excellent       & Mid-range target       \\
+        OnePlus 8T            & 11               & Excellent       & Performance good       \\
+        Samsung Galaxy S10    & 10               & Good            & Older flagship         \\
+        Xiaomi Redmi Note 9   & 9                & Good            & Budget device          \\
+        Motorola Moto G7      & 9                & Acceptable      & Low-end, some slowness \\
+        Samsung Galaxy Tab S7 & 12               & Excellent       & Tablet (landscape)     \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Minimum Requirements:}
+\paragraph*{Minimum Requirements:}
 
 \begin{itemize}
     \item Android 7.0 (API level 24) or higher
@@ -242,7 +242,7 @@ Testing conducted on diverse Android devices:
     \item Internet connection for multiplayer
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Screen Size and Orientation}
 \label{subsec:screen-size}
 
@@ -255,7 +255,7 @@ The game adapts to various screen configurations:
     \item \textbf{Tablets (7--10 inches)}: Excellent, especially in landscape orientation
 \end{itemize}
 
-\paragraph{Orientation Support:}
+\paragraph*{Orientation Support:}
 
 \begin{itemize}
     \item \textbf{Portrait}: Default, optimized for one-handed play
@@ -263,17 +263,17 @@ The game adapts to various screen configurations:
     \item Dynamic layout adjustment on rotation
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Usability Evaluation}
 \label{sec:usability-evaluation}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Informal User Testing}
 \label{subsec:informal-testing}
 
 Informal usability testing conducted with 12 volunteer participants (students and colleagues):
 
-\paragraph{Demographics:}
+\paragraph*{Demographics:}
 \begin{itemize}
     \item Age range: 20--35 years
     \item 8 with prior HPC knowledge, 4 without
@@ -281,7 +281,7 @@ Informal usability testing conducted with 12 volunteer participants (students an
     \item All had smartphone experience
 \end{itemize}
 
-\paragraph{Testing Protocol:}
+\paragraph*{Testing Protocol:}
 \begin{enumerate}
     \item Brief introduction to project goals (no gameplay instruction)
     \item Observation of first-time gameplay
@@ -290,21 +290,21 @@ Informal usability testing conducted with 12 volunteer participants (students an
     \item Semi-structured interview
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Key Findings}
 \label{subsec:usability-findings}
 
-\paragraph{Positive Feedback:}
+\paragraph*{Positive Feedback:}
 
 \begin{itemize}
     \item \textbf{Intuitive Controls}: 11/12 participants understood drag-and-drop immediately without instruction
     \item \textbf{Visual Clarity}: Card numbers and states were clearly visible
-    \item \textbf{Conceptual Connection}: Participants with HPC background (8/8) recognized OpenMP and MPI analogies
+    \item \textbf{Conceptual Connection}: Participants with HPC background (8/8) recognized OpenMP shared-memory parallels
     \item \textbf{Engagement}: Average play session 15--20 minutes, indicating good engagement
     \item \textbf{Performance}: No complaints about lag or performance issues
 \end{itemize}
 
-\paragraph{Areas for Improvement:}
+\paragraph*{Areas for Improvement:}
 
 \begin{itemize}
     \item \textbf{Onboarding}: 6/12 participants wanted brief tutorial or tooltips
@@ -313,7 +313,7 @@ Informal usability testing conducted with 12 volunteer participants (students an
     \item \textbf{Educational Context}: Participants without HPC background (4/4) didn't make HPC connections without explanation
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Suggested Improvements}
 \label{subsec:suggested-improvements}
 
@@ -328,17 +328,17 @@ Based on feedback, future versions should include:
     \item \textbf{Replay/Analysis Mode}: Review completed games to understand performance
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Educational Effectiveness}
 \label{sec:educational-effectiveness}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Preliminary Assessment}
 \label{subsec:preliminary-assessment}
 
 While comprehensive educational evaluation is beyond the scope of this thesis, preliminary indicators suggest educational value:
 
-\paragraph{Conceptual Understanding (HPC-Experienced Participants):}
+\paragraph*{Conceptual Understanding (HPC-Experienced Participants):}
 
 Post-gameplay interviews revealed that participants with prior HPC knowledge:
 
@@ -350,7 +350,7 @@ Post-gameplay interviews revealed that participants with prior HPC knowledge:
     \item \textbf{5/8} discussed load balancing when cards were unevenly distributed
 \end{itemize}
 
-\paragraph{Conceptual Introduction (Non-HPC Participants):}
+\paragraph*{Conceptual Introduction (Non-HPC Participants):}
 
 Participants without HPC background:
 
@@ -361,7 +361,7 @@ Participants without HPC background:
     \item After brief explanation, \textbf{4/4} expressed interest in learning more about parallel computing
 \end{itemize}
 
-\paragraph{Engagement and Motivation:}
+\paragraph*{Engagement and Motivation:}
 
 \begin{itemize}
     \item \textbf{10/12} participants expressed willingness to play again
@@ -370,7 +370,7 @@ Participants without HPC background:
     \item \textbf{11/12} appreciated the hands-on, interactive approach
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Pedagogical Value Proposition}
 \label{subsec:pedagogical-value}
 
@@ -384,7 +384,7 @@ The game serves as an effective \textbf{icebreaker or introductory activity}:
     \item \textbf{Assessment Aid}: Reveal misconceptions for instructors to address
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Comparison with Traditional Methods}
 \label{subsec:comparison-traditional}
 
@@ -396,29 +396,29 @@ Informal comparison with traditional HPC teaching methods (based on participant 
     \label{tab:comparison-traditional}
     \begin{tabular}{@{}lcc@{}}
         \toprule
-        \textbf{Criterion}           & \textbf{Game} & \textbf{Lecture/Textbook} \\
+        \textbf{Criterion}          & \textbf{Game} & \textbf{Lecture/Textbook} \\
         \midrule
-        Engagement                   & High          & Medium-Low                \\
-        Immediate Feedback           & Yes           & No                        \\
-        Hands-On Experience          & Yes           & No                        \\
-        Conceptual Visualization     & Strong        & Weak                      \\
-        Detailed Explanation         & Weak          & Strong                    \\
-        Accessibility                & High          & Medium                    \\
-        Scalability (student count)  & High          & High                      \\
-        Time Required                & 15--30 min    & 60--90 min (lecture)      \\
+        Engagement                  & High          & Medium-Low                \\
+        Immediate Feedback          & Yes           & No                        \\
+        Hands-On Experience         & Yes           & No                        \\
+        Conceptual Visualization    & Strong        & Weak                      \\
+        Detailed Explanation        & Weak          & Strong                    \\
+        Accessibility               & High          & Medium                    \\
+        Scalability (student count) & High          & High                      \\
+        Time Required               & 15--30 min    & 60--90 min (lecture)      \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Conclusion:}
+\paragraph*{Conclusion:}
 
 The game is not a replacement for traditional instruction but a valuable complementary tool that enhances engagement and provides intuitive understanding before formal study.
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Comparison with Initial Requirements}
 \label{sec:requirements-comparison}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Requirements Fulfillment}
 \label{subsec:requirements-fulfillment}
 
@@ -430,31 +430,31 @@ Assessment of how well the completed system meets initial requirements:
     \label{tab:requirements-status}
     \begin{tabular}{@{}llc@{}}
         \toprule
-        \textbf{Category}             & \textbf{Requirement}             & \textbf{Status}   \\
+        \textbf{Category} & \textbf{Requirement}  & \textbf{Status}   \\
         \midrule
-        Educational                   & OpenMP simulation                & \checkmark Met    \\
-                                      & MPI simulation                   & \checkmark Met    \\
-                                      & Performance feedback             & \checkmark Met    \\
-                                      & Scalable difficulty              & \checkmark Met    \\
-                                      & Conceptual clarity               & \checkmark Mostly \\
+        Educational       & Sequential baseline   & \checkmark Met    \\
+                          & OpenMP simulation     & \checkmark Met    \\
+                          & Performance feedback  & \checkmark Met    \\
+                          & Scalable difficulty   & \checkmark Met    \\
+                          & Conceptual clarity    & \checkmark Mostly \\
         \midrule
-        Functional                    & Card management                  & \checkmark Met    \\
-                                      & Single-player mode               & \checkmark Met    \\
-                                      & Multiplayer mode                 & \checkmark Met    \\
-                                      & User interface                   & \checkmark Met    \\
-                                      & Feedback systems                 & \checkmark Met    \\
+        Functional        & Card management       & \checkmark Met    \\
+                          & Single-player mode    & \checkmark Met    \\
+                          & Multiplayer mode      & \checkmark Met    \\
+                          & User interface        & \checkmark Met    \\
+                          & Feedback systems      & \checkmark Met    \\
         \midrule
-        Non-Functional                & Performance (60 FPS)             & \checkmark Mostly \\
-                                      & Usability                        & \checkmark Met    \\
-                                      & Reliability                      & \checkmark Met    \\
-                                      & Portability (Android)            & \checkmark Met    \\
-                                      & Maintainability                  & \checkmark Met    \\
-                                      & Accessibility                    & \checkmark Met    \\
+        Non-Functional    & Performance (60 FPS)  & \checkmark Mostly \\
+                          & Usability             & \checkmark Met    \\
+                          & Reliability           & \checkmark Met    \\
+                          & Portability (Android) & \checkmark Met    \\
+                          & Maintainability       & \checkmark Met    \\
+                          & Accessibility         & \checkmark Met    \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph{Notes:}
+\paragraph*{Notes:}
 
 \begin{itemize}
     \item \textbf{Conceptual Clarity}: Strong for HPC-experienced users; needs educational overlay for beginners
@@ -462,11 +462,11 @@ Assessment of how well the completed system meets initial requirements:
     \item \textbf{Portability}: Android fully supported; iOS and web exports remain future work
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Known Limitations}
 \label{sec:limitations}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Current Limitations}
 \label{subsec:current-limitations}
 
@@ -486,7 +486,7 @@ Assessment of how well the completed system meets initial requirements:
     \item \textbf{Formal Evaluation}: Lacks comprehensive educational efficacy study
 \end{enumerate}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \subsection{Scope Limitations}
 \label{subsec:scope-limitations}
 
@@ -501,7 +501,7 @@ Certain features were intentionally deferred to maintain project scope:
     \item Detailed analytics and learning analytics integration
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 \section{Summary}
 \label{sec:results-summary}
 
