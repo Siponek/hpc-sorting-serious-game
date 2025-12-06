@@ -16,15 +16,15 @@ default:
 # Dependencies & Submodules
 # -------------------------
 
-# Update GD-Sync submodule
+# Fetch and update all submodules in git-submodules directory
 [group('dependencies')]
-update-gd-sync:
+update-submodules:
     git submodule update --init --recursive
 
 # Link the submodule to addons folder for Godot (Windows). Will reimport stuff in engine when editor is opened, so be patient
 [group('dependencies')]
-update-gd-sync-windows: update-gd-sync delete-gd-sync-link
-    @New-Item -ItemType SymbolicLink -Path addons/GD-Sync -Target git-submodules/GD-Sync/addons/GD-Sync
+update-gd-sync-windows: update-submodules delete-gd-sync-link
+    @try { New-Item -ItemType SymbolicLink -Path addons/GD-Sync -Target git-submodules/GD-Sync/addons/GD-Sync -ErrorAction Stop; Write-Host "✓ GD-Sync symbolic link created successfully" -ForegroundColor Green } catch { Write-Host "✗ Failed to create symbolic link. Administrator rights may be required." -ForegroundColor Red; Write-Host "  Please run PowerShell as Administrator or enable Developer Mode in Windows Settings." -ForegroundColor Yellow; exit 1 }
 
 # Verify GD-Sync symbolic link is correctly set up
 [group('dependencies')]
@@ -34,4 +34,4 @@ verify-gd-sync-link:
 # Delete GD-Sync symbolic link
 [group('dependencies')]
 delete-gd-sync-link:
-    @if (Test-Path addons/GD-Sync) { Remove-Item addons/GD-Sync -Recurse -Force; Write-Host "✓ GD-Sync symbolic link deleted" -ForegroundColor Green } else { Write-Host "✗ GD-Sync symbolic link does not exist" -ForegroundColor Red }
+    @if (Test-Path addons/GD-Sync) { try { Remove-Item addons/GD-Sync -Recurse -Force -ErrorAction Stop; Write-Host "✓ GD-Sync symbolic link deleted" -ForegroundColor Green } catch { Write-Host "✗ Failed to delete symbolic link. Administrator rights may be required." -ForegroundColor Red; exit 1 } } else { Write-Host "ℹ GD-Sync symbolic link does not exist (skipping)" -ForegroundColor Cyan }

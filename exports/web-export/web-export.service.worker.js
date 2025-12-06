@@ -4,14 +4,14 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1765028495|553993684';
+const CACHE_VERSION = '1765034277|199565072';
 /** @type {string} */
 const CACHE_PREFIX = 'hpc-sorting-seri-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 /** @type {string} */
 const OFFLINE_URL = 'web-export.offline.html';
 /** @type {boolean} */
-const ENSURE_CROSSORIGIN_ISOLATION_HEADERS = true;
+const ENSURE_CROSSORIGIN_ISOLATION_HEADERS = false;
 // Files that will be cached on load.
 /** @type {string[]} */
 const CACHED_FILES = ["web-export.html","web-export.js","web-export.offline.html","web-export.icon.png","web-export.apple-touch-icon.png","web-export.audio.worklet.js","web-export.audio.position.worklet.js"];
