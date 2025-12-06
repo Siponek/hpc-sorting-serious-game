@@ -18,6 +18,8 @@ protectedMode=false
 config/name="hpc-sorting-serious-game"
 run/main_scene="res://scenes/MainMenuScene/menu_scene.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
+boot_splash/bg_color=Color(1, 0.976471, 0.937255, 1)
+boot_splash/image="uid://bhx8dihqjktvc"
 config/icon="uid://bhx8dihqjktvc"
 config/windows_native_icon="res://icon/icon.ico"
 
@@ -34,6 +36,11 @@ ToastParty="*res://addons/toastparty/toast-autoload.gd"
 PackRTC="*res://addons/packrtc/scripts/PackRTC.gd"
 GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
 ConnectionManager="*res://scenes/Multiplayer/connection_manager.gd"
+
+[display]
+
+window/size/viewport_width=1151
+window/size/viewport_height=649
 
 [dotnet]
 

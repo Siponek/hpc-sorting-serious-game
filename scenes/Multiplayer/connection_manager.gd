@@ -9,7 +9,7 @@ signal joined_lobby_successfully(lobby_name)
 signal failed_to_join_lobby(lobby_name, error_code)
 signal player_joined_lobby(client_id)
 signal player_left_lobby(client_id)
-signal player_list_updated(players_map)  # Emits the current map of players
+signal player_list_updated(players_map) # Emits the current map of players
 signal lobby_closed
 signal discovered_lobbies_updated(lobbies_list)
 
@@ -55,7 +55,14 @@ func start_hosting_lobby(
 
 
 func ensure_multiplayer_started():
-	if not GDSync.is_active():  # Or appropriate check for GDSync
+	# Web exports don't support UDP/ENet sockets - skip GDSync initialization
+	if OS.has_feature("web"):
+		logger.log_warning("Web platform detected: GD-Sync local multiplayer is not supported in web browsers.")
+		logger.log_warning("Web browsers block UDP/ENet sockets for security. You need WebRTC or WebSocket implementation.")
+		# Don't call GDSync.start_local_multiplayer() on web - it will fail with LOCAL_PORT_ERROR
+
+
+	if not GDSync.is_active(): # Or appropriate check for GDSync
 		GDSync.start_local_multiplayer()
 		logger.log_info("Started local multiplayer.")
 	else:
@@ -86,8 +93,8 @@ func leave_current_lobby():
 	if current_lobby_name_id != "":
 		# logger.log_info("Leaving lobby: ", current_lobby_name_id)
 		GDSync.lobby_leave()
-		if GDSync.lobby_get_player_count() < 1:  # Check if you are the last one
-			GDSync.lobby_close()  # This might trigger _on_gdsync_lobby_closed
+		if GDSync.lobby_get_player_count() < 1: # Check if you are the last one
+			GDSync.lobby_close() # This might trigger _on_gdsync_lobby_closed
 		emit_signal("lobby_closed")
 		_reset_lobby_state()
 	else:
@@ -126,6 +133,13 @@ func _on_gdsync_connection_failed(error: int):
 			push_error(
 				"Unable to connect, please check your internet connection."
 			)
+		ENUMS.CONNECTION_FAILED.LOCAL_PORT_ERROR:
+			push_error(
+				"Local port error. This usually happens with web exports or when network ports are blocked. "
+				+ "For web exports, multiplayer functionality may be limited."
+			)
+		_:
+			push_error("Unknown connection error: ", error)
 
 	emit_signal("connection_to_multiplayer_failed", error)
 
@@ -150,7 +164,7 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 	match error:
 		ENUMS.LOBBY_CREATION_ERROR.LOBBY_ALREADY_EXISTS:
 			error_message += "A lobby with this name already exists. Joining instead."
-			ConnectionManager.join_existing_lobby(lobby_name)  # Attempt to join the existing lobby
+			ConnectionManager.join_existing_lobby(lobby_name) # Attempt to join the existing lobby
 		ENUMS.LOBBY_CREATION_ERROR.NAME_TOO_SHORT:
 			error_message += "Name is too short."
 		ENUMS.LOBBY_CREATION_ERROR.NAME_TOO_LONG:
@@ -171,10 +185,10 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 	emit_signal("lobby_creation_has_failed", lobby_name, error_message)
 
 
-func _on_gdsync_lobby_joined(lobby_name_id: String):  # GDSync might pass client_id here too
+func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_id here too
 	# logger.log_info("Successfully joined lobby: ", lobby_name_id)
 	current_lobby_name_id = lobby_name_id
-	is_currently_host = GDSync.is_host()  # Update host status
+	is_currently_host = GDSync.is_host() # Update host status
 	emit_signal("joined_lobby_successfully", lobby_name_id)
 
 
@@ -208,7 +222,7 @@ func _on_gdsync_client_joined(client_id: int):
 		else:
 			(
 				ToastParty
-				. show(
+				.show(
 					{
 						"text": "Error, You are already in the lobby as host!",
 						"bgcolor": Color.ROSY_BROWN,

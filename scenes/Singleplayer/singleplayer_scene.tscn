@@ -225,6 +225,8 @@ size_flags_vertical = 3
 alignment = 1
 
 [node name="Background" parent="." instance=ExtResource("6_62g6h")]
+custom_minimum_size = Vector2(26.695, 0)
+layout_mode = 1
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
