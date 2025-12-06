@@ -209,12 +209,22 @@ func create_local_lobby(
 		connection_controller.set_host(my_id)
 		connection_controller.in_local_lobby = true
 
+		# Add host to client tables (host doesn't trigger _on_peer_connected for itself)
+		var host_client: Client = Client.new()
+		host_client.peer_id = my_id
+		host_client.client_id = my_id
+		host_client.valid = true
+		peer_client_table[my_id] = host_client
+		lobby_client_table[my_id] = host_client
+
 		set_process(true)
 		logger.write_log(
 			"Web lobby created. Code: " + current_room_code + ", Host ID: " + str(my_id), "[LocalServer-Web]"
 		)
 		# Emit with the room code so UI can display it for sharing
 		GDSync.lobby_created.emit.call_deferred(current_room_code)
+		# Emit client_joined for the host so they appear in the player list
+		GDSync.client_joined.emit.call_deferred(my_id)
 	else:
 		logger.write_error(
 			"Failed to create web lobby: " + str(session), "[LocalServer-Web]"
