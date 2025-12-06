@@ -102,7 +102,7 @@ func _on_connection_manager_lobby_created(lobby_id: String):
 		get_parent().add_child(lobby_scene_instance)
 		lobby_scene_instance.popup_centered()
 	self.close_requested.emit()
-	ConnectionManager.join_existing_lobby(lobby_id)
+	# Note: Host should NOT call join_existing_lobby - they're already in the lobby after creation
 
 
 func _on_connection_manager_lobby_creation_failed(

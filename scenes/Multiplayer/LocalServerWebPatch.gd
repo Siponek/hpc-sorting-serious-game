@@ -66,8 +66,6 @@ class Client:
 
 
 func _ready() -> void:
-	print("[LocalServerWebPatch] _ready() called!")
-
 	GDSync = get_node("/root/GDSync")
 	name = "LocalServer"
 	connection_controller = GDSync._connection_controller
@@ -84,14 +82,19 @@ func _ready() -> void:
 	_apply_signaling_url()
 
 	set_process(false)
-	print("[LocalServerWebPatch] Initialized successfully!")
 	logger.write_log(
 		"LocalServerWebPatch initialized for web platform.", "[LocalServer-Web]"
 	)
 
 
 func reset_multiplayer() -> void:
-	logger.write_log("Closing web multiplayer.", "[LocalServer-Web]")
+	logger.write_log("Resetting web multiplayer state.", "[LocalServer-Web]")
+
+	# NOTE: We intentionally do NOT close the room on the signaling server here.
+	# reset_multiplayer() is called by GD-Sync for various internal reasons
+	# (initialization, cleanup, state transitions, etc.) and closing the room
+	# here would break lobby discovery. The room should only be closed via
+	# close_lobby() which is called when the host explicitly leaves.
 
 	if rtc_session:
 		rtc_session.queue_free()
@@ -101,6 +104,18 @@ func reset_multiplayer() -> void:
 	found_lobbies.clear()
 	clear_lobby_data()
 	_is_initialized = false
+
+
+## Explicitly close the lobby and remove it from the signaling server.
+## Call this when the host intentionally leaves/closes the lobby.
+func close_lobby() -> void:
+	logger.write_log("Explicitly closing lobby.", "[LocalServer-Web]")
+
+	if is_host and current_room_code != "":
+		logger.write_log("Closing room on server: " + current_room_code, "[LocalServer-Web]")
+		_close_room_on_server(current_room_code)
+
+	reset_multiplayer()
 
 
 func clear_lobby_data() -> void:
@@ -118,7 +133,6 @@ func clear_lobby_data() -> void:
 
 
 func start_local_peer() -> bool:
-	print("[LocalServerWebPatch] start_local_peer() called - returning true for WebRTC mode")
 	logger.write_log(
 		"Web platform: WebRTC mode - no UDP binding needed.",
 		"[LocalServer-Web]"
@@ -172,6 +186,8 @@ func create_local_lobby(
 	var session = await PackRTC.host()
 
 	if session is PRSession:
+		# Update room metadata on signaling server (PackRTC doesn't send lobby info)
+		await _update_room_metadata(session.code, lobby_name, public, player_limit)
 		rtc_session = session
 		is_host = true
 
@@ -401,7 +417,6 @@ func _process(_delta: float) -> void:
 func _apply_signaling_url() -> void:
 	if signaling_server_url != "":
 		PackRTC.packrtc_url = signaling_server_url
-		print("[LocalServerWebPatch] Using custom signaling server: " + signaling_server_url)
 		logger.write_log(
 			"Using custom signaling server: " + signaling_server_url,
 			"[LocalServer-Web]"
@@ -412,6 +427,66 @@ func _apply_signaling_url() -> void:
 func set_signaling_server(url: String) -> void:
 	signaling_server_url = url
 	_apply_signaling_url()
+
+
+## Update room metadata on signaling server after PackRTC creates the room
+## PackRTC.host() doesn't send lobby name/public/player_limit, so we send it separately
+func _update_room_metadata(code: String, lobby_name: String, public: bool, player_limit: int) -> void:
+	if signaling_server_url == "":
+		return
+
+	var http = HTTPRequest.new()
+	add_child(http)
+
+	var url = signaling_server_url + "/session/update/" + code
+	var body = JSON.stringify({
+		"lobby_name": lobby_name,
+		"public": public,
+		"player_limit": player_limit
+	})
+
+	var headers = ["Content-Type: application/json"]
+	var error = http.request(url, headers, HTTPClient.METHOD_POST, body)
+
+	if error != OK:
+		logger.write_error("Failed to update room metadata: " + str(error), "[LocalServer-Web]")
+		http.queue_free()
+		return
+
+	# Wait for response
+	var result = await http.request_completed
+	http.queue_free()
+
+	if result[1] == 200:
+		logger.write_log("Room metadata updated: " + lobby_name, "[LocalServer-Web]")
+	else:
+		logger.write_error("Failed to update room metadata, status: " + str(result[1]), "[LocalServer-Web]")
+
+
+## Close room on signaling server (called when host leaves)
+func _close_room_on_server(code: String) -> void:
+	if signaling_server_url == "":
+		return
+
+	var http = HTTPRequest.new()
+	add_child(http)
+
+	var url = signaling_server_url + "/session/close/" + code
+	var error = http.request(url, [], HTTPClient.METHOD_POST)
+
+	if error != OK:
+		logger.write_error("Failed to close room: " + str(error), "[LocalServer-Web]")
+		http.queue_free()
+		return
+
+	# Wait for response (fire and forget, but clean up the node)
+	var result = await http.request_completed
+	http.queue_free()
+
+	if result[1] == 200:
+		logger.write_log("Room closed on server: " + code, "[LocalServer-Web]")
+	else:
+		logger.write_error("Failed to close room, status: " + str(result[1]), "[LocalServer-Web]")
 
 
 # Stub functions to maintain API compatibility

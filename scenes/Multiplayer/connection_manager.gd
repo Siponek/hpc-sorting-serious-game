@@ -100,6 +100,14 @@ func join_existing_lobby(lobby_id_to_join: String, password: String = ""):
 func leave_current_lobby():
 	if current_lobby_name_id != "":
 		# logger.log_info("Leaving lobby: ", current_lobby_name_id)
+
+		# For web platform, explicitly close the room on the signaling server
+		# if we're the host. This uses the new close_lobby() function in LocalServerWebPatch.
+		if OS.has_feature("web") and is_currently_host:
+			var local_server = GDSync.get_node_or_null("LocalServer")
+			if local_server and local_server.has_method("close_lobby"):
+				local_server.close_lobby()
+
 		GDSync.lobby_leave()
 		if GDSync.lobby_get_player_count() < 1: # Check if you are the last one
 			GDSync.lobby_close() # This might trigger _on_gdsync_lobby_closed

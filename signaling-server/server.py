@@ -110,6 +110,85 @@ async def handle_host(request):
     })
 
 
+async def handle_update(request):
+    """POST /session/update/:code - Update room metadata (lobby name, public, etc.)"""
+    code = request.match_info['code'].upper()
+
+    if code not in rooms:
+        return web.json_response(
+            {'success': False, 'code': 'ROOM_NOT_FOUND'},
+            status=404
+        )
+
+    try:
+        body = await request.json()
+    except json.JSONDecodeError:
+        body = {}
+
+    room = rooms[code]
+
+    # Update lobby metadata
+    old_lobby_name = room.get('lobby_name', '')
+    new_lobby_name = body.get('lobby_name', old_lobby_name)
+
+    # Update the lobby_name_to_code mapping if name changed
+    if old_lobby_name and old_lobby_name.lower() in lobby_name_to_code:
+        del lobby_name_to_code[old_lobby_name.lower()]
+
+    if new_lobby_name:
+        lobby_name_to_code[new_lobby_name.lower()] = code
+        room['lobby_name'] = new_lobby_name
+
+    if 'public' in body:
+        room['public'] = body['public']
+    if 'player_limit' in body:
+        room['player_limit'] = body['player_limit']
+
+    print(f"[UPDATE] Room {code} updated: lobby={room.get('lobby_name')}, public={room.get('public')}")
+
+    return web.json_response({
+        'success': True,
+        'code': code,
+        'lobby_name': room.get('lobby_name', ''),
+        'public': room.get('public', True),
+        'player_limit': room.get('player_limit', 0),
+    })
+
+
+async def handle_close(request):
+    """POST /session/close/:code - Close/delete a room (called when host leaves)"""
+    code = request.match_info['code'].upper()
+
+    if code not in rooms:
+        return web.json_response(
+            {'success': False, 'code': 'ROOM_NOT_FOUND'},
+            status=404
+        )
+
+    room = rooms[code]
+    lobby_name = room.get('lobby_name', '')
+
+    # Remove lobby name mapping
+    if lobby_name and lobby_name.lower() in lobby_name_to_code:
+        del lobby_name_to_code[lobby_name.lower()]
+
+    # Close any remaining WebSocket connections
+    for ws in list(ws_connections.get(code, {}).values()):
+        if not ws.closed:
+            await ws.close()
+
+    # Delete room
+    rooms.pop(code, None)
+    ws_connections.pop(code, None)
+
+    print(f"[CLOSE] Room {code} closed by host (lobby: {lobby_name})")
+
+    return web.json_response({
+        'success': True,
+        'code': code,
+    })
+
+
 async def handle_join(request):
     """POST /session/join/:code - Join an existing room by code or lobby name"""
     code_or_name = request.match_info['code']
@@ -259,16 +338,12 @@ async def handle_websocket(request):
                     except:
                         pass
 
-            # Cleanup empty rooms
-            if len(ws_connections.get(code, {})) == 0 and code != 'TEST':
-                # Remove lobby name mapping
-                room = rooms.get(code, {})
-                lobby_name = room.get('lobby_name', '')
-                if lobby_name and lobby_name.lower() in lobby_name_to_code:
-                    del lobby_name_to_code[lobby_name.lower()]
-                rooms.pop(code, None)
-                ws_connections.pop(code, None)
-                print(f"[ROOM] Room {code} deleted (empty)")
+            # Don't auto-delete rooms when signaling WebSocket disconnects
+            # WebRTC peers establish direct connections after signaling completes,
+            # so rooms should persist for discovery until explicitly closed.
+            # Note: In production, add periodic cleanup of stale rooms.
+            if len(ws_connections.get(code, {})) == 0:
+                print(f"[ROOM] Room {code} has no active signaling connections (kept for discovery)")
 
     return ws
 
@@ -278,6 +353,8 @@ def main():
 
     # Routes
     app.router.add_post('/session/host', handle_host)
+    app.router.add_post('/session/update/{code}', handle_update)
+    app.router.add_post('/session/close/{code}', handle_close)
     app.router.add_post('/session/join/{code}', handle_join)
     app.router.add_get('/health', handle_health)
     app.router.add_get('/rooms', handle_rooms)
@@ -286,6 +363,8 @@ def main():
 
     # Also handle OPTIONS for all routes
     app.router.add_route('OPTIONS', '/session/host', lambda r: web.Response())
+    app.router.add_route('OPTIONS', '/session/update/{code}', lambda r: web.Response())
+    app.router.add_route('OPTIONS', '/session/close/{code}', lambda r: web.Response())
     app.router.add_route('OPTIONS', '/session/join/{code}', lambda r: web.Response())
     app.router.add_route('OPTIONS', '/lobbies', lambda r: web.Response())
 
