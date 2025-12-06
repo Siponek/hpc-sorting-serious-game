@@ -4,6 +4,12 @@ set windows-powershell := true
 # Import formatter recipes
 import 'justfiles/formatter.justfile'
 
+# Import thesis compilation recipes
+import 'justfiles/thesis.justfile'
+
+# Import web export recipes
+import 'justfiles/web-export.justfile'
+
 default:
     @just --list
 

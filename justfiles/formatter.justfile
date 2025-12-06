@@ -1,27 +1,26 @@
 # Code Formatting
 # ---------------
 
-# Format all GDScript files in the project
+# Internal: Run gdformat with arguments
+_gdformat +args:
+    uv run --with gdtoolkit gdformat {{args}}
+
+# Format GDScript files (default: scenes directory, or specify custom path)
 [group('formatting')]
-format:
-    uv run --with gdtoolkit gdformat .
+format path="./scenes":
+    just _gdformat {{path}}
 
 # Check formatting without modifying files (useful for CI/CD)
 [group('formatting')]
-format-check:
-    uv run --with gdtoolkit gdformat . --check
-
-# Format a specific file or directory
-[group('formatting')]
-format-path path:
-    uv run --with gdtoolkit gdformat {{path}}
+format-check path="./scenes":
+    just _gdformat {{path}} --check
 
 # Format only changed files (git diff)
 [group('formatting')]
 format-changed:
-    git diff --name-only --diff-filter=ACMR "*.gd" | xargs -r uv run --with gdtoolkit gdformat
+    git diff --name-only --diff-filter=ACMR "*.gd" | xargs -r just _gdformat
 
 # Format files in staging area
 [group('formatting')]
 format-staged:
-    git diff --staged --name-only --diff-filter=ACMR "*.gd" | xargs -r uv run --with gdtoolkit gdformat
+    git diff --staged --name-only --diff-filter=ACMR "*.gd" | xargs -r just _gdformat

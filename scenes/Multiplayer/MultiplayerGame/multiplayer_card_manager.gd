@@ -441,9 +441,18 @@ func _on_card_placed_in_container(
 		return
 
 	var moved_card = dropped_card
+
+	# Check if this is the first move (timer not started yet)
+	var should_start_timer = not timer_node.timer_started
+
 	# IMPORTANT: Check slot status BEFORE scroll_container processes the drop
 	# Store this before the card's state changes
 	super._on_card_placed_in_container()
+
+	# If timer just started, broadcast to all clients
+	if should_start_timer and timer_node.timer_started:
+		logger.log_info("First move detected, broadcasting timer start to all clients")
+		GDSync.call_func(self.sync_timer_state, ["start"])
 
 	# Wait a frame to ensure card is properly placed
 	await get_tree().process_frame
@@ -500,8 +509,16 @@ func _on_card_placed_in_container(
 
 # Override parent's buffer placement handler
 func _on_card_placed_in_slot(card, slot):
+	# Check if this is the first move (timer not started yet)
+	var should_start_timer = not timer_node.timer_started
+
 	# Call parent logic first
 	super._on_card_placed_in_slot(card, slot)
+
+	# If timer just started, broadcast to all clients
+	if should_start_timer and timer_node.timer_started:
+		logger.log_info("First move detected (slot), broadcasting timer start to all clients")
+		GDSync.call_func(self.sync_timer_state, ["start"])
 
 	if not game_state_synced:
 		logger.log_info("Skipping buffer sync - game state not ready")
