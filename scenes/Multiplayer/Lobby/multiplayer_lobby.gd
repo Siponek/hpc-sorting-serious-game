@@ -103,7 +103,9 @@ func _ready():
 
 
 func set_lobby_id(id: String) -> void:
-	self.get_node(label_lobby_name_path).text = "Lobby ID: " + id
+	# On web platform, display "Room Code" instead of "Lobby ID" for clarity
+	var label_prefix = "Room Code: " if OS.has_feature("web") else "Lobby ID: "
+	self.get_node(label_lobby_name_path).text = label_prefix + id
 	logger.log_info("UI received lobby ID: ", id)
 
 

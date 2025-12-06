@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1765049166|580754843';
+const CACHE_VERSION = '1765051955|1231531071';
 /** @type {string} */
 const CACHE_PREFIX = 'hpc-sorting-seri-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;

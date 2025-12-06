@@ -198,7 +198,10 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_id here too
 	# logger.log_info("Successfully joined lobby: ", lobby_name_id)
 	current_lobby_name_id = lobby_name_id
-	is_currently_host = GDSync.is_host() # Update host status
+	# Don't override host status if we're already the host (e.g., host "joining" their own lobby)
+	if not is_currently_host:
+		is_currently_host = GDSync.is_host()
+	logger.log_info("Joined lobby. Host status: ", is_currently_host)
 	emit_signal("joined_lobby_successfully", lobby_name_id)
 
 
