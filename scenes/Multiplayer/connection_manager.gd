@@ -55,14 +55,22 @@ func start_hosting_lobby(
 
 
 func ensure_multiplayer_started():
-	# Web exports don't support UDP/ENet sockets - skip GDSync initialization
-	if OS.has_feature("web"):
-		logger.log_warning("Web platform detected: GD-Sync local multiplayer is not supported in web browsers.")
-		logger.log_warning("Web browsers block UDP/ENet sockets for security. You need WebRTC or WebSocket implementation.")
-		# Don't call GDSync.start_local_multiplayer() on web - it will fail with LOCAL_PORT_ERROR
+	#print all features for debugging
+	logger.log_info("Ensuring multiplayer is started...")
+	#print all OS features for debugging
+	# Note: On the Web platform, one of the following additional tags is defined to indicate the host platform: web_android, web_ios, web_linuxbsd, web_macos, or web_windows.
+	var features = OS.has_feature("web_windows") or OS.has_feature("web_macos") or OS.has_feature("web_linuxbsd") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+	# Web platform uses WebRTC via GDSyncWebPatch (applied automatically)
+	if features:
+		(
+			logger
+			.log_info(
+				"Web platform detected: Using WebRTC multiplayer via GDSyncWebPatch."
+			)
+		)
+		print("[ConnectionManager] ensure_multiplayer_started: Web platform detected.")
 
-
-	if not GDSync.is_active(): # Or appropriate check for GDSync
+	if not GDSync.is_active():
 		GDSync.start_local_multiplayer()
 		logger.log_info("Started local multiplayer.")
 	else:
@@ -135,8 +143,10 @@ func _on_gdsync_connection_failed(error: int):
 			)
 		ENUMS.CONNECTION_FAILED.LOCAL_PORT_ERROR:
 			push_error(
-				"Local port error. This usually happens with web exports or when network ports are blocked. "
-				+ "For web exports, multiplayer functionality may be limited."
+				(
+					"Local port error. This usually happens with web exports or when network ports are blocked. "
+					+ "For web exports, multiplayer functionality may be limited."
+				)
 			)
 		_:
 			push_error("Unknown connection error: ", error)
