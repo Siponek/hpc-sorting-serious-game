@@ -18,13 +18,7 @@ import json
 import random
 import sys
 from datetime import datetime
-
-try:
-    from aiohttp import web
-except ImportError:
-    print("ERROR: aiohttp library not installed.")
-    print("Install it with: pip install aiohttp")
-    sys.exit(1)
+from aiohttp import web
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 3000
 
@@ -89,6 +83,7 @@ async def handle_host(request):
         'lobby_name': lobby_name,
         'public': lobby_public,
         'player_limit': player_limit,
+        'player_count': 1,  # Host counts as first player
     }
     ws_connections[code] = {}
 
@@ -152,6 +147,34 @@ async def handle_update(request):
         'lobby_name': room.get('lobby_name', ''),
         'public': room.get('public', True),
         'player_limit': room.get('player_limit', 0),
+    })
+
+
+async def handle_player_count(request):
+    """POST /session/players/:code - Update player count for a room"""
+    code = request.match_info['code'].upper()
+
+    if code not in rooms:
+        return web.json_response(
+            {'success': False, 'code': 'ROOM_NOT_FOUND'},
+            status=404
+        )
+
+    try:
+        body = await request.json()
+    except json.JSONDecodeError:
+        body = {}
+
+    room = rooms[code]
+
+    if 'player_count' in body:
+        room['player_count'] = int(body['player_count'])
+        print(f"[PLAYERS] Room {code} player count: {room['player_count']}")
+
+    return web.json_response({
+        'success': True,
+        'code': code,
+        'player_count': room.get('player_count', 1),
     })
 
 
@@ -233,7 +256,8 @@ async def handle_rooms(request):
         room_list.append({
             'code': code,
             'channel': room['channel'],
-            'peers': len(ws_connections.get(code, {})),
+            'signaling_peers': len(ws_connections.get(code, {})),
+            'player_count': room.get('player_count', 1),
             'created_at': room['created_at'],
             'lobby_name': room.get('lobby_name', ''),
             'public': room.get('public', True),
@@ -251,7 +275,7 @@ async def handle_lobbies(request):
             lobbies.append({
                 'Name': room.get('lobby_name', code),
                 'Code': code,
-                'PlayerCount': len(ws_connections.get(code, {})),
+                'PlayerCount': room.get('player_count', 1),
                 'PlayerLimit': room.get('player_limit', 0),
                 'Public': True,
                 'Open': True,
@@ -289,9 +313,11 @@ async def handle_websocket(request):
             'peers': existing_peers,
         })
 
-        # Notify others
+        # Notify others about new peer
+        print(f"[WS] Notifying other peers about new peer {peer_id} in room {code}")
         for pid, other_ws in ws_connections[code].items():
             if pid != peer_id and not other_ws.closed:
+                print(f"[WS] Sending new_connection to peer {pid} about peer {peer_id}")
                 await other_ws.send_json({
                     'data_type': 'new_connection',
                     'peer_id': peer_id,
@@ -302,10 +328,16 @@ async def handle_websocket(request):
             if msg.type == web.WSMsgType.TEXT:
                 try:
                     data = json.loads(msg.data)
+                    data_type = data.get('data_type', 'unknown')
 
-                    if data.get('data_type') == 'ready':
+                    if data_type == 'ready':
                         print(f"[WS] Peer {peer_id} ready in room {code}")
                         continue
+
+                    # Log signaling messages for debugging
+                    if data_type in ('offer', 'answer', 'ice'):
+                        target_id = data.get('to', '?')
+                        print(f"[SIGNAL] {data_type.upper()} from peer {peer_id} to peer {target_id} in room {code}")
 
                     # Forward to target peer
                     if 'to' in data:
@@ -315,8 +347,11 @@ async def handle_websocket(request):
                             if not target_ws.closed:
                                 data['from'] = peer_id
                                 await target_ws.send_json(data)
+                                print(f"[SIGNAL] Forwarded {data_type} to peer {target_id}")
+                        else:
+                            print(f"[SIGNAL] Target peer {target_id} not found in room {code}")
                 except json.JSONDecodeError:
-                    pass
+                    print(f"[WS] Invalid JSON from peer {peer_id}")
             elif msg.type == web.WSMsgType.ERROR:
                 print(f"[WS] Error: {ws.exception()}")
 
@@ -354,6 +389,7 @@ def main():
     # Routes
     app.router.add_post('/session/host', handle_host)
     app.router.add_post('/session/update/{code}', handle_update)
+    app.router.add_post('/session/players/{code}', handle_player_count)
     app.router.add_post('/session/close/{code}', handle_close)
     app.router.add_post('/session/join/{code}', handle_join)
     app.router.add_get('/health', handle_health)
@@ -364,6 +400,7 @@ def main():
     # Also handle OPTIONS for all routes
     app.router.add_route('OPTIONS', '/session/host', lambda r: web.Response())
     app.router.add_route('OPTIONS', '/session/update/{code}', lambda r: web.Response())
+    app.router.add_route('OPTIONS', '/session/players/{code}', lambda r: web.Response())
     app.router.add_route('OPTIONS', '/session/close/{code}', lambda r: web.Response())
     app.router.add_route('OPTIONS', '/session/join/{code}', lambda r: web.Response())
     app.router.add_route('OPTIONS', '/lobbies', lambda r: web.Response())

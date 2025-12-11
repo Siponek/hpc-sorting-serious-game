@@ -6,7 +6,7 @@ extends Node
 
 var logger: ColorfulLogger
 var _patch_applied: bool = false
-
+const web_local_server_script = preload("res://scenes/Multiplayer/LocalServerWebPatch.gd")
 
 func _ready() -> void:
 	logger = CustomLogger.get_logger(self)
@@ -36,9 +36,7 @@ func _apply_web_patch() -> void:
 	original_local_server.set_physics_process(false)
 
 	# Create and add the web-compatible LocalServer
-	var web_local_server = (
-		preload("res://scenes/Multiplayer/LocalServerWebPatch.gd").new()
-	)
+	var web_local_server = web_local_server_script.new()
 	web_local_server.name = "LocalServer"
 	gdsync.add_child(web_local_server)
 
