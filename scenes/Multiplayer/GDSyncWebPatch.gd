@@ -9,7 +9,7 @@ var _patch_applied: bool = false
 
 
 func _ready() -> void:
-	logger = Logger.get_logger(self)
+	logger = CustomLogger.get_logger(self)
 
 	# Only apply patch for web exports
 	if not OS.has_feature("web"):

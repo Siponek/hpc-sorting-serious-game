@@ -26,7 +26,7 @@ var logger: ColorfulLogger
 
 
 func _ready():
-	logger = Logger.get_logger(self)
+	logger = CustomLogger.get_logger(self)
 	# Connect to GDSync signals here
 	GDSync.connected.connect(_on_gdsync_connected)
 	GDSync.connection_failed.connect(_on_gdsync_connection_failed)
@@ -100,7 +100,6 @@ func join_existing_lobby(lobby_id_to_join: String, password: String = ""):
 func leave_current_lobby():
 	if current_lobby_name_id != "":
 		# logger.log_info("Leaving lobby: ", current_lobby_name_id)
-
 		# For web platform, explicitly close the room on the signaling server
 		# if we're the host. This uses the new close_lobby() function in LocalServerWebPatch.
 		if OS.has_feature("web") and is_currently_host:

@@ -28,6 +28,7 @@ class Scripts:
 	const THEME_AUTOAPPLIER = "res://scenes/scripts/theme_autoapplier.gd"
 	const THEME_MANAGER = "res://theme_manager.gd"
 	const TIMER_CONTROLLER_SCRIPT = "res://scenes/timer_controller_script.gd"
+	const VAR_TREE_HANDLER = "res://lib/feature_flag_handlers/var_tree_handler.gd"
 
 class Scenes:
 	const BACKGROUND = "res://scenes/BackGroundScene/background.tscn"

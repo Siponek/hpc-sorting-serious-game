@@ -52,8 +52,9 @@ const finish_game_scene: PackedScene = preload(ProjectFiles.Scenes.FINISH_GAME_S
 @onready var sorted_cards_container: HBoxContainer = get_node("./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer")
 @onready var sorted_cards_panel: PanelContainer = get_node("./../SortedCardsPanel")
 @onready var scroll_container_node: ScrollContainer = $CardPanel/ScrollContainer
-@onready var var_tree: VarTree = get_node("./../CanvasLayer/VarTree")
-@onready var logger := Logger.get_logger(self)
+const VAR_TREE_PATH: NodePath = "./../CanvasLayer/VarTree"
+var var_tree: VarTree = null
+@onready var logger := CustomLogger.get_logger(self)
 
 class CardDebugData:
 	var cards_in_slots: int = 0
@@ -97,33 +98,32 @@ func _ready():
 	if sorted_cards_panel != null: # sorted_cards_panel is checked in _validate_node_references
 		sorted_cards_panel.visible = false
 	# Var tree mounting for debugging purposes
-	if OS.has_feature("debug"):
-		mount_var_tree_variables()
+	var_tree = VarTreeHandler.handle_var_tree(self, VAR_TREE_PATH, _setup_var_tree)
 
-func mount_var_tree_variables() -> void:
+func _setup_var_tree(vt: VarTree) -> void:
 	if _var_tree_mounted:
 		return # Already mounted
 	_var_tree_mounted = true
-	var_tree.mount_var(self, "Client number", {
+	vt.mount_var(self, "Client number", {
 		"font_color": Color.CYAN,
 		"format_callback": func(_value: Variant) -> String:
 			return str(Constants.get_game_debug_id())
 	})
-	var_tree.mount_var(self, "dbg_game_info/curr_dragged_card", {
+	vt.mount_var(self, "dbg_game_info/curr_dragged_card", {
 		"font_color": Color.SEASHELL,
 		"format_callback": func(_value: Variant) -> String:
 			if card_container: # Ensure 'card_container' is available
 				return str(DragState.currently_dragged_card.value) if DragState.currently_dragged_card != null else "None"
 			return "0"
 	})
-	var_tree.mount_var(self, "dbg_game_info/card_count", {
+	vt.mount_var(self, "dbg_game_info/card_count", {
 		"font_color": Color.SEASHELL,
 		"format_callback": func(_value: Variant) -> String:
 			if card_container: # Ensure 'card_container' is available
 				return str(card_container.get_child_count())
 			return "0"
 	})
-	var_tree.mount_var(self, "dbg_game_info/card_slots", {
+	vt.mount_var(self, "dbg_game_info/card_slots", {
 		"font_color": Color.SEASHELL,
 		"format_callback": func(_value: Variant) -> String:
 			var sum=0
@@ -134,23 +134,22 @@ func mount_var_tree_variables() -> void:
 			return "0"
 	})
 	if Settings.is_multiplayer:
-		#
-		var_tree.mount_var(self, "dbg_game_mp/multiplayer", {
+		vt.mount_var(self, "dbg_game_mp/multiplayer", {
 			"font_color": Color.AQUA,
 			"format_callback": func(_value: Variant) -> String:
 				return "ON"
 		})
-		var_tree.mount_var(self, "dbg_game_mp/IAmHost", {
-		"font_color": Color.SEASHELL,
-		"format_callback": func(_value: Variant) -> String:
-			return str(ConnectionManager.am_i_host())
+		vt.mount_var(self, "dbg_game_mp/IAmHost", {
+			"font_color": Color.SEASHELL,
+			"format_callback": func(_value: Variant) -> String:
+				return str(ConnectionManager.am_i_host())
 		})
-		var_tree.mount_var(self, "dbg_game_mp/currentLobbyID", {
+		vt.mount_var(self, "dbg_game_mp/currentLobbyID", {
 			"font_color": Color.SEASHELL,
 			"format_callback": func(_value: Variant) -> String:
 				return str(ConnectionManager.get_current_lobby_id())
 		})
-		var_tree.mount_var(self, "dbg_game_mp/Players count", {
+		vt.mount_var(self, "dbg_game_mp/Players count", {
 			"font_color": Color.SEASHELL,
 			"format_callback": func(_value: Variant) -> String:
 				return str(ConnectionManager.get_player_list().size())
@@ -209,9 +208,7 @@ func _validate_node_references() -> bool:
 	if not button_container:
 		logger.log_error("CardManager: button_container (for swap buttons) not found. Path: $SwapButtonPanel/CenterContainer/SwapButtonContainer")
 		all_valid = false
-	if not var_tree:
-		logger.log_error("CardManager: var_tree not found. Path: ./../CanvasLayer/VarTree")
-		all_valid = false
+	# var_tree validation is handled by VarTreeHandler
 	if not finish_game_scene:
 		logger.log_error("CardManager: finish_game_scene PackedScene not loaded properly.")
 		all_valid = false

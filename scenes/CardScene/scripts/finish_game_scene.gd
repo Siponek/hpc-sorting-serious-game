@@ -10,7 +10,7 @@ signal window_closed
 @onready var reset_button: Button = $FinishGameWindow/VBoxContainer/ResetGameButton
 @onready var exit_button: Button = $FinishGameWindow/VBoxContainer/ExitToMainMenuButton
 @onready var confetti_particles: GPUParticles2D = $ConfettiParticles
-@onready var logger := Logger.get_logger(self)
+@onready var logger := CustomLogger.get_logger(self)
 
 var finishing_player_id: int = -1
 

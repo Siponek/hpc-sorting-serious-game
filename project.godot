@@ -17,7 +17,7 @@ protectedMode=false
 
 config/name="hpc-sorting-serious-game"
 run/main_scene="res://scenes/MainMenuScene/menu_scene.tscn"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(1, 0.976471, 0.937255, 1)
 boot_splash/image="uid://bhx8dihqjktvc"
 config/icon="uid://bhx8dihqjktvc"
@@ -25,7 +25,7 @@ config/windows_native_icon="res://icon/icon.ico"
 
 [autoload]
 
-Logger="*res://lib/logger/logger.gd"
+CustomLogger="*res://lib/logger/logger.gd"
 Constants="*res://scenes/scripts/constants.gd"
 SceneManager="*res://scene_manager.gd"
 Settings="*res://settings.gd"
@@ -42,6 +42,8 @@ ConnectionManager="*res://scenes/Multiplayer/connection_manager.gd"
 
 window/size/viewport_width=1151
 window/size/viewport_height=649
+window/size/resizable=false
+window/stretch/mode="canvas_items"
 
 [dotnet]
 
