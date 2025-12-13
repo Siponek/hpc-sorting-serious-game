@@ -383,8 +383,49 @@ async def handle_websocket(request):
     return ws
 
 
+async def close_websocket(ws, peer_id: int, code: str):
+    """Close a single WebSocket connection gracefully."""
+    if ws.closed:
+        return
+    try:
+        await ws.send_json({
+            'data_type': 'server_shutdown',
+            'message': 'Server is shutting down',
+        })
+        await ws.close(code=1001, message=b'Server shutdown')
+        print(f"[SHUTDOWN] Closed connection for peer {peer_id} in room {code}")
+    except Exception as e:
+        print(f"[SHUTDOWN] Error closing peer {peer_id}: {e}")
+
+
+async def cleanup_all_connections():
+    """Close all WebSocket connections gracefully."""
+    print("\n[SHUTDOWN] Closing all connections...")
+
+    # Close all WebSocket connections
+    # Note: list() is required to avoid "dictionary changed size during iteration"
+    for code in list(ws_connections.keys()):
+        for peer_id, ws in list(ws_connections.get(code, {}).items()):
+            await close_websocket(ws, peer_id, code)
+
+    # Clear all data
+    ws_connections.clear()
+    rooms.clear()
+    lobby_name_to_code.clear()
+
+    print("[SHUTDOWN] All connections closed")
+
+
+async def on_shutdown(app):
+    """Called when the application is shutting down."""
+    await cleanup_all_connections()
+
+
 def main():
     app = web.Application(middlewares=[cors_middleware])
+
+    # Register shutdown handler
+    app.on_shutdown.append(on_shutdown)
 
     # Routes
     app.router.add_post('/session/host', handle_host)
