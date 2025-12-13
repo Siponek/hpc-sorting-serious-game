@@ -14,7 +14,7 @@ const DEBUG_MODE: bool = true
 
 var arguments = {}
 const DEFAULT_MULTIPLAYER_PORT: int = 7777
-var logger := CustomLogger.get_logger_by_name("constants-init")
+var logger := CustomLogger.get_logger()
 var _game_debug_id: String = "" # Cache the parsed ID
 
 

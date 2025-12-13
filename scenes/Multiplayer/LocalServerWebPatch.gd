@@ -72,12 +72,19 @@ func _ready() -> void:
 	session_controller = GDSync._session_controller
 
 	# Configure PackRTC
+	# Use server/client mode - host acts as server (peer_id=1), clients connect to it
+	# This matches GDSync's expected semantics where host is the authority
 	PackRTC.game_channel = "gdsync-hpc-sorting"
-	PackRTC.use_mesh = true
+	PackRTC.use_mesh = false # Server/client mode, not mesh
 	PackRTC.enable_debug = OS.has_feature("editor")
 
 	# Apply custom signaling server URL if set
 	_apply_signaling_url()
+
+	# Set high process priority so we run BEFORE ConnectionController
+	# This allows us to handle packet sending with proper set_target_peer() for WebRTC
+	# before ConnectionController tries to send without it
+	process_priority = -100
 
 	set_process(false)
 	logger.log_info(
@@ -226,6 +233,15 @@ func create_local_lobby(
 		var my_id = multiplayer.get_unique_id()
 		connection_controller.set_host(my_id)
 		connection_controller.in_local_lobby = true
+		# CRITICAL: Set status to LOCAL_CONNECTION so is_local() returns true
+		# This is needed for has_packets() to return true for SERVER/RELIABLE/UNRELIABLE channels
+		connection_controller.status = ENUMS.CONNECTION_STATUS.LOCAL_CONNECTION
+
+		# CRITICAL: Disable ConnectionController's _process so it doesn't consume our packets!
+		# ConnectionController._process() calls client.get_packet() which consumes packets
+		# before our LocalServerWebPatch._process() can see them.
+		connection_controller.set_process(false)
+		logger.log_info("Disabled ConnectionController._process() for host")
 
 		# Add host to client tables (host doesn't trigger _on_peer_connected for itself)
 		var host_client: Client = Client.new()
@@ -291,11 +307,22 @@ func join_lobby(lobby_name: String, password: String) -> void:
 		# CRITICAL: Also set ConnectionController's client to use our WebRTC peer!
 		# Otherwise ConnectionController._process() will see ENet client as DISCONNECTED
 		# and call reset_multiplayer() immediately, wiping out our lobby state.
+		# NOTE: We handle packet sending in LocalServerWebPatch._process() with proper
+		# set_target_peer(1) calls since ConnectionController doesn't do this for WebRTC.
 		connection_controller.client = session.rtc_peer
 
 		# For WebRTC, the host is always peer ID 1 (the one who created the session)
 		connection_controller.set_host(1)
 		connection_controller.in_local_lobby = true
+		# CRITICAL: Set status to LOCAL_CONNECTION so is_local() returns true
+		# This is needed for has_packets() to return true for SERVER/RELIABLE/UNRELIABLE channels
+		connection_controller.status = ENUMS.CONNECTION_STATUS.LOCAL_CONNECTION
+
+		# CRITICAL: Disable ConnectionController's _process so it doesn't interfere with our packet handling!
+		# We handle all packet sending/receiving in LocalServerWebPatch._process()
+		connection_controller.set_process(false)
+		logger.log_info("Disabled ConnectionController._process() for client")
+
 		set_process(true)
 
 		var my_id = multiplayer.get_unique_id()
@@ -405,6 +432,19 @@ func is_local_server() -> bool:
 func _on_peer_connected(id: int) -> void:
 	logger.log_info("WebRTC peer connected: " + str(id) + ", is_host: " + str(is_host))
 
+	# Debug: Log peer info immediately on connection
+	if rtc_session and rtc_session.rtc_peer:
+		var peer = rtc_session.rtc_peer
+		var peer_info = peer.get_peer(id)
+		if peer_info:
+			logger.log_info("Peer " + str(id) + " connection details: " + str(peer_info))
+			var channels = peer_info.get("channels", [])
+			logger.log_info("Peer " + str(id) + " has " + str(channels.size()) + " channels")
+			for i in range(channels.size()):
+				var ch = channels[i]
+				if ch:
+					logger.log_info("  Channel " + str(i) + ": ready_state=" + str(ch.get_ready_state()) + ", label=" + ch.get_label())
+
 	var client: Client = Client.new()
 	client.peer_id = id
 	client.client_id = id
@@ -425,6 +465,8 @@ func _on_peer_connected(id: int) -> void:
 	# If we're a client and just connected to the host (peer 1), send pending GDSync join request
 	if not is_host and id == 1 and _pending_join_lobby_name != "":
 		logger.log_info("Connected to host! Sending GDSync join protocol messages...")
+		# Clear waiting flag to prevent duplicate join flow from _process()
+		_waiting_for_host_data_channel = false
 		# Send client ID first
 		request_processor.send_client_id()
 		# Broadcast player data
@@ -434,6 +476,11 @@ func _on_peer_connected(id: int) -> void:
 		# Clear pending state
 		_pending_join_lobby_name = ""
 		_pending_join_password = ""
+
+		# CRITICAL: Send packets IMMEDIATELY instead of waiting for _process()
+		# ConnectionController._process() runs and consumes packets before our _process() despite process_priority
+		# So we must send the packets right here, right now.
+		_send_client_packets_immediately()
 
 	# Emit client joined
 	GDSync.client_joined.emit.call_deferred(id)
@@ -463,6 +510,116 @@ func _on_peer_disconnected(id: int) -> void:
 	GDSync.client_left.emit.call_deferred(id)
 
 
+## Send all queued client packets immediately to the host.
+## This is called from _on_peer_connected() because we can't rely on _process()
+## - ConnectionController._process() consumes packets before our _process() runs.
+func _send_client_packets_immediately() -> void:
+	if is_host or not rtc_session or not rtc_session.rtc_peer:
+		return
+
+	var peer = rtc_session.rtc_peer
+
+	# Check what packets are available
+	var has_setup = request_processor.has_packets(ENUMS.PACKET_CHANNEL.SETUP)
+	var has_server = request_processor.has_packets(ENUMS.PACKET_CHANNEL.SERVER)
+	var has_reliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.RELIABLE)
+	var has_unreliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+
+	logger.log_info("Sending packets immediately - SETUP: " + str(has_setup) + ", SERVER: " + str(has_server) + ", RELIABLE: " + str(has_reliable) + ", UNRELIABLE: " + str(has_unreliable))
+
+	# Debug: Check peer connection state
+	var conn_status = peer.get_connection_status()
+	var has_peer_1 = peer.has_peer(1)
+	logger.log_info("Peer state before sending - connection_status: " + str(conn_status) + ", has_peer(1): " + str(has_peer_1))
+
+	if conn_status != MultiplayerPeer.CONNECTION_CONNECTED:
+		logger.log_warning("Cannot send packets - not connected! Status: " + str(conn_status))
+		return
+
+	if not has_peer_1:
+		logger.log_warning("Cannot send packets - host peer (1) not found!")
+		return
+
+	# All client packets go to host (peer 1)
+	peer.set_target_peer(1)
+
+	if has_setup:
+		var packet_data = request_processor.package_requests(ENUMS.PACKET_CHANNEL.SETUP)
+		logger.log_info("CLIENT sending SETUP packet to host (immediate), size: " + str(packet_data.size()))
+		peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
+		var err = peer.put_packet(packet_data)
+		logger.log_info("SETUP put_packet result: " + str(err))
+	if has_server:
+		var packet_data = request_processor.package_requests(ENUMS.PACKET_CHANNEL.SERVER)
+		logger.log_info("CLIENT sending SERVER packet to host (immediate), size: " + str(packet_data.size()) + ", first 20 bytes: " + str(packet_data.slice(0, min(20, packet_data.size()))))
+
+		# Log channel state BEFORE sending
+		var peer_info_before = peer.get_peer(1)
+		if peer_info_before:
+			var channels_before = peer_info_before.get("channels", [])
+			if channels_before.size() > 0 and channels_before[0]:
+				logger.log_info("Channel 0 BEFORE send: buffered=" + str(channels_before[0].get_buffered_amount()))
+
+		peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
+		var err = peer.put_packet(packet_data)
+		logger.log_info("SERVER put_packet result: " + str(err) + " (0=OK)")
+
+		# Debug: Also log channel states for peer 1 AFTER sending
+		var peer_info = peer.get_peer(1)
+		if peer_info:
+			logger.log_info("Peer 1 info after send: connected=" + str(peer_info.get("connected", "?")) + ", channels=" + str(peer_info.get("channels", []).size()))
+			# Check individual channel states
+			var channels = peer_info.get("channels", [])
+			for i in range(channels.size()):
+				var ch = channels[i]
+				if ch:
+					var state = ch.get_ready_state()
+					var label = ch.get_label()
+					var buffered = ch.get_buffered_amount()
+					logger.log_info("  Channel " + str(i) + " (" + label + "): ready_state=" + str(state) + ", buffered=" + str(buffered) + " AFTER send")
+	if has_reliable:
+		var packet_data = request_processor.package_requests(ENUMS.PACKET_CHANNEL.RELIABLE)
+		logger.log_info("CLIENT sending RELIABLE packet to host (immediate), size: " + str(packet_data.size()))
+		peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
+		var err = peer.put_packet(packet_data)
+		logger.log_info("RELIABLE put_packet result: " + str(err))
+	if has_unreliable:
+		var packet_data = request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+		logger.log_info("CLIENT sending UNRELIABLE packet to host (immediate), size: " + str(packet_data.size()))
+		peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
+		var err = peer.put_packet(packet_data)
+		logger.log_info("UNRELIABLE put_packet result: " + str(err))
+
+
+## Trigger the join flow when data channel becomes ready (alternative path to _on_peer_connected)
+func _trigger_join_flow() -> void:
+	if is_host:
+		return
+
+	# Add host to our client tables if not already present
+	if not peer_client_table.has(1):
+		var client: Client = Client.new()
+		client.peer_id = 1
+		client.client_id = 1
+		client.valid = true
+		peer_client_table[1] = client
+		lobby_client_table[1] = client
+
+	logger.log_info("Triggering join flow - sending GDSync join protocol messages...")
+	# Send client ID first
+	request_processor.send_client_id()
+	# Broadcast player data
+	session_controller.broadcast_player_data()
+	# Send join lobby request
+	request_processor.create_join_lobby_request(local_lobby_name, local_lobby_password)
+
+	# Send packets immediately
+	_send_client_packets_immediately()
+
+	# Emit client joined for host
+	GDSync.client_joined.emit.call_deferred(1)
+
+
 var _debug_log_counter: int = 0
 
 func _process(_delta: float) -> void:
@@ -472,9 +629,9 @@ func _process(_delta: float) -> void:
 	var peer = rtc_session.rtc_peer
 	var status = peer.get_connection_status()
 
-	# Log connection status periodically for debugging
+	# Log connection status periodically for debugging (every 10 seconds)
 	_debug_log_counter += 1
-	if _debug_log_counter % 60 == 1: # Log every ~1 second at 60fps
+	if _debug_log_counter % 600 == 1: # Log every ~10 seconds at 60fps
 		var status_name = "UNKNOWN"
 		match status:
 			MultiplayerPeer.CONNECTION_DISCONNECTED: status_name = "DISCONNECTED"
@@ -492,13 +649,12 @@ func _process(_delta: float) -> void:
 			if peer_info and peer_info.has("connection"):
 				var connection: WebRTCPeerConnection = peer_info["connection"]
 				var conn_state = connection.get_connection_state()
-				if _debug_log_counter % 30 == 1:
-					logger.log_info("Host connection state: " + str(conn_state))
 				# WebRTCPeerConnection.STATE_CONNECTED = 2
 				if conn_state == WebRTCPeerConnection.STATE_CONNECTED:
 					logger.log_info("Host data channel is ready! Triggering join flow...")
 					_waiting_for_host_data_channel = false
-					_on_peer_connected(1)
+					# Trigger the full join flow which will send packets immediately
+					_trigger_join_flow()
 
 	match (status):
 		MultiplayerPeer.CONNECTION_DISCONNECTED:
@@ -509,11 +665,43 @@ func _process(_delta: float) -> void:
 		MultiplayerPeer.CONNECTION_CONNECTED:
 			peer.poll()
 
+			# Immediately check for packets after poll (for both host and client)
+			var immediate_pkt_count = peer.get_available_packet_count()
+			if immediate_pkt_count > 0:
+				logger.log_info("POLL: " + str(immediate_pkt_count) + " packets available after poll, is_host=" + str(is_host))
+
 			if is_host:
+				# Debug: Log peer status and packet count periodically
+				if _debug_log_counter % 60 == 1: # Every ~1 second
+					var peer_list = []
+					for pid in peer_client_table.keys():
+						if pid != 1: # Skip self
+							var has_p = peer.has_peer(pid)
+							peer_list.append(str(pid) + "(has=" + str(has_p) + ")")
+					var pkt_count = peer.get_available_packet_count()
+					if peer_list.size() > 0:
+						logger.log_info("HOST peers: " + ", ".join(peer_list) + ", packets_available: " + str(pkt_count))
+
+					# Debug: Check the peer info for each connected peer
+					for pid in peer_client_table.keys():
+						if pid != 1 and peer.has_peer(pid):
+							var peer_info = peer.get_peer(pid)
+							if peer_info:
+								logger.log_info("HOST peer " + str(pid) + " info: connected=" + str(peer_info.get("connected", "?")) + ", channels=" + str(peer_info.get("channels", []).size()))
+								# Check individual channel states on host side
+								var channels = peer_info.get("channels", [])
+								for i in range(channels.size()):
+									var ch = channels[i]
+									if ch:
+										var state = ch.get_ready_state()
+										var label = ch.get_label()
+										logger.log_info("  HOST Channel " + str(i) + " (" + label + "): ready_state=" + str(state))
+
 				# HOST: Send queued requests to clients
 				for peer_id in peer_client_table:
 					var client: Client = peer_client_table[peer_id]
 					if client.requests_RUDP.size() > 0:
+						logger.log_info("HOST sending RUDP to peer " + str(peer_id) + ", count: " + str(client.requests_RUDP.size()))
 						peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
 						peer.set_target_peer(client.peer_id)
 						peer.put_packet(var_to_bytes(client.requests_RUDP))
@@ -523,38 +711,21 @@ func _process(_delta: float) -> void:
 						peer.set_target_peer(client.peer_id)
 						peer.put_packet(var_to_bytes(client.requests_UDP))
 						client.requests_UDP.clear()
-			else:
-				# CLIENT: Send queued requests to host (via request_processor)
-				# This mirrors ConnectionController._process() lines 349-364
-				if request_processor.has_packets(ENUMS.PACKET_CHANNEL.SERVER):
-					logger.log_info("CLIENT: Sending SERVER packets to host")
-					peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
-					peer.set_target_peer(1) # Host is always peer 1
-					peer.put_packet(request_processor.package_requests(ENUMS.PACKET_CHANNEL.SERVER))
-				if request_processor.has_packets(ENUMS.PACKET_CHANNEL.RELIABLE):
-					logger.log_info("CLIENT: Sending RELIABLE packets to host")
-					peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
-					peer.set_target_peer(1)
-					peer.put_packet(request_processor.package_requests(ENUMS.PACKET_CHANNEL.RELIABLE))
-				if request_processor.has_packets(ENUMS.PACKET_CHANNEL.UNRELIABLE):
-					logger.log_info("CLIENT: Sending UNRELIABLE packets to host")
-					peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
-					peer.set_target_peer(1)
-					peer.put_packet(request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE))
 
-			# Process incoming packets
-			var packet_count = peer.get_available_packet_count()
-			if packet_count > 0:
-				logger.log_info("Processing " + str(packet_count) + " incoming packet(s), is_host: " + str(is_host))
-			while peer.get_available_packet_count() > 0:
-				var channel: int = peer.get_packet_channel()
-				var sender_peer_id: int = peer.get_packet_peer()
-				var bytes: PackedByteArray = peer.get_packet()
-				logger.log_info("Received packet from peer " + str(sender_peer_id) + ", channel: " + str(channel) + ", size: " + str(bytes.size()))
+				# HOST: Check for incoming packets
+				var available = peer.get_available_packet_count()
+				if available > 0:
+					logger.log_info("HOST has " + str(available) + " packets available")
 
-				if is_host:
-					# Host processes client requests
+				# HOST: Process incoming packets from clients
+				while peer.get_available_packet_count() > 0:
+					var channel: int = peer.get_packet_channel()
+					var sender_peer_id: int = peer.get_packet_peer()
+					var bytes: PackedByteArray = peer.get_packet()
+					logger.log_info("HOST received packet from peer " + str(sender_peer_id) + ", size: " + str(bytes.size()))
+
 					if not peer_client_table.has(sender_peer_id):
+						logger.log_warning("Unknown sender peer: " + str(sender_peer_id))
 						continue
 
 					var from: Client = peer_client_table[sender_peer_id]
@@ -567,24 +738,46 @@ func _process(_delta: float) -> void:
 					if message.has(ENUMS.PACKET_VALUE.CLIENT_REQUESTS):
 						for request in message[ENUMS.PACKET_VALUE.CLIENT_REQUESTS]:
 							_broadcast_request(request, from, channel == 0)
-				else:
-					# Client processes messages from host
-					# The host sends an array of requests, process each one
-					var requests: Array = bytes_to_var(bytes)
-					for r in requests:
-						var request: Array = r
-						var request_type: int = request[ENUMS.DATA.REQUEST_TYPE]
-						match (request_type):
-							ENUMS.REQUEST_TYPE.SET_VARIABLE:
-								request_processor.set_variable(request)
-							ENUMS.REQUEST_TYPE.SET_VARIABLE_CACHED:
-								request_processor.set_variable_cached(request)
-							ENUMS.REQUEST_TYPE.CALL_FUNCTION:
-								request_processor.call_function(request)
-							ENUMS.REQUEST_TYPE.CALL_FUNCTION_CACHED:
-								request_processor.call_function_cached(request)
-							ENUMS.REQUEST_TYPE.MESSAGE:
-								request_processor.process_message(request)
+			else:
+				# CLIENT: Handle packet sending with proper set_target_peer(1)
+				# ConnectionController._process() calls put_packet() without set_target_peer(),
+				# which works for ENet (single server) but NOT for WebRTC mesh.
+				# We run with higher priority (process_priority = -100) so we consume packets
+				# BEFORE ConnectionController tries to send them without targeting.
+				# Debug: Check what packets are available
+				var has_setup = request_processor.has_packets(ENUMS.PACKET_CHANNEL.SETUP)
+				var has_server = request_processor.has_packets(ENUMS.PACKET_CHANNEL.SERVER)
+				var has_reliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.RELIABLE)
+				var has_unreliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+
+				if has_setup or has_server or has_reliable or has_unreliable:
+					logger.log_info("CLIENT has packets - SETUP: " + str(has_setup) + ", SERVER: " + str(has_server) + ", RELIABLE: " + str(has_reliable) + ", UNRELIABLE: " + str(has_unreliable))
+
+				peer.set_target_peer(1) # All client packets go to host
+
+				if has_setup:
+					logger.log_info("CLIENT sending SETUP packet to host")
+					peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
+					peer.put_packet(request_processor.package_requests(ENUMS.PACKET_CHANNEL.SETUP))
+				if has_server:
+					logger.log_info("CLIENT sending SERVER packet to host")
+					peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
+					peer.put_packet(request_processor.package_requests(ENUMS.PACKET_CHANNEL.SERVER))
+				if has_reliable:
+					logger.log_info("CLIENT sending RELIABLE packet to host")
+					peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_RELIABLE
+					peer.put_packet(request_processor.package_requests(ENUMS.PACKET_CHANNEL.RELIABLE))
+				if has_unreliable:
+					logger.log_info("CLIENT sending UNRELIABLE packet to host")
+					peer.transfer_mode = MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
+					peer.put_packet(request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE))
+
+				# CLIENT: Also handle receiving packets from host
+				# (ConnectionController also does this, but we do it here for consistency)
+				while peer.get_available_packet_count() > 0:
+					var bytes: PackedByteArray = peer.get_packet()
+					logger.log_info("CLIENT received packet from host, size: " + str(bytes.size()))
+					request_processor.unpack_packet(bytes)
 
 
 ## Process server requests from clients (host only)
@@ -702,7 +895,8 @@ func _join_lobby_request(from: Client, request: Array) -> void:
 	from.valid = true
 	lobby_client_table[from.client_id] = from
 
-	_send_message(ENUMS.MESSAGE_TYPE.LOBBY_JOINED, from, local_lobby_name)
+	# _send_message(ENUMS.MESSAGE_TYPE.LOBBY_JOINED, from, local_lobby_name)
+	_send_message(ENUMS.MESSAGE_TYPE.LOBBY_JOINED, from, current_room_code)
 	_send_message(ENUMS.MESSAGE_TYPE.HOST_CHANGED, from, GDSync.get_client_id())
 	_send_message(ENUMS.MESSAGE_TYPE.LOBBY_DATA_RECEIVED, from, get_lobby_dictionary(true))
 

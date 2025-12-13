@@ -229,6 +229,9 @@ func _on_connection_manager_failed_to_join_lobby(
 	ToastParty.show(
 		{"text": error_message, "bgcolor": Color.RED, "color": Color.WHITE}
 	)
+	logger.log_error(
+		"Failed to join lobby via ConnectionManager: ", error_message
+	)
 
 
 func lobby_creation_failed(lobby_name: String, error: String):
