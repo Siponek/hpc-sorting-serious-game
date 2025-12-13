@@ -10,6 +10,9 @@ import 'justfiles/thesis.justfile'
 # Import web export recipes
 import 'justfiles/web-export.justfile'
 
+# Import multiplayer recipes
+import 'justfiles/multiplayer.justfile'
+
 default:
     @just --list
 

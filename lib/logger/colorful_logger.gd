@@ -121,6 +121,11 @@ func log_info(message: String, arg1=null, arg2=null, arg3=null, arg4=null, arg5=
 	var full_message = _format_message(message, [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10])
 	_print_colored(LogLevel.INFO, full_message)
 
+func log_debug(message: String, arg1=null, arg2=null, arg3=null, arg4=null, arg5=null, arg6=null, arg7=null, arg8=null, arg9=null, arg10=null) -> void:
+	var full_message = _format_message(message, [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10])
+	if Constants.LOG_DEBUG_MODE:
+		_print_colored(LogLevel.INFO, "[DEBUG] " + full_message)
+
 
 func log_warning(message: String, arg1=null, arg2=null, arg3=null, arg4=null, arg5=null, arg6=null, arg7=null, arg8=null, arg9=null, arg10=null) -> void:
 	var full_message = _format_message(message, [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10])

@@ -20,44 +20,12 @@ enum CircularPathState {
 	MOVING_DOWN,
 	# READY_TO_LOOP_RIGHT # State before starting the loop by moving right again
 }
+@onready var logger := CustomLogger.get_logger(self)
 
 func _ready():
-	# Turn off the debug tree if not needed.
-	if OS.has_feature("debug"):
-		var var_tree: VarTree = get_node(var_tree_node_path)
-		var_tree.visible = OS.has_feature("debug")
-		var_tree.mount_var(self, "Debug ID", {
-			"font_color": Color.WHITE_SMOKE,
-			"format_callback": func(_value: Variant) -> String:
-				return str(Constants.arguments.get("game_debug_id", "N/A"))
-		})
-		var_tree.mount_var(self, "clientID", {
-		"font_color": Color.WHITE_SMOKE,
-		"format_callback": func(_value: Variant) -> String:
-			return str(ConnectionManager.get_my_client_id())
-		})
-		var_tree.mount_var(self, "IAmHost", {
-			"font_color": Color.SEASHELL,
-			"format_callback": func(_value: Variant) -> String:
-				return str(ConnectionManager.am_i_host())
-		})
-		var_tree.mount_var(self, "currentLobbyID", {
-			"font_color": Color.SEASHELL,
-			"format_callback": func(_value: Variant) -> String:
-				return str(ConnectionManager.get_current_lobby_id())
-		})
-		var_tree.mount_var(self, "Players count", {
-			"font_color": Color.SEASHELL,
-			"format_callback": func(_value: Variant) -> String:
-				return str(ConnectionManager.get_player_list().size())
-		})
-		var_tree.mount_var(self, "IDs", {
-			"font_color": Color.SEASHELL,
-			"format_callback": func(_value: Variant) -> String:
-				return str(ConnectionManager.get_player_list().keys())
-		})
-		
-		 
+	# Handle VarTree setup or cleanup
+	VarTreeHandler.handle_var_tree(self, var_tree_node_path, _setup_var_tree)
+
 	var cumulative_pivot_y_offset = 0.0 # Accumulator for the Y pivot offset
 	for btn: Button in get_children():
 		if btn is Button:
@@ -273,3 +241,36 @@ func _on_button_gui_input(event: InputEvent, button: Button):
 		
 		# Play a click sound (optional)
 		# if $ClickSound: $ClickSound.play()
+
+func _setup_var_tree(var_tree: VarTree) -> void:
+	var_tree.visible = true
+	var_tree.mount_var(self, "Debug ID", {
+		"font_color": Color.WHITE_SMOKE,
+		"format_callback": func(_value: Variant) -> String:
+			return str(Constants.arguments.get("game_debug_id", "N/A"))
+	})
+	var_tree.mount_var(self, "clientID", {
+		"font_color": Color.WHITE_SMOKE,
+		"format_callback": func(_value: Variant) -> String:
+			return str(ConnectionManager.get_my_client_id())
+	})
+	var_tree.mount_var(self, "IAmHost", {
+		"font_color": Color.SEASHELL,
+		"format_callback": func(_value: Variant) -> String:
+			return str(ConnectionManager.am_i_host())
+	})
+	var_tree.mount_var(self, "currentLobbyID", {
+		"font_color": Color.SEASHELL,
+		"format_callback": func(_value: Variant) -> String:
+			return str(ConnectionManager.get_current_lobby_id())
+	})
+	var_tree.mount_var(self, "Players count", {
+		"font_color": Color.SEASHELL,
+		"format_callback": func(_value: Variant) -> String:
+			return str(ConnectionManager.get_player_list().size())
+	})
+	var_tree.mount_var(self, "IDs", {
+		"font_color": Color.SEASHELL,
+		"format_callback": func(_value: Variant) -> String:
+			return str(ConnectionManager.get_player_list().keys())
+	})

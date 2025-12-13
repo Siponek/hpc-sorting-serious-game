@@ -1,6 +1,6 @@
 extends Node
 var current_scene: Node = null
-@onready var logger := Logger.get_logger(self)
+@onready var logger := CustomLogger.get_logger(self)
 
 func _ready():
 	var root = get_tree().root

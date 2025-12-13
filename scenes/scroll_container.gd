@@ -4,7 +4,7 @@ extends ScrollContainer
 # we want to be able to scroll through the cards when there are too many cards to fit on the screen
 # and we want to be able to drag and drop cards between the slots. The dynamic container cannot be used for that
 # Because we need clear indication where we can drag the cards to.
-@onready var logger = Logger.get_logger(self)
+@onready var logger = CustomLogger.get_logger(self)
 var CARD_CONTAINER_PATH: String
 
 const DROP_PLACEHOLDER_SCENE: PackedScene = preload(
@@ -53,7 +53,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if not (data is Card):
 		return
 
-	var incoming_card_data: Card = data  # This is the data from _get_drag_data, which is the card itself
+	var incoming_card_data: Card = data # This is the data from _get_drag_data, which is the card itself
 	var card_to_place: Card = null
 	var final_insert_index: int = -1
 	# --- Handle the incoming card ---
@@ -64,7 +64,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	):
 		# This means the card originated from this container and was hidden
 		card_to_place = dragged_card_from_container_node
-		card_to_place.visible = true  # Make it visible again
+		card_to_place.visible = true # Make it visible again
 	else:
 		# Card came from a buffer slot or another source
 		card_to_place = incoming_card_data
@@ -75,7 +75,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if card_to_place.get_parent() != null:
 		card_to_place.get_parent().remove_child(card_to_place)
 
-	var source_slot: CardBuffer = card_to_place.current_slot  # Get current_slot before clearing it
+	var source_slot: CardBuffer = card_to_place.current_slot # Get current_slot before clearing it
 
 	# --- Determine insertion index ---
 	if (
@@ -87,7 +87,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		final_insert_index = current_drop_placeholder.get_index()
 		current_drop_placeholder.get_parent().remove_child(
 			current_drop_placeholder
-		)  # Remove placeholder
+		) # Remove placeholder
 	else:
 		# Fallback: Calculate target index based on drop position (e.g., if placeholder wasn't active or card from buffer)
 		var card_spacing = card_container.get_theme_constant(
@@ -114,7 +114,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		)
 
 	# --- Handle card placement/swapping ---
-	if source_slot != null:  # Card came FROM a buffer slot
+	if source_slot != null: # Card came FROM a buffer slot
 		print_debug(
 			(
 				"Card %d returning from buffer slot %s to container at index %d"
@@ -126,21 +126,21 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			)
 		)
 		if source_slot.occupied_by == card_to_place:
-			source_slot.occupied_by = null  # CardBuffer will call _update_panel_visibility
-			source_slot._update_panel_visibility()  # Explicitly call if not handled by setter
-		card_to_place.remove_from_slot()  # Resets style, current_slot = null
+			source_slot.occupied_by = null # CardBuffer will call _update_panel_visibility
+			source_slot._update_panel_visibility() # Explicitly call if not handled by setter
+		card_to_place.remove_from_slot() # Resets style, current_slot = null
 
 		card_container.add_child(card_to_place)
 		card_container.move_child(card_to_place, final_insert_index)
 		card_to_place.set_can_drag(true)
-	else:  # Card came FROM the container itself (swapping or reordering)
+	else: # Card came FROM the container itself (swapping or reordering)
 		logger.log_info(
 			(
 				"Card %d dropped within container, targeting index %d"
 				% [card_to_place.value, final_insert_index]
 			)
 		)
-		var source_index = card_to_place.original_index  # Where the card started (if not hidden) or where it was if hidden
+		var source_index = card_to_place.original_index # Where the card started (if not hidden) or where it was if hidden
 
 		# If card_to_place was the dragged_card_from_container_node, it was already removed.
 		# Otherwise, it's an incoming_card that wasn't part of this container before this drop.
@@ -149,12 +149,12 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		var target_card_at_destination: Card = null
 		if final_insert_index < card_container.get_child_count():
 			var node_at_target = card_container.get_child(final_insert_index)
-			if node_at_target is Card and node_at_target != card_to_place:  # Ensure it's not the placeholder
+			if node_at_target is Card and node_at_target != card_to_place: # Ensure it's not the placeholder
 				target_card_at_destination = node_at_target
 
-		card_container.add_child(card_to_place)  # Add the card first
+		card_container.add_child(card_to_place) # Add the card first
 
-		if target_card_at_destination != null:  # Swapping with an existing card
+		if target_card_at_destination != null: # Swapping with an existing card
 			logger.log_info(
 				(
 					"Swapping card %d with card %d (at index %d)"
@@ -171,10 +171,10 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			# This part of the logic from your previous version was more direct for swaps.
 			# For now, let's simplify: insert card_to_place. HBoxContainer shifts others.
 			card_container.move_child(card_to_place, final_insert_index)
-		else:  # Moving to an empty slot or end
+		else: # Moving to an empty slot or end
 			card_container.move_child(card_to_place, final_insert_index)
 
-		card_to_place.remove_from_slot()  # Resets style just in case
+		card_to_place.remove_from_slot() # Resets style just in case
 		card_to_place.set_can_drag(true)
 
 	# --- Finalize ---
@@ -183,7 +183,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		var child = card_container.get_child(i)
 		if child is Card:
 			child.original_index = i
-			child.is_potential_swap_highlight = false  # Reset swap highlight
+			child.is_potential_swap_highlight = false # Reset swap highlight
 			child._apply_current_style()
 
 	card_container.queue_redraw()
@@ -249,7 +249,7 @@ func _process(_delta: float) -> void:
 			if child is Card and child.visible:
 				num_actual_cards += 1
 			elif child == current_drop_placeholder:
-				pass  # Don't count placeholder if it's already there for num_actual_cards
+				pass # Don't count placeholder if it's already there for num_actual_cards
 
 		var potential_insert_index: int = 0
 		if effective_card_width > 0:
@@ -287,7 +287,7 @@ func _process(_delta: float) -> void:
 
 		current_drop_placeholder.visible = true
 	else:
-		if is_dragging_card_over_self:  # Mouse just exited
+		if is_dragging_card_over_self: # Mouse just exited
 			if (
 				current_drop_placeholder != null
 				and current_drop_placeholder.is_inside_tree()

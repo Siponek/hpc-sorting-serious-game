@@ -10,6 +10,8 @@ class Scripts:
 	const CONSTANTS = "res://scenes/scripts/constants.gd"
 	const DRAG_STATE = "res://scenes/scripts/drag_state.gd"
 	const FINISH_GAME_SCENE = "res://scenes/CardScene/scripts/finish_game_scene.gd"
+	const GD_SYNC_WEB_PATCH = "res://scenes/Multiplayer/GDSyncWebPatch.gd"
+	const LOCAL_SERVER_WEB_PATCH = "res://scenes/Multiplayer/LocalServerWebPatch.gd"
 	const LOGGER = "res://lib/logger/logger.gd"
 	const MAIN_MENU_OPTIONS = "res://scenes/MainMenuScene/main_menu_options.gd"
 	const MULTIPLAYER_CARD_MANAGER = "res://scenes/Multiplayer/MultiplayerGame/multiplayer_card_manager.gd"
@@ -26,6 +28,7 @@ class Scripts:
 	const THEME_AUTOAPPLIER = "res://scenes/scripts/theme_autoapplier.gd"
 	const THEME_MANAGER = "res://theme_manager.gd"
 	const TIMER_CONTROLLER_SCRIPT = "res://scenes/timer_controller_script.gd"
+	const VAR_TREE_HANDLER = "res://lib/feature_flag_handlers/var_tree_handler.gd"
 
 class Scenes:
 	const BACKGROUND = "res://scenes/BackGroundScene/background.tscn"

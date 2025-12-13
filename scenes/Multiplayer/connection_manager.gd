@@ -26,7 +26,7 @@ var logger: ColorfulLogger
 
 
 func _ready():
-	logger = Logger.get_logger(self)
+	logger = CustomLogger.get_logger(self)
 	# Connect to GDSync signals here
 	GDSync.connected.connect(_on_gdsync_connected)
 	GDSync.connection_failed.connect(_on_gdsync_connection_failed)
@@ -55,14 +55,22 @@ func start_hosting_lobby(
 
 
 func ensure_multiplayer_started():
-	# Web exports don't support UDP/ENet sockets - skip GDSync initialization
-	if OS.has_feature("web"):
-		logger.log_warning("Web platform detected: GD-Sync local multiplayer is not supported in web browsers.")
-		logger.log_warning("Web browsers block UDP/ENet sockets for security. You need WebRTC or WebSocket implementation.")
-		# Don't call GDSync.start_local_multiplayer() on web - it will fail with LOCAL_PORT_ERROR
+	#print all features for debugging
+	logger.log_info("Ensuring multiplayer is started...")
+	#print all OS features for debugging
+	# Note: On the Web platform, one of the following additional tags is defined to indicate the host platform: web_android, web_ios, web_linuxbsd, web_macos, or web_windows.
+	var features = OS.has_feature("web_windows") or OS.has_feature("web_macos") or OS.has_feature("web_linuxbsd") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+	# Web platform uses WebRTC via GDSyncWebPatch (applied automatically)
+	if features:
+		(
+			logger
+			.log_info(
+				"Web platform detected: Using WebRTC multiplayer via GDSyncWebPatch."
+			)
+		)
+		print("[ConnectionManager] ensure_multiplayer_started: Web platform detected.")
 
-
-	if not GDSync.is_active(): # Or appropriate check for GDSync
+	if not GDSync.is_active():
 		GDSync.start_local_multiplayer()
 		logger.log_info("Started local multiplayer.")
 	else:
@@ -92,6 +100,13 @@ func join_existing_lobby(lobby_id_to_join: String, password: String = ""):
 func leave_current_lobby():
 	if current_lobby_name_id != "":
 		# logger.log_info("Leaving lobby: ", current_lobby_name_id)
+		# For web platform, explicitly close the room on the signaling server
+		# if we're the host. This uses the new close_lobby() function in LocalServerWebPatch.
+		if OS.has_feature("web") and is_currently_host:
+			var local_server = GDSync.get_node_or_null("LocalServer")
+			if local_server and local_server.has_method("close_lobby"):
+				local_server.close_lobby()
+
 		GDSync.lobby_leave()
 		if GDSync.lobby_get_player_count() < 1: # Check if you are the last one
 			GDSync.lobby_close() # This might trigger _on_gdsync_lobby_closed
@@ -135,8 +150,10 @@ func _on_gdsync_connection_failed(error: int):
 			)
 		ENUMS.CONNECTION_FAILED.LOCAL_PORT_ERROR:
 			push_error(
-				"Local port error. This usually happens with web exports or when network ports are blocked. "
-				+ "For web exports, multiplayer functionality may be limited."
+				(
+					"Local port error. This usually happens with web exports or when network ports are blocked. "
+					+ "For web exports, multiplayer functionality may be limited."
+				)
 			)
 		_:
 			push_error("Unknown connection error: ", error)
@@ -188,7 +205,10 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_id here too
 	# logger.log_info("Successfully joined lobby: ", lobby_name_id)
 	current_lobby_name_id = lobby_name_id
-	is_currently_host = GDSync.is_host() # Update host status
+	# Don't override host status if we're already the host (e.g., host "joining" their own lobby)
+	if not is_currently_host:
+		is_currently_host = GDSync.is_host()
+	logger.log_info("Joined lobby. Host status: ", is_currently_host)
 	emit_signal("joined_lobby_successfully", lobby_name_id)
 
 
