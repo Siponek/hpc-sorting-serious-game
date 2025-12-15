@@ -7,3 +7,23 @@ addons/**git**
 # Ignore link to submodule
 addons/GD-Sync
 
+
+# Python generated files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.manifest
+*.spec
+pip-wheel-metadata/
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+
