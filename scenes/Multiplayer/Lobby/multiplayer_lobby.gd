@@ -1,10 +1,10 @@
 extends Window
 
-var clients_ui_nodes: Dictionary = {} # To keep track of instantiated player UI elements
+var clients_ui_nodes: Dictionary = {}  # To keep track of instantiated player UI elements
 const label_lobby_name_path: NodePath = "MarginContainer/VBoxContainer2/GridContainer/LabelLobbyID"
 const start_game_button_path: NodePath = "MarginContainer/VBoxContainer2/HBoxContainer/StartGameButton"
 @onready
-var player_container: Node = $MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby # Ensure this path is correct
+var player_container: Node = $MarginContainer/VBoxContainer2/VScrollBar/GridContainerPlayerInLobby  # Ensure this path is correct
 @onready var player_lobby_spawner: NodeInstantiator = $NodeInstantiator
 @onready
 var buffer_spinbox: SpinBox = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/BufferSpinBox
@@ -25,7 +25,7 @@ func _ready():
 		)
 		(
 			ToastParty
-			.show(
+			. show(
 				{
 					"text":
 					"Error: PlayerInLobby scene is not loaded in NodeInstantiator!",
@@ -56,13 +56,13 @@ func _ready():
 			"MultiplayerLobby: Cannot initialize, ConnectionManager has no current lobby ID."
 		)
 		return
-	self.set_lobby_id(current_lobby_id) # Set the lobby ID in the UI
+	self.set_lobby_id(current_lobby_id)  # Set the lobby ID in the UI
 	self.clear_player_list_ui()
 
 	if ConnectionManager.am_i_host():
 		(
 			ToastParty
-			.show(
+			. show(
 				{
 					"text":
 					(
@@ -70,7 +70,7 @@ func _ready():
 						+ str(ConnectionManager.get_my_client_id())
 						+ ")"
 					),
-					"bgcolor": Color.GREEN, # ...
+					"bgcolor": Color.GREEN,  # ...
 				}
 			)
 		)
@@ -81,7 +81,7 @@ func _ready():
 	else:
 		(
 			ToastParty
-			.show(
+			. show(
 				{
 					"text":
 					(
@@ -91,7 +91,7 @@ func _ready():
 						+ str(ConnectionManager.get_my_client_id())
 						+ ")"
 					),
-					"bgcolor": Color.DARK_GREEN, # ...
+					"bgcolor": Color.DARK_GREEN,  # ...
 				}
 			)
 		)
@@ -154,7 +154,7 @@ func _on_cm_player_left(client_id: int):
 	logger.log_info("Player left event from CM. ID: ", client_id)
 	ToastParty.show(
 		{
-			"text": "Player (" + str(client_id) + ") left.", # Ideally, get player name before they are removed from CM's list
+			"text": "Player (" + str(client_id) + ") left.",  # Ideally, get player name before they are removed from CM's list
 			"bgcolor": Color.LIGHT_CORAL,
 			"color": Color.BLACK
 		}
@@ -221,7 +221,7 @@ func _on_cm_lobby_closed():
 	ToastParty.show(
 		{"text": "The lobby has been closed.", "bgcolor": Color.GRAY}
 	)
-	self.close_requested.emit() # Close this lobby window
+	self.close_requested.emit()  # Close this lobby window
 
 
 func _on_leave_lobby_button_pressed() -> void:
@@ -237,7 +237,7 @@ func _on_start_game_button_pressed() -> void:
 		# Show preparation message
 		GDSync.call_func(
 			ToastParty.show,
-			[ {"text": "Host is starting the game...", "bgcolor": Color.BLUE}]
+			[{"text": "Host is starting the game...", "bgcolor": Color.BLUE}]
 		)
 
 		# Read current values from SpinBoxes

@@ -59,7 +59,13 @@ func ensure_multiplayer_started():
 	logger.log_info("Ensuring multiplayer is started...")
 	#print all OS features for debugging
 	# Note: On the Web platform, one of the following additional tags is defined to indicate the host platform: web_android, web_ios, web_linuxbsd, web_macos, or web_windows.
-	var features = OS.has_feature("web_windows") or OS.has_feature("web_macos") or OS.has_feature("web_linuxbsd") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+	var features = (
+		OS.has_feature("web_windows")
+		or OS.has_feature("web_macos")
+		or OS.has_feature("web_linuxbsd")
+		or OS.has_feature("web_android")
+		or OS.has_feature("web_ios")
+	)
 	# Web platform uses WebRTC via GDSyncWebPatch (applied automatically)
 	if features:
 		(
@@ -68,7 +74,9 @@ func ensure_multiplayer_started():
 				"Web platform detected: Using WebRTC multiplayer via GDSyncWebPatch."
 			)
 		)
-		print("[ConnectionManager] ensure_multiplayer_started: Web platform detected.")
+		print(
+			"[ConnectionManager] ensure_multiplayer_started: Web platform detected."
+		)
 
 	if not GDSync.is_active():
 		GDSync.start_local_multiplayer()

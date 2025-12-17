@@ -10,12 +10,12 @@ const BUTTON_HEIGHT: int = 50
 const BUTTON_SPACING: int = 10
 const CARD_WIDTH: int = 100
 const CARD_HEIGHT: int = 150
-const LOG_DEBUG_MODE: bool = false # Mainly used ofr
+const LOG_DEBUG_MODE: bool = false  # Mainly used ofr
 
 var arguments = {}
 const DEFAULT_MULTIPLAYER_PORT: int = 7777
 var logger := CustomLogger.get_logger()
-var _game_debug_id: String = "" # Cache the parsed ID
+var _game_debug_id: String = ""  # Cache the parsed ID
 
 
 func _ready():
