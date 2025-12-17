@@ -1,17 +1,32 @@
 extends Node
 
-# --- Signals ---
-signal connected_to_multiplayer
-signal connection_to_multiplayer_failed(error_code)
-signal lobby_created_successfully(lobby_name)
-signal lobby_creation_has_failed(lobby_name, error_str)
-signal joined_lobby_successfully(lobby_name)
-signal failed_to_join_lobby(lobby_name, error_code)
-signal player_joined_lobby(client_id)
-signal player_left_lobby(client_id)
-signal player_list_updated(players_map) # Emits the current map of players
-signal lobby_closed
-signal discovered_lobbies_updated(lobbies_list)
+
+# --- Signals (namespaced in inner class with auto-logging) ---
+class Signals:
+	signal connected_to_multiplayer
+	signal connection_to_multiplayer_failed(error_code)
+	signal lobby_created_successfully(lobby_name)
+	signal lobby_creation_has_failed(lobby_name, error_str)
+	signal joined_lobby_successfully(lobby_name)
+	signal failed_to_join_lobby(lobby_name, error_code)
+	signal player_joined_lobby(client_id)
+	signal player_left_lobby(client_id)
+	signal player_list_updated(players_map) # Emits the current map of players
+	signal lobby_closed
+	signal discovered_lobbies_updated(lobbies_list)
+
+	var _logger: ColorfulLogger
+
+	func setup_logging(logger: ColorfulLogger) -> void:
+		_logger = logger
+		for sig in get_signal_list():
+			var sig_name: String = sig["name"]
+			connect(sig_name, func(_a=null, _b=null, _c=null):
+				_logger.log_info("Signal emitted: ", sig_name)
+			)
+
+
+var signals := Signals.new()
 
 # --- State Variables ---
 var current_lobby_name_id: String = ""
@@ -27,6 +42,7 @@ var logger: ColorfulLogger
 
 func _ready():
 	logger = CustomLogger.get_logger(self)
+	signals.setup_logging(logger)
 	# Connect to GDSync signals here
 	GDSync.connected.connect(_on_gdsync_connected)
 	GDSync.connection_failed.connect(_on_gdsync_connection_failed)
@@ -51,6 +67,7 @@ func start_hosting_lobby(
 	_player_limit: int = 0
 ):
 	# GDSync.lobby_create(lobby_name, passw password, is_public, player_limit)
+	logger.log_info("Emit lobby_create: ", lobby_name)
 	GDSync.lobby_create(lobby_name)
 
 
@@ -101,7 +118,7 @@ func get_lobby_host_id() -> int:
 
 
 func join_existing_lobby(lobby_id_to_join: String, password: String = ""):
-	# logger.log_info("Attempting to join lobby: ", lobby_id_to_join)
+	logger.log_info("Emit lobby_join: ", lobby_id_to_join)
 	GDSync.lobby_join(lobby_id_to_join, password)
 
 
@@ -118,7 +135,7 @@ func leave_current_lobby():
 		GDSync.lobby_leave()
 		if GDSync.lobby_get_player_count() < 1: # Check if you are the last one
 			GDSync.lobby_close() # This might trigger _on_gdsync_lobby_closed
-		emit_signal("lobby_closed")
+		signals.lobby_closed.emit()
 		_reset_lobby_state()
 	else:
 		logger.log_warning("Not in a lobby to leave.")
@@ -144,7 +161,7 @@ func get_my_client_id() -> int:
 func _on_gdsync_connected():
 	local_client_id = GDSync.get_client_id()
 	# logger.log_info("Connected to multiplayer. Client ID: ", local_client_id)
-	emit_signal("connected_to_multiplayer")
+	signals.connected_to_multiplayer.emit()
 
 
 func _on_gdsync_connection_failed(error: int):
@@ -166,7 +183,7 @@ func _on_gdsync_connection_failed(error: int):
 		_:
 			push_error("Unknown connection error: ", error)
 
-	emit_signal("connection_to_multiplayer_failed", error)
+	signals.connection_to_multiplayer_failed.emit(error)
 
 
 func _on_gdsync_lobby_created(lobby_id: String):
@@ -175,7 +192,7 @@ func _on_gdsync_lobby_created(lobby_id: String):
 	is_currently_host = true
 	local_client_id = GDSync.get_client_id()
 	actual_lobby_host_id = local_client_id
-	emit_signal("lobby_created_successfully", lobby_id)
+	signals.lobby_created_successfully.emit(lobby_id)
 
 
 func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
@@ -207,7 +224,7 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 		# ... other GDSync specific error codes ...
 		_:
 			error_message += "Unknown error (" + str(error) + ")."
-	emit_signal("lobby_creation_has_failed", lobby_name, error_message)
+	signals.lobby_creation_has_failed.emit(lobby_name, error_message)
 
 
 func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_id here too
@@ -217,7 +234,7 @@ func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_
 	if not is_currently_host:
 		is_currently_host = GDSync.is_host()
 	logger.log_info("Joined lobby. Host status: ", is_currently_host)
-	emit_signal("joined_lobby_successfully", lobby_name_id)
+	signals.joined_lobby_successfully.emit(lobby_name_id)
 
 
 func _on_gdsync_lobby_join_failed(lobby_name: String, error_code: int):
@@ -237,16 +254,16 @@ func _on_gdsync_lobby_join_failed(lobby_name: String, error_code: int):
 		# ... other GDSync specific error codes ...
 		_:
 			error_message += "Unknown error (" + str(error_code) + ")."
-	emit_signal("failed_to_join_lobby", lobby_name, error_message)
+	signals.failed_to_join_lobby.emit(lobby_name, error_message)
 
 
 func _on_gdsync_client_joined(client_id: int):
+	logger.log_info("Trying to emit player_joined_lobby: ", client_id)
 	if client_id == local_client_id and is_currently_host:
 		if not connected_clients.has(client_id):
-			# logger.log_info("Host (self) officially noted in lobby. ID: ", client_id)
 			connected_clients[client_id] = {"name": "Player " + str(client_id)}
-			emit_signal("player_list_updated", connected_clients)
-			emit_signal("player_joined_lobby", client_id)
+			signals.player_list_updated.emit(connected_clients)
+			signals.player_joined_lobby.emit(client_id)
 		else:
 			(
 				ToastParty
@@ -257,14 +274,15 @@ func _on_gdsync_client_joined(client_id: int):
 					}
 				)
 			)
-			# logger.log_info("Host (self) re-announced or already present in lobby. ID: ", client_id)
 		return
+	else:
+		logger.log_info("Emit player_joined_lobby for client ID: ", client_id)
 
 	if not connected_clients.has(client_id):
 		logger.log_info("Client joined lobby. ID: ", client_id)
 		connected_clients[client_id] = {"name": "Player " + str(client_id)}
-		emit_signal("player_list_updated", connected_clients)
-		emit_signal("player_joined_lobby", client_id)
+		signals.player_list_updated.emit(connected_clients)
+		signals.player_joined_lobby.emit(client_id)
 	else:
 		logger.log_info(
 			"Client ", client_id, " re-announced or already present."
@@ -275,8 +293,8 @@ func _on_gdsync_client_left(client_id: int):
 	if connected_clients.has(client_id):
 		logger.log_info("Client left lobby. ID: ", client_id)
 		connected_clients.erase(client_id)
-		emit_signal("player_list_updated", connected_clients)
-		emit_signal("player_left_lobby", client_id)
+		signals.player_list_updated.emit(connected_clients)
+		signals.player_left_lobby.emit(client_id)
 
 		if client_id == local_client_id:
 			_reset_lobby_state()
@@ -285,13 +303,13 @@ func _on_gdsync_client_left(client_id: int):
 func _on_gdsync_lobby_closed():
 	logger.log_info("Lobby has been closed.")
 	_reset_lobby_state()
-	emit_signal("lobby_closed")
+	signals.lobby_closed.emit()
 
 
 func _on_gdsync_lobby_list_updated(lobbies: Array):
 	logger.log_info("Received lobby list update. Count: ", lobbies.size())
 	discovered_lobbies = lobbies
-	emit_signal("discovered_lobbies_updated", discovered_lobbies)
+	signals.discovered_lobbies_updated.emit(discovered_lobbies)
 
 
 func _reset_lobby_state():
@@ -299,4 +317,4 @@ func _reset_lobby_state():
 	connected_clients.clear()
 	is_currently_host = false
 	# Notify UI of empty list
-	emit_signal("player_list_updated", connected_clients)
+	signals.player_list_updated.emit(connected_clients)
