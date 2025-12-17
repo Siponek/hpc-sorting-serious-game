@@ -122,25 +122,13 @@ func clear_player_list_ui() -> void:
 	clients_ui_nodes.clear()
 	logger.log_info("Cleared player list UI.")
 
-func _on_cm_player_joined(client_id: int):
-	logger.log_info("Player joined event from CM. ID: ", client_id)
-	# This signal might be redundant if player_list_updated is comprehensive.
-	# If player_list_updated always follows, you might only need to connect to that.
-	# For now, let's assume we want a specific toast for a new joiner.
-	var player_data = ConnectionManager.get_player_list().get(
-		client_id, {"name": "New Player %d" % client_id}
-	)
+func _on_cm_player_joined(player: MultiplayerTypes.PlayerData):
+	logger.log_info("Player joined event from CM. ID: ", player.client_id)
 	GDSync.call_func(
 		ToastParty.show,
 		[
 			{
-				"text":
-				(
-					player_data.get("name", "REMOTE: Player %d" % client_id)
-					+ " ("
-					+ str(client_id)
-					+ ") joined!"
-				),
+				"text": player.name + " (" + str(player.client_id) + ") joined!",
 				"bgcolor": Color.LIGHT_GREEN,
 				"color": Color.BLACK
 			}
@@ -148,7 +136,7 @@ func _on_cm_player_joined(client_id: int):
 	)
 	ToastParty.show(
 		{
-			"text": player_data.name + " (" + str(client_id) + ") joined!",
+			"text": player.name + " (" + str(player.client_id) + ") joined!",
 			"bgcolor": Color.LIGHT_GREEN,
 			"color": Color.BLACK
 		}
@@ -166,24 +154,32 @@ func _on_cm_player_left(client_id: int):
 	)
 
 
-func _on_cm_player_list_updated(players_map: Dictionary):
+func _on_cm_player_list_updated(players_map: MultiplayerTypes.PlayersMap):
 	logger.log_info("Updating player list UI with ", players_map.size(), " players.")
 	self.clear_player_list_ui()
 	GDSync.call_func(self.clear_player_list_ui, [])
 	if ConnectionManager.am_i_host(): # On first lobby creation, host also gets this signal
 		update_player_list_ui(players_map)
+		# GDSync.call_func(self.update_player_list_ui, [players_map])
 
 
 ### Clear existing player UI elements and update with new data for each player in the lobby as Host
-func update_player_list_ui(players_map: Dictionary):
-	logger.log_info("Populating player list UI...")
+func update_player_list_ui(players_map: MultiplayerTypes.PlayersMap):
+	logger.log_info("Populating player list UI... Player count: ", players_map.size())
 	var actual_host_id = ConnectionManager.get_lobby_host_id()
-	for client_id: int in players_map:
-		var player_data = players_map[client_id]
+	if players_map.size() == 0:
+		logger.log_error("No players in the lobby to display.")
+		return
+	# debug
+	var player_ids: Array[int] = players_map.get_client_ids()
+	logger.log_info("Player IDs in lobby: ", player_ids)
+
+	for player: MultiplayerTypes.PlayerData in players_map.get_all_players():
+		var client_id := player.client_id
 		var client_ui_instance: PlayerInLobby = (
 			player_lobby_spawner.instantiate_node()
 		)
-		await get_tree().process_frame
+		# await get_tree().process_frame
 		if not client_ui_instance:
 			push_error(
 				(
@@ -195,19 +191,19 @@ func update_player_list_ui(players_map: Dictionary):
 		client_ui_instance.set_client_id(client_id)
 		clients_ui_nodes[client_id] = client_ui_instance
 		GDSync.set_gdsync_owner(client_ui_instance, client_id)
-		client_ui_instance.setup_player_display(client_id, player_data)
+		client_ui_instance.setup_player_display(player)
 		client_ui_instance.determine_and_set_color(actual_host_id, client_id)
-		await get_tree().process_frame
+		# await get_tree().process_frame
 
 		GDSync.call_func(
-			client_ui_instance.setup_player_display, [client_id, player_data]
+			client_ui_instance.setup_player_display_from_dict, [player.to_dict()]
 		)
 		GDSync.call_func(
 			client_ui_instance.determine_and_set_color,
 			[actual_host_id, client_id]
 		)
 
-		await get_tree().process_frame
+	await get_tree().process_frame
 
 
 func _on_cm_lobby_closed():

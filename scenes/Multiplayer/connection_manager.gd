@@ -4,16 +4,16 @@ extends Node
 # --- Signals (namespaced in inner class with auto-logging) ---
 class Signals:
 	signal connected_to_multiplayer
-	signal connection_to_multiplayer_failed(error_code)
-	signal lobby_created_successfully(lobby_name)
-	signal lobby_creation_has_failed(lobby_name, error_str)
-	signal joined_lobby_successfully(lobby_name)
-	signal failed_to_join_lobby(lobby_name, error_code)
-	signal player_joined_lobby(client_id)
-	signal player_left_lobby(client_id)
-	signal player_list_updated(players_map) # Emits the current map of players
+	signal connection_to_multiplayer_failed(error_code: int)
+	signal lobby_created_successfully(lobby_name: String)
+	signal lobby_creation_has_failed(lobby_name: String, error_str: String)
+	signal joined_lobby_successfully(lobby_name: String)
+	signal failed_to_join_lobby(lobby_name: String, error_code: String)
+	signal player_joined_lobby(player: MultiplayerTypes.PlayerData)
+	signal player_left_lobby(client_id: int)
+	signal player_list_updated(players_map: MultiplayerTypes.PlayersMap)
 	signal lobby_closed
-	signal discovered_lobbies_updated(lobbies_list)
+	signal discovered_lobbies_updated(lobbies_list: Array)
 
 	var _logger: ColorfulLogger
 
@@ -30,8 +30,7 @@ var signals := Signals.new()
 
 # --- State Variables ---
 var current_lobby_name_id: String = ""
-###  Store client_id: client_data
-var connected_clients: Dictionary = {}
+var connected_clients: MultiplayerTypes.PlayersMap = MultiplayerTypes.PlayersMap.new()
 var is_currently_host: bool = false
 var local_client_id: int = -1
 var actual_lobby_host_id: int = -1
@@ -42,7 +41,7 @@ var logger: ColorfulLogger
 
 func _ready():
 	logger = CustomLogger.get_logger(self)
-	signals.setup_logging(logger)
+	# signals.setup_logging(logger)
 	# Connect to GDSync signals here
 	GDSync.connected.connect(_on_gdsync_connected)
 	GDSync.connection_failed.connect(_on_gdsync_connection_failed)
@@ -96,7 +95,8 @@ func ensure_multiplayer_started():
 		)
 
 	if not GDSync.is_active():
-		GDSync.start_local_multiplayer()
+		# await needed: LocalServerSignaling.start_local_peer() is async
+		await GDSync.start_local_multiplayer() # ignore, it has overwritten _local_server overwritten by Patch
 		logger.log_info("Started local multiplayer.")
 	else:
 		logger.log_info("Local multiplayer already started or connected.")
@@ -141,8 +141,8 @@ func leave_current_lobby():
 		logger.log_warning("Not in a lobby to leave.")
 
 
-func get_player_list() -> Dictionary:
-	return connected_clients.duplicate(true)
+func get_player_list() -> MultiplayerTypes.PlayersMap:
+	return connected_clients.duplicate()
 
 
 func get_current_lobby_id() -> String:
@@ -233,7 +233,6 @@ func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_
 	# Don't override host status if we're already the host (e.g., host "joining" their own lobby)
 	if not is_currently_host:
 		is_currently_host = GDSync.is_host()
-	logger.log_info("Joined lobby. Host status: ", is_currently_host)
 	signals.joined_lobby_successfully.emit(lobby_name_id)
 
 
@@ -259,30 +258,15 @@ func _on_gdsync_lobby_join_failed(lobby_name: String, error_code: int):
 
 func _on_gdsync_client_joined(client_id: int):
 	logger.log_info("Trying to emit player_joined_lobby: ", client_id)
-	if client_id == local_client_id and is_currently_host:
-		if not connected_clients.has(client_id):
-			connected_clients[client_id] = {"name": "Player " + str(client_id)}
-			signals.player_list_updated.emit(connected_clients)
-			signals.player_joined_lobby.emit(client_id)
-		else:
-			(
-				ToastParty
-				.show(
-					{
-						"text": "Error, You are already in the lobby as host!",
-						"bgcolor": Color.ROSY_BROWN,
-					}
-				)
-			)
-		return
-	else:
-		logger.log_info("Emit player_joined_lobby for client ID: ", client_id)
+	# if client_id == local_client_id and is_currently_host:
+	# 	return
 
-	if not connected_clients.has(client_id):
+	if not connected_clients.has_player(client_id):
 		logger.log_info("Client joined lobby. ID: ", client_id)
-		connected_clients[client_id] = {"name": "Player " + str(client_id)}
+		var player := MultiplayerTypes.PlayerData.new(client_id)
+		connected_clients.add_player(player)
 		signals.player_list_updated.emit(connected_clients)
-		signals.player_joined_lobby.emit(client_id)
+		signals.player_joined_lobby.emit(player)
 	else:
 		logger.log_info(
 			"Client ", client_id, " re-announced or already present."
@@ -290,9 +274,9 @@ func _on_gdsync_client_joined(client_id: int):
 
 
 func _on_gdsync_client_left(client_id: int):
-	if connected_clients.has(client_id):
+	if connected_clients.has_player(client_id):
 		logger.log_info("Client left lobby. ID: ", client_id)
-		connected_clients.erase(client_id)
+		connected_clients.remove_player(client_id)
 		signals.player_list_updated.emit(connected_clients)
 		signals.player_left_lobby.emit(client_id)
 

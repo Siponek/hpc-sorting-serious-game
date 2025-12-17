@@ -142,7 +142,6 @@ func _on_join_game_button_pressed() -> void:
 		)
 		return
 
-	# ConnectionManager.ensure_multiplayer_started() # Ensure GDSync is active
 	ConnectionManager.join_existing_lobby(lobby_id_to_attempt_join)
 
 
