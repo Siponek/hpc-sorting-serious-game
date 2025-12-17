@@ -88,10 +88,9 @@ func _print_colored(level: LogLevel, message: String) -> void:
 	var level_text: String = LogLevel.keys()[level]
 	var cs := _callsite(3) # Adjusted depth to get actual caller
 
-	# Clickable location in editor output: res://file.gd:line
-	var loc := (
-		"%s:%d" % [cs.get("source", "res://unknown"), int(cs.get("line", 0))]
-	)
+	# Location with just filename:line
+	var source_path: String = cs.get("source", "unknown")
+	var loc := "%s:%d" % [source_path.get_file(), int(cs.get("line", 0))]
 	var func_name := str(cs.get("function", "<unknown>"))
 
 	# Editor automatically detects res://...:line as clickable
