@@ -6,7 +6,12 @@ extends Node
 
 var logger: ColorfulLogger
 var _patch_applied: bool = false
-const web_local_server_script = preload("res://scenes/Multiplayer/LocalServerWebPatch.gd")
+
+# Use the new signaling-based LocalServer
+const web_local_server_script = preload(
+	ProjectFiles.Scripts.LOCAL_SERVER_SIGNALING
+)
+
 
 func _ready() -> void:
 	logger = CustomLogger.get_logger(self)
@@ -27,7 +32,9 @@ func _apply_web_patch() -> void:
 	# Get the original LocalServer node
 	var original_local_server = gdsync.get_node_or_null("LocalServer")
 	if not original_local_server:
-		logger.log_error("GDSync LocalServer not found! Cannot apply web patch.")
+		logger.log_error(
+			"GDSync LocalServer not found! Cannot apply web patch."
+		)
 		return
 
 	# Disable and rename the original LocalServer
@@ -44,8 +51,13 @@ func _apply_web_patch() -> void:
 	gdsync._local_server = web_local_server
 
 	# Also update ConnectionController's reference if it exists
-	if gdsync._connection_controller and "local_server" in gdsync._connection_controller:
+	if (
+		gdsync._connection_controller
+		and "local_server" in gdsync._connection_controller
+	):
 		gdsync._connection_controller.local_server = web_local_server
 
 	_patch_applied = true
-	logger.log_info("GD-Sync WebRTC patch applied for web platform.")
+	logger.log_info(
+		"GD-Sync WebRTC patch applied for web platform (using SignalingClient)."
+	)
