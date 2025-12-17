@@ -446,6 +446,10 @@ func _setup_rtc_session(session: PRSession, hosting: bool) -> void:
 	multiplayer.multiplayer_peer = session.rtc_peer
 	connection_controller.client = session.rtc_peer
 
+	# Update our client ID now that multiplayer peer is set
+	my_current_client.client_id = multiplayer.get_unique_id()
+	logger.log_info("Updated my client ID to: %d" % my_current_client.client_id)
+
 	# Connect peer signals for WebRTC-level events
 	session.rtc_peer.peer_connected.connect(_on_rtc_peer_connected)
 	session.rtc_peer.peer_disconnected.connect(_on_rtc_peer_disconnected)

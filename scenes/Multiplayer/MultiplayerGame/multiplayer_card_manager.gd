@@ -7,8 +7,8 @@ var my_client_id: int = -1
 var game_state_synced: bool = false
 @onready var buffer_size = Settings.player_buffer_count
 # Track which cards are in OTHER players' buffers
-var cards_in_other_buffers: Dictionary = {}  # card_value: player_id
-
+var cards_in_other_buffers: Dictionary = {} # card_value: player_id
+const var_tree_node_path: NodePath = "../CanvasLayer/VarTreeMainMenu"
 
 # TODO The cards order is not syncing properly, checkout before cloude update
 # To see if the syncing mechanism makes sense.
@@ -33,8 +33,8 @@ func _ready():
 		_initialize_client_structure()
 		await get_tree().create_timer(0.5).timeout
 		request_game_state_from_host()
-	if OS.has_feature("debug"):
-		mount_var_tree_variables()
+	if VarTreeHandler.should_enable_var_tree():
+		VarTreeHandler.handle_var_tree(self, var_tree_node_path, _setup_var_tree)
 
 
 func _initialize_client_structure():
@@ -95,7 +95,7 @@ func broadcast_initial_game_state():
 				"original_index": card.original_index,
 				"in_container": true,
 				"in_buffer": false,
-				"buffer_owner": -1
+				"buffer_owner": - 1
 			}
 		)
 
@@ -138,7 +138,7 @@ func send_current_state_to(requesting_client_id: int):
 					"original_index": child.original_index,
 					"in_container": true,
 					"in_buffer": false,
-					"buffer_owner": -1
+					"buffer_owner": - 1
 				}
 			)
 
@@ -150,7 +150,7 @@ func send_current_state_to(requesting_client_id: int):
 			card_states.append(
 				{
 					"value": card.value,
-					"index": -1,
+					"index": - 1,
 					"original_index": card.original_index,
 					"in_container": false,
 					"in_buffer": true,
@@ -164,8 +164,8 @@ func send_current_state_to(requesting_client_id: int):
 		card_states.append(
 			{
 				"value": card_value,
-				"index": -1,
-				"original_index": -1,
+				"index": - 1,
+				"original_index": - 1,
 				"in_container": false,
 				"in_buffer": true,
 				"buffer_owner": owner_id
@@ -310,7 +310,7 @@ func sync_card_moved(
 	# Make sure card is visible and draggable
 	card.visible = true
 	card.set_can_drag(true)
-	card.remove_from_slot()  # Reset any slot styling
+	card.remove_from_slot() # Reset any slot styling
 
 	_update_all_card_indices()
 
@@ -521,7 +521,7 @@ func _on_card_placed_in_slot(card, slot):
 	if should_start_timer and timer_node.timer_started:
 		(
 			logger
-			. log_info(
+			.log_info(
 				"First move detected (slot), broadcasting timer start to all clients"
 			)
 		)

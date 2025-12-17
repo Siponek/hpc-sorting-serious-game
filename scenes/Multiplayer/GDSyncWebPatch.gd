@@ -18,6 +18,9 @@ func _ready() -> void:
 
 	# Only apply patch for web exports
 	if not OS.has_feature("web"):
+		logger.log_info(
+			"GD-Sync Web patch not applied: not running on web platform."
+		)
 		return
 
 	_apply_web_patch()
