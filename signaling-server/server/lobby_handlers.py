@@ -1,47 +1,72 @@
+# pyright: strict
+
 """
 Lobby Protocol Handlers
 
-Handles WebSocket messages for the lobby system:
+Handles messages for the lobby system (WebSocket or HTTP+SSE):
 - create_lobby
 - list_lobbies
 - join_lobby
 - leave_lobby
 - ping
+- broadcast (game packets)
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
-from .models import Peer, Lobby
+from collections.abc import Awaitable, Callable
+from typing import Any
+
+from .enums import ErrorCode, LobbyCloseReason, MessageType, ResponseType, SSEEventType
+from .models import Lobby, Peer
 from .state import state
 
-if TYPE_CHECKING:
-    pass
+# Type alias for handler functions
+HandlerFunc = Callable[[Peer, dict[str, Any]], Awaitable[dict[str, Any]]]
 
 
 # =============================================================================
 # Utility Functions
 # =============================================================================
 
-async def send_to_peer(peer: Peer, message: dict) -> bool:
-    """Send a JSON message to a peer's WebSocket."""
+async def send_to_peer(peer: Peer, message: dict[str, Any]) -> bool:
+    """Send a JSON message to a peer via WebSocket or SSE queue."""
+    # Try WebSocket first
     if peer.ws and not peer.ws.closed:
         try:
             await peer.ws.send_json(message)
             return True
         except Exception as e:
-            print(f"[LOBBY] Error sending to peer {peer.peer_id}: {e}")
+            print(f"[LOBBY] Error sending WS to peer {peer.peer_id}: {e}")
+            return False
+
+    # Try SSE queue
+    if peer.sse_queue:
+        try:
+            await peer.sse_queue.put(message)
+            return True
+        except Exception as e:
+            print(f"[LOBBY] Error queueing SSE for peer {peer.peer_id}: {e}")
+            return False
+
     return False
 
 
-async def broadcast_to_lobby(lobby: Lobby, message: dict, exclude_peer_id: int = None) -> None:
+async def broadcast_to_lobby(
+    lobby: Lobby,
+    message: dict[str, Any],
+    exclude_peer_id: int | None = None
+) -> None:
     """Broadcast a message to all peers in a lobby, optionally excluding one."""
     for peer_id, peer in lobby.peers.items():
         if peer_id != exclude_peer_id:
             await send_to_peer(peer, message)
 
 
-async def close_lobby(lobby: Lobby, reason: str = "closed") -> None:
+async def close_lobby(
+    lobby: Lobby,
+    reason: LobbyCloseReason = LobbyCloseReason.CLOSED
+) -> None:
     """Close a lobby and notify all peers."""
     code = lobby.code
     print(f"[LOBBY] Closing {code} '{lobby.name}' (reason: {reason})")
@@ -49,9 +74,9 @@ async def close_lobby(lobby: Lobby, reason: str = "closed") -> None:
     # Notify all remaining peers
     for peer in list(lobby.peers.values()):
         await send_to_peer(peer, {
-            "t": "lobby_closed",
+            "t": ResponseType.LOBBY_CLOSED,
             "code": code,
-            "reason": reason,
+            "reason": str(reason),
         })
         peer.lobby_code = None
 
@@ -63,12 +88,12 @@ async def close_lobby(lobby: Lobby, reason: str = "closed") -> None:
 # Protocol Handlers
 # =============================================================================
 
-async def handle_create_lobby(peer: Peer, data: dict) -> dict:
+async def handle_create_lobby(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
     """Handle create_lobby command."""
-    name = data.get("name", f"Lobby-{state.generate_code()}")
-    public = data.get("public", True)
-    player_limit = data.get("player_limit", 0)
-    player_data = data.get("player", {"name": f"Player {peer.peer_id}"})
+    name: str = data.get("name", f"Lobby-{state.generate_code()}")
+    public: bool = data.get("public", True)
+    player_limit: int = data.get("player_limit", 0)
+    player_data: dict[str, Any] = data.get("player", {"name": f"Player {peer.peer_id}"})
 
     # Update peer's player data
     peer.player_data = player_data
@@ -79,7 +104,7 @@ async def handle_create_lobby(peer: Peer, data: dict) -> dict:
     print(f"[LOBBY] Created: {lobby.code} '{name}' by peer {peer.peer_id}")
 
     return {
-        "t": "lobby_created",
+        "t": ResponseType.LOBBY_CREATED,
         "code": lobby.code,
         "name": name,
         "host_id": peer.peer_id,
@@ -87,50 +112,50 @@ async def handle_create_lobby(peer: Peer, data: dict) -> dict:
     }
 
 
-async def handle_list_lobbies(peer: Peer, data: dict) -> dict:
+async def handle_list_lobbies(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
     """Handle list_lobbies command."""
     lobbies = state.get_public_lobbies()
     items = [lobby.to_list_item() for lobby in lobbies]
 
     return {
-        "t": "lobby_list",
+        "t": ResponseType.LOBBY_LIST,
         "items": items,
     }
 
 
-async def handle_join_lobby(peer: Peer, data: dict) -> dict:
+async def handle_join_lobby(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
     """Handle join_lobby command."""
-    code_or_name = data.get("code", "")
-    player_data = data.get("player", {"name": f"Player {peer.peer_id}"})
+    code_or_name: str = data.get("code", "")
+    player_data: dict[str, Any] = data.get("player", {"name": f"Player {peer.peer_id}"})
 
     # Find lobby
     lobby = state.find_lobby(code_or_name)
     if not lobby:
         return {
-            "t": "error",
-            "code": "LOBBY_NOT_FOUND",
+            "t": ResponseType.ERROR,
+            "code": ErrorCode.LOBBY_NOT_FOUND,
             "message": "Lobby not found",
         }
 
     if not lobby.open:
         return {
-            "t": "error",
-            "code": "LOBBY_CLOSED",
+            "t": ResponseType.ERROR,
+            "code": ErrorCode.LOBBY_CLOSED,
             "message": "Lobby is closed",
         }
 
     if lobby.is_full():
         return {
-            "t": "error",
-            "code": "LOBBY_FULL",
+            "t": ResponseType.ERROR,
+            "code": ErrorCode.LOBBY_FULL,
             "message": "Lobby is full",
         }
 
     # Check if already in a lobby
     if peer.lobby_code:
         return {
-            "t": "error",
-            "code": "ALREADY_IN_LOBBY",
+            "t": ResponseType.ERROR,
+            "code": ErrorCode.ALREADY_IN_LOBBY,
             "message": "You are already in a lobby",
         }
 
@@ -149,14 +174,14 @@ async def handle_join_lobby(peer: Peer, data: dict) -> dict:
 
     # Notify other peers in lobby (especially host)
     await broadcast_to_lobby(lobby, {
-        "t": "peer_joined",
+        "t": ResponseType.PEER_JOINED,
         "id": peer.peer_id,
         "player": peer.player_data,
     }, exclude_peer_id=peer.peer_id)
 
     # Send lobby_joined to the joining peer
     return {
-        "t": "lobby_joined",
+        "t": ResponseType.LOBBY_JOINED,
         "code": lobby.code,
         "name": lobby.name,
         "host_id": lobby.host_id,
@@ -165,12 +190,12 @@ async def handle_join_lobby(peer: Peer, data: dict) -> dict:
     }
 
 
-async def handle_leave_lobby(peer: Peer, data: dict) -> dict:
+async def handle_leave_lobby(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
     """Handle leave_lobby command."""
     if not peer.lobby_code:
         return {
-            "t": "error",
-            "code": "NOT_IN_LOBBY",
+            "t": ResponseType.ERROR,
+            "code": ErrorCode.NOT_IN_LOBBY,
             "message": "You are not in a lobby",
         }
 
@@ -178,8 +203,8 @@ async def handle_leave_lobby(peer: Peer, data: dict) -> dict:
     if not lobby:
         peer.lobby_code = None
         return {
-            "t": "error",
-            "code": "LOBBY_NOT_FOUND",
+            "t": ResponseType.ERROR,
+            "code": ErrorCode.LOBBY_NOT_FOUND,
             "message": "Lobby no longer exists",
         }
 
@@ -191,11 +216,11 @@ async def handle_leave_lobby(peer: Peer, data: dict) -> dict:
 
     if was_host:
         # Host left - close the lobby
-        await close_lobby(lobby, "host_left")
+        await close_lobby(lobby, LobbyCloseReason.HOST_LEFT)
     else:
         # Regular peer left - notify others
         await broadcast_to_lobby(lobby, {
-            "t": "peer_left",
+            "t": ResponseType.PEER_LEFT,
             "id": peer.peer_id,
         })
 
@@ -204,12 +229,12 @@ async def handle_leave_lobby(peer: Peer, data: dict) -> dict:
         if room:
             room.player_count = len(lobby.peers)
 
-    return {"t": "lobby_left", "code": lobby_code}
+    return {"t": ResponseType.LOBBY_LEFT, "code": lobby_code}
 
 
-async def handle_ping(peer: Peer, data: dict) -> dict:
+async def handle_ping(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
     """Handle ping/heartbeat."""
-    return {"t": "pong"}
+    return {"t": ResponseType.PONG}
 
 
 # =============================================================================
@@ -228,11 +253,11 @@ async def handle_peer_disconnect(peer: Peer) -> None:
 
             if was_host:
                 # Host disconnected - close lobby
-                await close_lobby(lobby, "host_disconnected")
+                await close_lobby(lobby, LobbyCloseReason.HOST_DISCONNECTED)
             else:
                 # Regular peer disconnected - notify others
                 await broadcast_to_lobby(lobby, {
-                    "t": "peer_left",
+                    "t": ResponseType.PEER_LEFT,
                     "id": peer.peer_id,
                 })
 
@@ -250,16 +275,16 @@ async def handle_peer_disconnect(peer: Peer) -> None:
 # =============================================================================
 
 # Map of message types to handlers
-MESSAGE_HANDLERS = {
-    "create_lobby": handle_create_lobby,
-    "list_lobbies": handle_list_lobbies,
-    "join_lobby": handle_join_lobby,
-    "leave_lobby": handle_leave_lobby,
-    "ping": handle_ping,
+MESSAGE_HANDLERS: dict[str, HandlerFunc] = {
+    MessageType.CREATE_LOBBY: handle_create_lobby,
+    MessageType.LIST_LOBBIES: handle_list_lobbies,
+    MessageType.JOIN_LOBBY: handle_join_lobby,
+    MessageType.LEAVE_LOBBY: handle_leave_lobby,
+    MessageType.PING: handle_ping,
 }
 
 
-async def route_message(peer: Peer, data: dict) -> dict:
+async def route_message(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
     """Route a message to the appropriate handler."""
     msg_type = data.get("t", "unknown")
 
@@ -268,7 +293,7 @@ async def route_message(peer: Peer, data: dict) -> dict:
         return await handler(peer, data)
 
     return {
-        "t": "error",
-        "code": "UNKNOWN_COMMAND",
+        "t": ResponseType.ERROR,
+        "code": ErrorCode.UNKNOWN_COMMAND,
         "message": f"Unknown command: {msg_type}",
     }

@@ -1,3 +1,5 @@
+# pyright: strict
+
 """
 HTTP Endpoint Handlers
 
@@ -5,13 +7,15 @@ REST API endpoints for backward compatibility with existing clients.
 """
 
 from __future__ import annotations
-import json
+
+from typing import Any
+
 from aiohttp import web
 
 from .config import PORT
-from .state import state
+from .enums import ErrorCode, LobbyCloseReason
 from .lobby_handlers import close_lobby
-
+from .state import state
 
 # =============================================================================
 # Session Endpoints (WebRTC signaling)
@@ -20,15 +24,15 @@ from .lobby_handlers import close_lobby
 async def handle_host(request: web.Request) -> web.Response:
     """POST /session/host - Create a new room (HTTP fallback for WebRTC-only clients)"""
     try:
-        body = await request.json()
-    except:
+        body: dict[str, Any] = await request.json()
+    except Exception:
         body = {}
 
-    is_debug = body.get('is_debug', False)
-    channel = body.get('channel', 'default')
-    lobby_name = body.get('lobby_name', '')
-    lobby_public = body.get('public', True)
-    player_limit = body.get('player_limit', 0)
+    is_debug: bool = body.get('is_debug', False)
+    channel: str = body.get('channel', 'default')
+    lobby_name: str = body.get('lobby_name', '')
+    lobby_public: bool = body.get('public', True)
+    player_limit: int = body.get('player_limit', 0)
 
     room = state.create_room(
         channel=channel,
@@ -58,18 +62,18 @@ async def handle_update(request: web.Request) -> web.Response:
     room = state.get_room(code)
     if not room:
         return web.json_response(
-            {'success': False, 'code': 'ROOM_NOT_FOUND'},
+            {'success': False, 'code': ErrorCode.ROOM_NOT_FOUND},
             status=404
         )
 
     try:
-        body = await request.json()
-    except json.JSONDecodeError:
+        body: dict[str, Any] = await request.json()
+    except Exception:
         body = {}
 
     # Update lobby name mapping
     old_lobby_name = room.lobby_name
-    new_lobby_name = body.get('lobby_name', old_lobby_name)
+    new_lobby_name: str = body.get('lobby_name', old_lobby_name)
 
     if old_lobby_name and old_lobby_name.lower() in state.lobby_name_to_code:
         del state.lobby_name_to_code[old_lobby_name.lower()]
@@ -101,13 +105,13 @@ async def handle_player_count(request: web.Request) -> web.Response:
     room = state.get_room(code)
     if not room:
         return web.json_response(
-            {'success': False, 'code': 'ROOM_NOT_FOUND'},
+            {'success': False, 'code': ErrorCode.ROOM_NOT_FOUND},
             status=404
         )
 
     try:
-        body = await request.json()
-    except json.JSONDecodeError:
+        body: dict[str, Any] = await request.json()
+    except Exception:
         body = {}
 
     if 'player_count' in body:
@@ -128,7 +132,7 @@ async def handle_close(request: web.Request) -> web.Response:
     room = state.get_room(code)
     if not room:
         return web.json_response(
-            {'success': False, 'code': 'ROOM_NOT_FOUND'},
+            {'success': False, 'code': ErrorCode.ROOM_NOT_FOUND},
             status=404
         )
 
@@ -136,14 +140,14 @@ async def handle_close(request: web.Request) -> web.Response:
 
     # Close any remaining WebSocket connections
     connections = state.get_signaling_connections(code)
-    for ws in list(connections.values()):
+    for ws in connections.values():
         if not ws.closed:
             await ws.close()
 
     # Also close the lobby if it exists
     lobby = state.get_lobby(code)
     if lobby:
-        await close_lobby(lobby, "host_closed")
+        await close_lobby(lobby, LobbyCloseReason.HOST_CLOSED)
     else:
         state.remove_room(code)
 
@@ -162,7 +166,7 @@ async def handle_join(request: web.Request) -> web.Response:
     room = state.find_room(code_or_name)
     if not room:
         return web.json_response(
-            {'success': False, 'code': 'ROOM_NOT_FOUND'},
+            {'success': False, 'code': ErrorCode.ROOM_NOT_FOUND},
             status=404
         )
 
@@ -195,7 +199,7 @@ async def handle_health(request: web.Request) -> web.Response:
 
 async def handle_rooms(request: web.Request) -> web.Response:
     """GET /rooms - List all rooms (debug)"""
-    room_list = []
+    room_list: list[dict[str, Any]] = []
     for code, room in state.rooms.items():
         connections = state.get_signaling_connections(code)
         room_dict = room.to_dict()
@@ -207,7 +211,7 @@ async def handle_rooms(request: web.Request) -> web.Response:
 
 async def handle_lobbies(request: web.Request) -> web.Response:
     """GET /lobbies - List public lobbies"""
-    lobby_list = []
+    lobby_list: list[dict[str, Any]] = []
 
     # First try the lobby system
     for lobby in state.get_public_lobbies():
@@ -248,9 +252,12 @@ def register_http_routes(app: web.Application) -> None:
     app.router.add_get('/lobbies', handle_lobbies)
 
     # OPTIONS handlers for CORS
-    app.router.add_route('OPTIONS', '/session/host', lambda r: web.Response())
-    app.router.add_route('OPTIONS', '/session/update/{code}', lambda r: web.Response())
-    app.router.add_route('OPTIONS', '/session/players/{code}', lambda r: web.Response())
-    app.router.add_route('OPTIONS', '/session/close/{code}', lambda r: web.Response())
-    app.router.add_route('OPTIONS', '/session/join/{code}', lambda r: web.Response())
-    app.router.add_route('OPTIONS', '/lobbies', lambda r: web.Response())
+    async def options_handler(_request: web.Request) -> web.Response:
+        return web.Response()
+
+    app.router.add_route('OPTIONS', '/session/host', options_handler)
+    app.router.add_route('OPTIONS', '/session/update/{code}', options_handler)
+    app.router.add_route('OPTIONS', '/session/players/{code}', options_handler)
+    app.router.add_route('OPTIONS', '/session/close/{code}', options_handler)
+    app.router.add_route('OPTIONS', '/session/join/{code}', options_handler)
+    app.router.add_route('OPTIONS', '/lobbies', options_handler)

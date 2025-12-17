@@ -1,29 +1,33 @@
+# pyright: strict
+
 """
 Data Models for Signaling Server
 """
 
 from __future__ import annotations
+
+import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import Any
 
-if TYPE_CHECKING:
-    from aiohttp import web
+from aiohttp import web
 
 
 @dataclass
 class Peer:
     """Represents a connected peer/player in the lobby system."""
     peer_id: int
-    ws: web.WebSocketResponse
-    player_data: dict = field(default_factory=lambda: {})
-    lobby_code: Optional[str] = None
+    ws: web.WebSocketResponse | None = None  # WebSocket (if using WS)
+    sse_queue: asyncio.Queue[dict[str, Any]] | None = None  # SSE queue (if using HTTP)
+    player_data: dict[str, Any] = field(default_factory=lambda: {})
+    lobby_code: str | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.player_data:
             self.player_data = {"name": f"Player {self.peer_id}"}
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "id": self.peer_id,
@@ -41,7 +45,7 @@ class Lobby:
     player_limit: int = 0
     open: bool = True
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    peers: dict[int, Peer] = field(default_factory=dict)
+    peers: dict[int, Peer] = field(default_factory=lambda: {})
 
     @classmethod
     def create(cls, code: str, name: str, host_peer: Peer, public: bool = True, player_limit: int = 0) -> Lobby:
@@ -61,14 +65,14 @@ class Lobby:
         self.peers[peer.peer_id] = peer
         peer.lobby_code = self.code
 
-    def remove_peer(self, peer_id: int) -> Optional[Peer]:
+    def remove_peer(self, peer_id: int) -> Peer | None:
         """Remove a peer from the lobby."""
         peer = self.peers.pop(peer_id, None)
         if peer:
             peer.lobby_code = None
         return peer
 
-    def get_players_list(self) -> list[dict]:
+    def get_players_list(self) -> list[dict[str, Any]]:
         """Get list of all players in the lobby."""
         return [p.to_dict() for p in self.peers.values()]
 
@@ -80,7 +84,7 @@ class Lobby:
         """Check if the lobby is full."""
         return self.player_limit > 0 and len(self.peers) >= self.player_limit
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "code": self.code,
@@ -92,7 +96,7 @@ class Lobby:
             "open": self.open,
         }
 
-    def to_list_item(self) -> dict:
+    def to_list_item(self) -> dict[str, Any]:
         """Format for lobby list response."""
         return {
             "code": self.code,
@@ -102,7 +106,7 @@ class Lobby:
             "player_limit": self.player_limit,
         }
 
-    def to_gdsync_format(self) -> dict:
+    def to_gdsync_format(self) -> dict[str, Any]:
         """Format for GDSync/HTTP lobby list compatibility."""
         return {
             "Name": self.name,
@@ -127,7 +131,7 @@ class Room:
     player_limit: int = 0
     player_count: int = 1
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "code": self.code,

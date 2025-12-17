@@ -6,6 +6,9 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.13.2",
+    "pyright>=1.1.407",
+    "pytest>=9.0.2",
+    "ruff>=0.14.9",
     "websockets>=15.0.1",
 ]
 
@@ -15,3 +18,33 @@ dev = ["gdtoolkit>=4.5.0"]
 # Make the 'dev' group active for uv run/sync so gdtoolkit is present
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.pyright]
+include = ["signaling-server"]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+
+[tool.ruff]
+include = ["signaling-server/**/*.py"]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "ARG001", # unused function argument (required by framework signatures)
+    "SIM105", # contextlib.suppress - less readable for async code
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["server"]

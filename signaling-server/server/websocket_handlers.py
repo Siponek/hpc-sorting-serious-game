@@ -1,3 +1,5 @@
+# pyright: strict
+
 """
 WebSocket Endpoint Handlers
 
@@ -6,18 +8,20 @@ Two WebSocket endpoints:
 2. /ws/{code} - WebRTC signaling (ICE/SDP exchange)
 """
 
-from __future__ import annotations
 import json
-from aiohttp import web, WSMsgType
+from typing import Any
 
+from aiohttp import WSMsgType, web
+
+from .enums import ErrorCode, ResponseType, SignalingDataType
+from .lobby_handlers import handle_peer_disconnect, route_message
 from .models import Peer
 from .state import state
-from .lobby_handlers import route_message, handle_peer_disconnect
-
 
 # =============================================================================
 # Lobby WebSocket Handler
 # =============================================================================
+
 
 async def handle_lobby_websocket(request: web.Request) -> web.WebSocketResponse:
     """WebSocket handler for lobby events (separate from WebRTC signaling)."""
@@ -31,26 +35,30 @@ async def handle_lobby_websocket(request: web.Request) -> web.WebSocketResponse:
     print(f"[LOBBY] Peer {peer_id} connected (total lobby peers: {len(state.lobby_peers)})")
 
     # Send welcome message with assigned ID
-    await ws.send_json({
-        "t": "welcome",
-        "your_id": peer_id,
-    })
+    await ws.send_json(
+        {
+            "t": ResponseType.WELCOME,
+            "your_id": peer_id,
+        }
+    )
 
     try:
         async for msg in ws:
             if msg.type == WSMsgType.TEXT:
                 try:
-                    data = json.loads(msg.data)
+                    data: dict[str, Any] = json.loads(msg.data)
                     response = await route_message(peer, data)
                     if response:
                         await ws.send_json(response)
 
                 except json.JSONDecodeError:
-                    await ws.send_json({
-                        "t": "error",
-                        "code": "INVALID_JSON",
-                        "message": "Invalid JSON",
-                    })
+                    await ws.send_json(
+                        {
+                            "t": ResponseType.ERROR,
+                            "code": ErrorCode.INVALID_JSON,
+                            "message": "Invalid JSON",
+                        }
+                    )
             elif msg.type == WSMsgType.ERROR:
                 print(f"[LOBBY] WebSocket error for peer {peer_id}: {ws.exception()}")
 
@@ -66,13 +74,14 @@ async def handle_lobby_websocket(request: web.Request) -> web.WebSocketResponse:
 # WebRTC Signaling WebSocket Handler
 # =============================================================================
 
-async def handle_signaling_websocket(request: web.Request) -> web.WebSocketResponse:
+
+async def handle_signaling_websocket(request: web.Request) -> web.WebSocketResponse | web.Response:
     """WebSocket handler for WebRTC signaling (ICE/SDP exchange)."""
-    code = request.match_info['code'].upper()
+    code = request.match_info["code"].upper()
 
     room = state.get_room(code)
     if not room:
-        return web.Response(status=404, text='Room not found')
+        return web.Response(status=404, text="Room not found")
 
     ws = web.WebSocketResponse()
     await ws.prepare(request)
@@ -89,44 +98,54 @@ async def handle_signaling_websocket(request: web.Request) -> web.WebSocketRespo
     try:
         # Send initialization with existing peers
         existing_peers = state.get_signaling_peer_ids(code, exclude=peer_id)
-        await ws.send_json({
-            'data_type': 'initialize',
-            'id': peer_id,
-            'peers': existing_peers,
-        })
+        await ws.send_json(
+            {
+                "data_type": SignalingDataType.INITIALIZE,
+                "id": peer_id,
+                "peers": existing_peers,
+            }
+        )
 
         # Notify others about new peer
         for pid, other_ws in connections.items():
             if pid != peer_id and not other_ws.closed:
-                await other_ws.send_json({
-                    'data_type': 'new_connection',
-                    'peer_id': peer_id,
-                })
+                await other_ws.send_json(
+                    {
+                        "data_type": SignalingDataType.NEW_CONNECTION,
+                        "peer_id": peer_id,
+                    }
+                )
 
         # Message loop
         async for msg in ws:
             if msg.type == WSMsgType.TEXT:
                 try:
-                    data = json.loads(msg.data)
-                    data_type = data.get('data_type', 'unknown')
+                    data: dict[str, Any] = json.loads(msg.data)
+                    data_type = data.get("data_type", "unknown")
 
                     # Skip ready messages
-                    if data_type == 'ready':
+                    if data_type == SignalingDataType.READY:
                         continue
 
                     # Log signaling messages
-                    if data_type in ('offer', 'answer', 'ice'):
-                        target_id = data.get('to', '?')
-                        print(f"[SIGNAL] {data_type.upper()} from peer {peer_id} to peer {target_id}")
+                    if data_type in (
+                        SignalingDataType.OFFER,
+                        SignalingDataType.ANSWER,
+                        SignalingDataType.ICE,
+                    ):
+                        target_id = data.get("to", "?")
+                        print(
+                            f"[SIGNAL] {data_type.upper()} from peer {peer_id} to peer {target_id}"
+                        )
 
                     # Forward to target peer
-                    if 'to' in data:
-                        target_id = data['to']
+                    if "to" in data:
+                        target_id = data["to"]
                         target_connections = state.get_signaling_connections(code)
                         if target_id in target_connections:
                             target_ws = target_connections[target_id]
                             if not target_ws.closed:
-                                data['from'] = peer_id
+                                data["from"] = peer_id
                                 await target_ws.send_json(data)
 
                 except json.JSONDecodeError:
@@ -141,14 +160,16 @@ async def handle_signaling_websocket(request: web.Request) -> web.WebSocketRespo
         state.remove_signaling_connection(code, peer_id)
 
         # Notify others about disconnect
-        for pid, other_ws in list(state.get_signaling_connections(code).items()):
+        for other_ws in state.get_signaling_connections(code).values():
             if not other_ws.closed:
                 try:
-                    await other_ws.send_json({
-                        'data_type': 'peer_disconnected',
-                        'peer_id': peer_id,
-                    })
-                except:
+                    await other_ws.send_json(
+                        {
+                            "data_type": SignalingDataType.PEER_DISCONNECTED,
+                            "peer_id": peer_id,
+                        }
+                    )
+                except Exception:
                     pass
 
     return ws
@@ -158,7 +179,8 @@ async def handle_signaling_websocket(request: web.Request) -> web.WebSocketRespo
 # Route Registration
 # =============================================================================
 
+
 def register_websocket_routes(app: web.Application) -> None:
     """Register all WebSocket routes."""
-    app.router.add_get('/lobby', handle_lobby_websocket)
-    app.router.add_get('/ws/{code}', handle_signaling_websocket)
+    app.router.add_get("/lobby", handle_lobby_websocket)
+    app.router.add_get("/ws/{code}", handle_signaling_websocket)

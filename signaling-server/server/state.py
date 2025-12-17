@@ -1,17 +1,17 @@
+# pyright: strict
+
 """
 Global State Management for Signaling Server
 """
 
 from __future__ import annotations
+
 import random
-from typing import Optional, TYPE_CHECKING
+
 from aiohttp import web
 
 from .config import CONFIG
-from .models import Peer, Lobby, Room
-
-if TYPE_CHECKING:
-    pass
+from .models import Lobby, Peer, Room
 
 
 class State:
@@ -90,16 +90,16 @@ class State:
 
         return lobby
 
-    def get_lobby(self, code: str) -> Optional[Lobby]:
+    def get_lobby(self, code: str) -> Lobby | None:
         """Get a lobby by code."""
         return self.lobbies.get(code.upper())
 
-    def get_lobby_by_name(self, name: str) -> Optional[Lobby]:
+    def get_lobby_by_name(self, name: str) -> Lobby | None:
         """Get a lobby by name."""
         code = self.lobby_name_to_code.get(name.lower())
         return self.lobbies.get(code) if code else None
 
-    def find_lobby(self, code_or_name: str) -> Optional[Lobby]:
+    def find_lobby(self, code_or_name: str) -> Lobby | None:
         """Find a lobby by code or name."""
         # Try as code first
         lobby = self.get_lobby(code_or_name)
@@ -108,7 +108,7 @@ class State:
         # Try as name
         return self.get_lobby_by_name(code_or_name)
 
-    def remove_lobby(self, code: str) -> Optional[Lobby]:
+    def remove_lobby(self, code: str) -> Lobby | None:
         """Remove a lobby and clean up associated resources."""
         lobby = self.lobbies.pop(code, None)
         if lobby:
@@ -141,11 +141,11 @@ class State:
         """Register a peer in the lobby system."""
         self.lobby_peers[peer.peer_id] = peer
 
-    def remove_lobby_peer(self, peer_id: int) -> Optional[Peer]:
+    def remove_lobby_peer(self, peer_id: int) -> Peer | None:
         """Remove a peer from the lobby system."""
         return self.lobby_peers.pop(peer_id, None)
 
-    def get_lobby_peer(self, peer_id: int) -> Optional[Peer]:
+    def get_lobby_peer(self, peer_id: int) -> Peer | None:
         """Get a peer by ID."""
         return self.lobby_peers.get(peer_id)
 
@@ -156,10 +156,7 @@ class State:
     def create_room(self, channel: str = "default", lobby_name: str = "",
                     public: bool = True, player_limit: int = 0, is_debug: bool = False) -> Room:
         """Create a new WebRTC signaling room."""
-        if is_debug:
-            code = "TEST"
-        else:
-            code = self.generate_unique_code()
+        code = "TEST" if is_debug else self.generate_unique_code()
 
         room = Room(
             code=code,
@@ -176,11 +173,11 @@ class State:
 
         return room
 
-    def get_room(self, code: str) -> Optional[Room]:
+    def get_room(self, code: str) -> Room | None:
         """Get a room by code."""
         return self.rooms.get(code.upper())
 
-    def find_room(self, code_or_name: str) -> Optional[Room]:
+    def find_room(self, code_or_name: str) -> Room | None:
         """Find a room by code or name."""
         # Try as code first
         room = self.get_room(code_or_name)
@@ -190,7 +187,7 @@ class State:
         code = self.lobby_name_to_code.get(code_or_name.lower())
         return self.rooms.get(code) if code else None
 
-    def remove_room(self, code: str) -> Optional[Room]:
+    def remove_room(self, code: str) -> Room | None:
         """Remove a room."""
         room = self.rooms.pop(code, None)
         if room and room.lobby_name:
@@ -221,11 +218,11 @@ class State:
         """Get all signaling connections for a room."""
         return self.ws_connections.get(code, {})
 
-    def get_signaling_peer_ids(self, code: str, exclude: int = None) -> list[int]:
+    def get_signaling_peer_ids(self, code: str, exclude: int | None = None) -> list[int]:
         """Get all peer IDs in a signaling room."""
         connections = self.ws_connections.get(code, {})
         if exclude is not None:
-            return [pid for pid in connections.keys() if pid != exclude]
+            return [pid for pid in connections if pid != exclude]
         return list(connections.keys())
 
     # =========================================================================

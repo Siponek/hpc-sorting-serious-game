@@ -1,15 +1,26 @@
+# pyright: strict
+
 """
 Application Factory and Main Entry Point
 """
 
 from __future__ import annotations
+
 import logging
+from collections.abc import Awaitable, Callable
+from typing import Any
+
 from aiohttp import web
 
-from .config import PORT, CONFIG
-from .state import state
+from .config import CONFIG, PORT
+from .enums import ResponseType, SignalingDataType
 from .http_handlers import register_http_routes
+from .http_lobby_handlers import register_http_lobby_routes
+from .state import state
 from .websocket_handlers import register_websocket_routes
+
+# Type alias for middleware handler
+Handler = Callable[[web.Request], Awaitable[web.StreamResponse]]
 
 
 # =============================================================================
@@ -17,10 +28,13 @@ from .websocket_handlers import register_websocket_routes
 # =============================================================================
 
 @web.middleware
-async def cors_middleware(request: web.Request, handler) -> web.Response:
+async def cors_middleware(
+    request: web.Request,
+    handler: Handler
+) -> web.StreamResponse:
     """CORS middleware for cross-origin requests."""
     if request.method == 'OPTIONS':
-        response = web.Response()
+        response: web.StreamResponse = web.Response()
     else:
         try:
             response = await handler(request)
@@ -29,7 +43,7 @@ async def cors_middleware(request: web.Request, handler) -> web.Response:
 
     response.headers['Access-Control-Allow-Origin'] = CONFIG.cors_origins
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Accept, Cache-Control'
     return response
 
 
@@ -45,19 +59,20 @@ async def cleanup_all_connections() -> None:
     for peer in list(state.lobby_peers.values()):
         if peer.ws and not peer.ws.closed:
             try:
-                await peer.ws.send_json({"t": "server_shutdown"})
+                await peer.ws.send_json({"t": ResponseType.SERVER_SHUTDOWN})
                 await peer.ws.close(code=1001, message=b'Server shutdown')
-            except:
+            except Exception:
                 pass
 
     # Close signaling WebSocket connections
     for code in list(state.ws_connections.keys()):
-        for peer_id, ws in list(state.ws_connections.get(code, {}).items()):
+        connections: dict[int, Any] = state.ws_connections.get(code, {})
+        for _peer_id, ws in connections.items():
             if not ws.closed:
                 try:
-                    await ws.send_json({'data_type': 'server_shutdown'})
+                    await ws.send_json({'data_type': SignalingDataType.SERVER_SHUTDOWN})
                     await ws.close(code=1001, message=b'Server shutdown')
-                except:
+                except Exception:
                     pass
 
     # Clear all state
@@ -66,7 +81,7 @@ async def cleanup_all_connections() -> None:
     print("[SHUTDOWN] All connections closed")
 
 
-async def on_shutdown(app: web.Application) -> None:
+async def on_shutdown(_app: web.Application) -> None:
     """Called when the application is shutting down."""
     await cleanup_all_connections()
 
@@ -84,7 +99,8 @@ def create_app() -> web.Application:
 
     # Register routes
     register_http_routes(app)
-    register_websocket_routes(app)
+    register_http_lobby_routes(app)  # New HTTP+SSE lobby routes
+    register_websocket_routes(app)   # Keep WebSocket routes for backward compatibility
 
     return app
 
@@ -102,23 +118,23 @@ def print_banner() -> None:
     """Print server startup banner."""
     print()
     print('=' * 60)
-    print('  WebRTC Signaling + Lobby Event Server')
+    print('  Lobby Server (HTTP + SSE)')
     print('=' * 60)
     print()
-    print(f'  HTTP:           http://localhost:{PORT}')
-    print(f'  WebRTC WS:      ws://localhost:{PORT}/ws/{{code}}')
-    print(f'  Lobby WS:       ws://localhost:{PORT}/lobby')
+    print(f'  Base URL:       http://localhost:{PORT}')
     print()
-    print('  Lobby Protocol (JSON over WebSocket):')
-    print('    -> {"t":"create_lobby","name":"...","public":true}')
-    print('    -> {"t":"list_lobbies"}')
-    print('    -> {"t":"join_lobby","code":"XXXX","player":{"name":"..."}}')
-    print('    -> {"t":"leave_lobby"}')
-    print('    <- {"t":"lobby_created","code":"...","host_id":1,"your_id":1}')
-    print('    <- {"t":"lobby_joined","code":"...","host_id":1,"your_id":2,...}')
-    print('    <- {"t":"peer_joined","id":2,"player":{...}}')
-    print('    <- {"t":"peer_left","id":2}')
-    print('    <- {"t":"lobby_closed","code":"...","reason":"..."}')
+    print('  HTTP API (recommended for web):')
+    print('    POST /api/lobby/connect     - Get peer ID')
+    print('    POST /api/lobby/create      - Create lobby')
+    print('    POST /api/lobby/join        - Join lobby')
+    print('    POST /api/lobby/leave       - Leave lobby')
+    print('    GET  /api/lobby/list        - List lobbies')
+    print('    POST /api/lobby/broadcast   - Send game packets')
+    print('    GET  /api/lobby/events      - SSE event stream')
+    print()
+    print('  Legacy WebSocket (backward compatible):')
+    print('    WS   /lobby                 - Lobby events')
+    print('    WS   /ws/{code}             - WebRTC signaling')
     print()
     print('=' * 60)
     print()
