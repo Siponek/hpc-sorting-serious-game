@@ -6,7 +6,9 @@ Application Factory and Main Entry Point
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import sys
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -87,6 +89,44 @@ async def on_shutdown(_app: web.Application) -> None:
 
 
 # =============================================================================
+# Keyboard Input Handler
+# =============================================================================
+
+async def keyboard_listener() -> None:
+    """Listen for keyboard commands in the terminal."""
+    loop = asyncio.get_event_loop()
+
+    while True:
+        try:
+            # Read input asynchronously
+            line = await loop.run_in_executor(None, sys.stdin.readline)
+            cmd = line.strip().lower()
+
+            if cmd == 'r':
+                print("\n[RESTART] Clearing all connections and state...")
+                await cleanup_all_connections()
+                print("[RESTART] Server state reset. Ready for new connections.\n")
+            elif cmd == 'q':
+                print("\n[QUIT] Shutting down server...")
+                # Raise SystemExit to trigger graceful shutdown
+                raise SystemExit(0)
+            elif cmd == 'h' or cmd == 'help':
+                print("\n  Commands:")
+                print("    r     - Reset server state (disconnect all clients)")
+                print("    q     - Quit server")
+                print("    h     - Show this help\n")
+            elif cmd:
+                print(f"  Unknown command: '{cmd}' (type 'h' for help)")
+
+        except EOFError:
+            break
+        except SystemExit:
+            raise
+        except Exception as e:
+            print(f"[ERROR] Keyboard listener error: {e}")
+
+
+# =============================================================================
 # Application Factory
 # =============================================================================
 
@@ -138,6 +178,8 @@ def print_banner() -> None:
     print()
     print('=' * 60)
     print()
+    print('  Commands: r = reset state, q = quit, h = help')
+    print()
     print('[SERVER] Waiting for connections...')
     print()
 
@@ -146,13 +188,30 @@ def print_banner() -> None:
 # Main Entry Point
 # =============================================================================
 
+async def run_server() -> None:
+    """Run the server with keyboard input support."""
+    app = create_app()
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    site = web.TCPSite(runner, CONFIG.host, PORT)
+    await site.start()
+
+    try:
+        await keyboard_listener()
+    finally:
+        await runner.cleanup()
+
+
 def main() -> None:
     """Main entry point for the server."""
     suppress_connection_reset_errors()
     print_banner()
 
-    app = create_app()
-    web.run_app(app, host=CONFIG.host, port=PORT, print=None)
+    try:
+        asyncio.run(run_server())
+    except KeyboardInterrupt:
+        print("\n[SERVER] Stopped.")
 
 
 if __name__ == '__main__':
