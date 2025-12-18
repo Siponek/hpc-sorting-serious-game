@@ -264,6 +264,8 @@ func _on_gdsync_client_joined(client_id: int):
 	if not connected_clients.has_player(client_id):
 		logger.log_info("Client joined lobby. ID: ", client_id)
 		var player := MultiplayerTypes.PlayerData.new(client_id)
+		# Set is_host based on whether this client is the lobby host
+		player.is_host = (client_id == actual_lobby_host_id)
 		connected_clients.add_player(player)
 		signals.player_list_updated.emit(connected_clients)
 		signals.player_joined_lobby.emit(player)

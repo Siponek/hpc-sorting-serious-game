@@ -495,9 +495,10 @@ func _process(_delta: float) -> void:
 
 
 func _process_host() -> void:
-	# IMPORTANT: Process the host's own SERVER requests first
-	# When the HOST calls GDSync.set_gdsync_owner(), it queues to requestsSERV
-	# but ConnectionController._process() skips LOCAL mode, so we must handle it here
+	# IMPORTANT: Process SERVER requests FIRST so ownership messages are sent before
+	# the RELIABLE requests that depend on them. On the client, ownership is stored
+	# in session_controller.owner_cache. When is_gdsync_owner() is called later (by
+	# setup_player_display_from_dict), it checks the cache and applies ownership.
 	_process_host_server_requests()
 
 	# Process host's own RELIABLE/UNRELIABLE requests (e.g., GDSync.call_func())
@@ -671,7 +672,24 @@ func _process_incoming_packet_as_client(bytes: PackedByteArray) -> void:
 			ENUMS.REQUEST_TYPE.CALL_FUNCTION_CACHED:
 				request_processor.call_function_cached(request)
 			ENUMS.REQUEST_TYPE.MESSAGE:
-				request_processor.process_message(request)
+				_process_message_as_client(request)
+
+
+## Process MESSAGE requests on CLIENT, with special handling for ownership
+func _process_message_as_client(request: Array) -> void:
+	var message_type: int = request[ENUMS.MESSAGE_DATA.TYPE]
+
+	# Special handling for SET_GDSYNC_OWNER - use delayed setting
+	# because the node might not exist yet when the message arrives
+	if message_type == ENUMS.MESSAGE_TYPE.SET_GDSYNC_OWNER:
+		var node_path: String = request[ENUMS.MESSAGE_DATA.VALUE]
+		var owner_id = request[ENUMS.MESSAGE_DATA.VALUE2] if request.size() >= 4 else null
+		# Use delayed mechanism - will retry after a frame if node doesn't exist
+		session_controller.set_gdsync_owner_delayed(node_path, owner_id)
+		return
+
+	# For all other message types, use the standard process_message
+	request_processor.process_message(request)
 
 
 func _process_incoming_packet_as_host(from_peer: int, bytes: PackedByteArray) -> void:
@@ -918,6 +936,12 @@ func _set_owner_request(from: Client, request: Array) -> void:
 			local_owner_cache.erase(node_path)
 	else:
 		local_owner_cache[node_path] = owner_id
+
+	# Update the HOST's own session_controller with the ownership info
+	# This is needed because the host doesn't receive its own messages
+	var node: Node = get_node_or_null(node_path)
+	if node != null:
+		session_controller.set_gdsync_owner_remote(node, owner_id)
 
 	for client_id in lobby_client_table:
 		_send_message(
