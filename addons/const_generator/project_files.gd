@@ -17,6 +17,7 @@ class Scripts:
 	const MULTIPLAYER_CARD_MANAGER = "res://scenes/Multiplayer/MultiplayerGame/multiplayer_card_manager.gd"
 	const MULTIPLAYER_LOBBY = "res://scenes/Multiplayer/Lobby/multiplayer_lobby.gd"
 	const MULTIPLAYER_OPTIONS = "res://scenes/MainMenuScene/Multiplayer/multiplayer_options.gd"
+	const MULTIPLAYER_TYPES = "res://scenes/Multiplayer/multiplayer_types.gd"
 	const OPTIONS_DIALOG_SCRIPT = "res://scenes/MainMenuScene/Options/options_dialog_script.gd"
 	const PLAYER_IN_LOBBY = "res://scenes/Multiplayer/Lobby/player_in_lobby.gd"
 	const SCENE_MANAGER = "res://scene_manager.gd"

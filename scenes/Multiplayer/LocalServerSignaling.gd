@@ -330,7 +330,9 @@ func _on_lobby_joined(
 	)
 
 	current_room_code = code
-	is_host = false
+	# Only set is_host = false if we're NOT the host (host_id != your_id)
+	# The host also receives lobby_joined after lobby_created, don't overwrite
+	is_host = (host_id == your_id)
 
 	# IDs should already match GDSync's - just update local references
 	my_current_client.client_id = your_id
@@ -452,16 +454,29 @@ func _on_peer_left_signaling(peer_id: int) -> void:
 func _on_game_packet_received(from_peer: int, packet_base64: String) -> void:
 	# Decode and process the packet
 	var bytes = Marshalls.base64_to_raw(packet_base64)
+
+	# Debug logging
+	logger.log_info("Received packet from peer %d: base64_len=%d, decoded_len=%d" % [from_peer, packet_base64.length(), bytes.size()])
+	if packet_base64.length() < 100:
+		logger.log_info("  base64: %s" % packet_base64)
+
 	if bytes.is_empty():
 		logger.log_warning("Received empty packet from peer %d" % from_peer)
+		return
+
+	if bytes.size() < 4:
+		logger.log_error("Packet too short (%d bytes) from peer %d, base64: %s" % [bytes.size(), from_peer, packet_base64.substr(0, 50)])
 		return
 
 	if is_host:
 		# Host receives packet from client - process and potentially broadcast
 		_process_incoming_packet_as_host(from_peer, bytes)
 	else:
-		# Client receives packet from host - just unpack and process
-		request_processor.unpack_packet(bytes)
+		# Client receives packet from host - process locally
+		# Note: We can't use request_processor.unpack_packet() directly because it has
+		# a bug where local mode doesn't skip the non-local decryption path.
+		# Instead, we process the raw array of requests directly.
+		_process_incoming_packet_as_client(bytes)
 
 
 # =============================================================================
@@ -485,6 +500,9 @@ func _process_host() -> void:
 	# but ConnectionController._process() skips LOCAL mode, so we must handle it here
 	_process_host_server_requests()
 
+	# Process host's own RELIABLE/UNRELIABLE requests (e.g., GDSync.call_func())
+	_process_host_broadcast_requests()
+
 	# Send queued requests to clients via HTTP
 	# Like original LocalServer, send raw arrays (not using package_requests which wraps in Dictionary)
 	for client_id in lobby_client_table.keys():
@@ -497,6 +515,7 @@ func _process_host() -> void:
 		if not client.requests_RUDP.is_empty():
 			var pkt = var_to_bytes(client.requests_RUDP)
 			var packet_base64 = Marshalls.raw_to_base64(pkt)
+			logger.log_info("HOST sending RELIABLE to %d: bytes=%d, base64_len=%d, requests=%d" % [client.client_id, pkt.size(), packet_base64.length(), client.requests_RUDP.size()])
 			_signaling.broadcast_packet(packet_base64, client.client_id)
 			client.requests_RUDP.clear()
 
@@ -504,6 +523,7 @@ func _process_host() -> void:
 		if not client.requests_UDP.is_empty():
 			var pkt = var_to_bytes(client.requests_UDP)
 			var packet_base64 = Marshalls.raw_to_base64(pkt)
+			logger.log_info("HOST sending UNRELIABLE to %d: bytes=%d, base64_len=%d" % [client.client_id, pkt.size(), packet_base64.length()])
 			_signaling.broadcast_packet(packet_base64, client.client_id)
 			client.requests_UDP.clear()
 
@@ -531,6 +551,59 @@ func _process_host_server_requests() -> void:
 	if message.has(ENUMS.PACKET_VALUE.SERVER_REQUESTS):
 		for request in message[ENUMS.PACKET_VALUE.SERVER_REQUESTS]:
 			_process_server_request(host_client, request)
+
+
+## Process HOST's own RELIABLE/UNRELIABLE requests from request_processor.
+## When the host calls GDSync.call_func(), GDSync.sync_var(), etc.,
+## requests are queued in request_processor but never sent (since
+## ConnectionController is disabled in LOCAL mode). We handle them here.
+func _process_host_broadcast_requests() -> void:
+	var has_reliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.RELIABLE)
+	var has_unreliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+
+	if not has_reliable and not has_unreliable:
+		return
+
+	# Get all clients except self
+	var target_clients: Array[Client] = []
+	for client_id in lobby_client_table.keys():
+		if client_id != my_current_client.client_id:
+			target_clients.append(lobby_client_table[client_id])
+
+	if target_clients.is_empty():
+		# No other clients - just clear the queues
+		if has_reliable:
+			request_processor.package_requests(ENUMS.PACKET_CHANNEL.RELIABLE)
+		if has_unreliable:
+			request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+		return
+
+	var host_client: Client = lobby_client_table.get(my_current_client.client_id)
+
+	# Package and broadcast RELIABLE requests
+	if has_reliable:
+		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.RELIABLE)
+		var message: Dictionary = bytes_to_var(pkt)
+
+		# Extract CLIENT_REQUESTS and queue to each client
+		if message.has(ENUMS.PACKET_VALUE.CLIENT_REQUESTS):
+			for request in message[ENUMS.PACKET_VALUE.CLIENT_REQUESTS]:
+				for client in target_clients:
+					if connection_controller.USE_SENDER_ID:
+						_set_sender_id(host_client, client, true)
+					_put_request(request, client, true)
+
+	# Package and broadcast UNRELIABLE requests
+	if has_unreliable:
+		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+		var message: Dictionary = bytes_to_var(pkt)
+
+		if message.has(ENUMS.PACKET_VALUE.CLIENT_REQUESTS):
+			for request in message[ENUMS.PACKET_VALUE.CLIENT_REQUESTS]:
+				for client in target_clients:
+					if connection_controller.USE_SENDER_ID:
+						_set_sender_id(host_client, client, false)
+					_put_request(request, client, false)
 
 
 func _process_client() -> void:
@@ -563,6 +636,42 @@ func _process_client() -> void:
 		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
 		_signaling.broadcast_packet(packet_base64, host_id)
+
+
+## Process a packet received by the CLIENT from the HOST
+## The packet is a raw Array of requests (same format as original LocalServer)
+func _process_incoming_packet_as_client(bytes: PackedByteArray) -> void:
+	var packet: Variant = bytes_to_var(bytes)
+
+	# In local mode, host sends raw Array of requests
+	var requests: Array = []
+	if packet is Array:
+		requests = packet
+	elif packet is Dictionary:
+		# Fallback: Dictionary format from package_requests
+		if packet.has(ENUMS.PACKET_VALUE.CLIENT_REQUESTS):
+			requests = packet[ENUMS.PACKET_VALUE.CLIENT_REQUESTS]
+	else:
+		logger.log_error("Unexpected packet type from host: %s" % typeof(packet))
+		return
+
+	# Process each request using RequestProcessor's internal methods
+	for request in requests:
+		if not request is Array or request.is_empty():
+			continue
+
+		var request_type: int = request[ENUMS.DATA.REQUEST_TYPE]
+		match request_type:
+			ENUMS.REQUEST_TYPE.SET_VARIABLE:
+				request_processor.set_variable(request)
+			ENUMS.REQUEST_TYPE.SET_VARIABLE_CACHED:
+				request_processor.set_variable_cached(request)
+			ENUMS.REQUEST_TYPE.CALL_FUNCTION:
+				request_processor.call_function(request)
+			ENUMS.REQUEST_TYPE.CALL_FUNCTION_CACHED:
+				request_processor.call_function_cached(request)
+			ENUMS.REQUEST_TYPE.MESSAGE:
+				request_processor.process_message(request)
 
 
 func _process_incoming_packet_as_host(from_peer: int, bytes: PackedByteArray) -> void:
