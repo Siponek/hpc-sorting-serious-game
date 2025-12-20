@@ -160,7 +160,7 @@ func get_my_client_id() -> int:
 # --- GDSync Signal Handlers (Internal) ---
 func _on_gdsync_connected():
 	local_client_id = GDSync.get_client_id()
-	# logger.log_info("Connected to multiplayer. Client ID: ", local_client_id)
+	logger.log_info("Connected to multiplayer. Client ID: ", local_client_id)
 	signals.connected_to_multiplayer.emit()
 
 
@@ -230,6 +230,14 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_id here too
 	# logger.log_info("Successfully joined lobby: ", lobby_name_id)
 	current_lobby_name_id = lobby_name_id
+	# Always update local_client_id when joining a lobby
+	# This is critical for clients who don't receive the "connected" signal in local/web mode
+	local_client_id = GDSync.get_client_id()
+	# Also update the host ID - clients need this to call functions on the host
+	actual_lobby_host_id = GDSync.get_host()
+	logger.log_info(
+		"Lobby joined. local_client_id: ", local_client_id, ", host_id: ", actual_lobby_host_id
+	)
 	# Don't override host status if we're already the host (e.g., host "joining" their own lobby)
 	if not is_currently_host:
 		is_currently_host = GDSync.is_host()

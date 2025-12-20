@@ -1,6 +1,52 @@
 extends "res://scenes/CardScene/scripts/card_manager.gd"
 class_name MultiplayerCardManager
 
+
+## Inner class for card state transport protocol
+class CardState:
+	var value: int
+	var index: int
+	var original_index: int
+	var in_container: bool
+	var in_buffer: bool
+	var buffer_owner: int
+
+	func _init(
+		p_value: int,
+		p_index: int = -1,
+		p_original_index: int = -1,
+		p_in_container: bool = true,
+		p_in_buffer: bool = false,
+		p_buffer_owner: int = -1
+	) -> void:
+		value = p_value
+		index = p_index
+		original_index = p_original_index
+		in_container = p_in_container
+		in_buffer = p_in_buffer
+		buffer_owner = p_buffer_owner
+
+	func to_dict() -> Dictionary:
+		return {
+			"value": value,
+			"index": index,
+			"original_index": original_index,
+			"in_container": in_container,
+			"in_buffer": in_buffer,
+			"buffer_owner": buffer_owner
+		}
+
+	static func from_dict(data: Dictionary) -> CardState:
+		return CardState.new(
+			data.get("value", 0),
+			data.get("index", -1),
+			data.get("original_index", -1),
+			data.get("in_container", true),
+			data.get("in_buffer", false),
+			data.get("buffer_owner", -1)
+		)
+
+
 # Multiplayer-specific variables
 var is_host: bool = false
 var my_client_id: int = -1
@@ -37,8 +83,8 @@ func _ready():
 		VarTreeHandler.handle_var_tree(self, var_tree_node_path, _setup_var_tree)
 
 
+### Client: Set up structure without generating cards
 func _initialize_client_structure():
-	"""Client: Set up structure without generating cards"""
 	logger.log_info("Client initializing structure")
 
 	card_colors.map(func(color: Color): return color.lightened(0.1))
@@ -74,12 +120,14 @@ func setup_multiplayer_sync():
 	GDSync.expose_func(self.sync_card_left_buffer)
 	GDSync.expose_func(self.sync_timer_state)
 	GDSync.expose_func(self.sync_game_finished)
+	# Host function that clients can call to request current state
+	GDSync.expose_func(self.send_current_state_to)
 
 	logger.log_info("Sync functions exposed")
 
 
+### Host: Send complete initial game state to all clients
 func broadcast_initial_game_state():
-	"""Host: Send complete initial game state to all clients"""
 	if not is_host:
 		return
 
@@ -88,16 +136,8 @@ func broadcast_initial_game_state():
 	var card_states: Array[Dictionary] = []
 	for i in range(cards_array.size()):
 		var card = cards_array[i]
-		card_states.append(
-			{
-				"value": card.value,
-				"index": i,
-				"original_index": card.original_index,
-				"in_container": true,
-				"in_buffer": false,
-				"buffer_owner": - 1
-			}
-		)
+		var state = CardState.new(card.value, i, card.original_index)
+		card_states.append(state.to_dict())
 
 	GDSync.call_func(
 		self.sync_complete_game_state,
@@ -107,8 +147,8 @@ func broadcast_initial_game_state():
 	logger.log_info("Initial state broadcasted")
 
 
+### Client: Request current game state from host
 func request_game_state_from_host():
-	"""Client: Request current game state from host"""
 	logger.log_info("Requesting game state from host")
 
 	if is_host:
@@ -131,46 +171,24 @@ func send_current_state_to(requesting_client_id: int):
 	for i in range(card_container.get_child_count()):
 		var child = card_container.get_child(i)
 		if child is Card:
-			card_states.append(
-				{
-					"value": child.value,
-					"index": i,
-					"original_index": child.original_index,
-					"in_container": true,
-					"in_buffer": false,
-					"buffer_owner": - 1
-				}
-			)
+			var state = CardState.new(child.value, i, child.original_index)
+			card_states.append(state.to_dict())
 
 	# Cards in MY buffer
 	for slot_idx in range(slots.size()):
 		var slot = slots[slot_idx]
 		if slot.occupied_by and slot.occupied_by is Card:
 			var card = slot.occupied_by
-			card_states.append(
-				{
-					"value": card.value,
-					"index": - 1,
-					"original_index": card.original_index,
-					"in_container": false,
-					"in_buffer": true,
-					"buffer_owner": my_client_id
-				}
+			var state = CardState.new(
+				card.value, -1, card.original_index, false, true, my_client_id
 			)
+			card_states.append(state.to_dict())
 
 	# Cards in OTHER players' buffers
 	for card_value in cards_in_other_buffers:
 		var owner_id = cards_in_other_buffers[card_value]
-		card_states.append(
-			{
-				"value": card_value,
-				"index": - 1,
-				"original_index": - 1,
-				"in_container": false,
-				"in_buffer": true,
-				"buffer_owner": owner_id
-			}
-		)
+		var state = CardState.new(card_value, -1, -1, false, true, owner_id)
+		card_states.append(state.to_dict())
 
 	GDSync.call_func_on(
 		requesting_client_id,

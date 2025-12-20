@@ -516,7 +516,7 @@ func _process_host() -> void:
 		if not client.requests_RUDP.is_empty():
 			var pkt = var_to_bytes(client.requests_RUDP)
 			var packet_base64 = Marshalls.raw_to_base64(pkt)
-			logger.log_info("HOST sending RELIABLE to %d: bytes=%d, base64_len=%d, requests=%d" % [client.client_id, pkt.size(), packet_base64.length(), client.requests_RUDP.size()])
+			logger.log_debug("HOST sending RELIABLE to %d: bytes=%d, base64_len=%d, requests=%d" % [client.client_id, pkt.size(), packet_base64.length(), client.requests_RUDP.size()])
 			_signaling.broadcast_packet(packet_base64, client.client_id)
 			client.requests_RUDP.clear()
 
@@ -524,7 +524,7 @@ func _process_host() -> void:
 		if not client.requests_UDP.is_empty():
 			var pkt = var_to_bytes(client.requests_UDP)
 			var packet_base64 = Marshalls.raw_to_base64(pkt)
-			logger.log_info("HOST sending UNRELIABLE to %d: bytes=%d, base64_len=%d" % [client.client_id, pkt.size(), packet_base64.length()])
+			logger.log_debug("HOST sending UNRELIABLE to %d: bytes=%d, base64_len=%d" % [client.client_id, pkt.size(), packet_base64.length()])
 			_signaling.broadcast_packet(packet_base64, client.client_id)
 			client.requests_UDP.clear()
 
@@ -621,21 +621,25 @@ func _process_client() -> void:
 	if has_setup:
 		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.SETUP)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
+		logger.log_debug("CLIENT sending SETUP to host %d: bytes=%d" % [host_id, pkt.size()])
 		_signaling.broadcast_packet(packet_base64, host_id)
 
 	if has_server:
 		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.SERVER)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
+		logger.log_debug("CLIENT sending SERVER to host %d: bytes=%d" % [host_id, pkt.size()])
 		_signaling.broadcast_packet(packet_base64, host_id)
 
 	if has_reliable:
 		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.RELIABLE)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
+		logger.log_debug("CLIENT sending RELIABLE to host %d: bytes=%d" % [host_id, pkt.size()])
 		_signaling.broadcast_packet(packet_base64, host_id)
 
 	if has_unreliable:
 		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
+		logger.log_debug("CLIENT sending UNRELIABLE to host %d: bytes=%d" % [host_id, pkt.size()])
 		_signaling.broadcast_packet(packet_base64, host_id)
 
 
@@ -706,7 +710,50 @@ func _process_incoming_packet_as_host(from_peer: int, bytes: PackedByteArray) ->
 
 	if message.has(ENUMS.PACKET_VALUE.CLIENT_REQUESTS):
 		for request in message[ENUMS.PACKET_VALUE.CLIENT_REQUESTS]:
-			_broadcast_request(request, from, true) # Always reliable over HTTP
+			# Check if this request targets the host
+			var target_client: int = int(request[int(ENUMS.DATA.TARGET_CLIENT)])
+
+			if target_client < 0:
+				# Broadcast to all: process locally on host AND forward to other clients
+				logger.log_info("Host processing BROADCAST request from %d (type=%d)" % [from.client_id, request[ENUMS.DATA.REQUEST_TYPE]])
+				_process_client_request_locally(request, from)
+				_broadcast_request(request, from, true)
+			elif target_client == my_current_client.client_id:
+				# Request specifically for the host - process it locally only
+				logger.log_info("Host processing TARGETED request from %d (type=%d)" % [from.client_id, request[ENUMS.DATA.REQUEST_TYPE]])
+				_process_client_request_locally(request, from)
+			else:
+				# Request is for other client(s) - just forward it
+				_broadcast_request(request, from, true) # Always reliable over HTTP
+
+
+## Process a CLIENT_REQUEST locally on the host (when the request targets the host)
+func _process_client_request_locally(request: Array, from: Client) -> void:
+	if request.is_empty():
+		return
+
+	var request_type: int = request[ENUMS.DATA.REQUEST_TYPE]
+	logger.log_debug(
+		"Processing client request locally: type=%d from=%d" % [request_type, from.client_id]
+	)
+
+	# Set the sender ID so the host knows who sent the request
+	if connection_controller.USE_SENDER_ID:
+		session_controller.sender_id = from.client_id
+
+	match request_type:
+		ENUMS.REQUEST_TYPE.SET_VARIABLE:
+			request_processor.set_variable(request)
+		ENUMS.REQUEST_TYPE.SET_VARIABLE_CACHED:
+			request_processor.set_variable_cached(request)
+		ENUMS.REQUEST_TYPE.CALL_FUNCTION:
+			request_processor.call_function(request)
+		ENUMS.REQUEST_TYPE.CALL_FUNCTION_CACHED:
+			request_processor.call_function_cached(request)
+		ENUMS.REQUEST_TYPE.MESSAGE:
+			request_processor.process_message(request)
+		_:
+			logger.log_warning("Unknown client request type: %d" % request_type)
 
 
 # =============================================================================
