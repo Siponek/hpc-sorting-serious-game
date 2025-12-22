@@ -38,12 +38,12 @@ func _ready():
 			btn.button_down.connect(func(): _on_button_pressed(btn))
 			btn.button_up.connect(func(): _on_button_released(btn))
 			btn.gui_input.connect(func(event): _on_button_gui_input(event, btn))
-			
+
 			btn.pivot_offset = Vector2(int(btn.size.x / 2) + cumulative_pivot_y_offset + int(btn.size.y / 2), int(btn.size.y / 2))
 			# Add the current button's full height to the accumulator for the next button.
 			cumulative_pivot_y_offset -= btn.size.y
 			btn.scale = Vector2(1, 1)
-			# We need to store original position and rotation for the button but with regards to the 
+			# We need to store original position and rotation for the button but with regards to the
 			btn.set_meta("original_container_offset", btn.global_position - self.global_position)
 			btn.set_meta("current_rotation", 0)
 
@@ -56,17 +56,17 @@ func _open_instantiated_dialog(dialog_instance: Window) -> void:
 	if dialog_open:
 		print("Dialog already open, cannot open another.")
 		return
-		
+
 	dialog_open = true
 	add_child(dialog_instance)
-	
+
 	# Setup window properties
 	dialog_instance.close_requested.connect(func():
 		dialog_instance.hide()
 		dialog_instance.queue_free()
 		dialog_open=false
 	)
-	
+
 	# Show the window
 	dialog_instance.popup_centered()
 
@@ -97,18 +97,18 @@ func _on_button_mouse_entered(button: Button):
 	# Create a new tween for mouse enter effect.
 	var tween: Tween = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	tween.set_parallel(true)
-	
+
 	# Scale, rotate and color change
 	tween.tween_property(button, "scale", Vector2(1.1, 1.1), 0.2)
 	tween.tween_property(button, "rotation_degrees", button.get_meta("current_rotation") + 2, 0.2)
-	
+
 	var screen_width = get_viewport_rect().size.x
 	var screen_height = get_viewport_rect().size.y
 	var button_right_edge
 	var distance_to_edge
 	var current_side_vector_move
 	var min_distance = 5.0 # Minimum distance to use when button passes an edge
-	
+
 	match button.get_meta("current_side"):
 		CircularPathState.MOVING_RIGHT:
 			button_right_edge = button.global_position.x + button.size.x
@@ -134,8 +134,8 @@ func _on_button_mouse_entered(button: Button):
 			else:
 				distance_to_edge = screen_height - button_right_edge
 			current_side_vector_move = Vector2.DOWN
-	
-	
+
+
 	# Mini game ;>
 	if distance_to_edge >= EDGE_MARGIN:
 		# Move 10 pixels right
@@ -164,14 +164,14 @@ func _on_button_mouse_entered(button: Button):
 		button.add_theme_constant_override("shadow_offset_x", 3)
 		button.add_theme_constant_override("shadow_offset_y", 3)
 		button.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.3))
-	
+
 	enter_tweens[button] = tween
 
 func _on_button_mouse_exited(button: Button):
 	# Note the EASE_IN instead of EASE_OUT for natural reversal feel
 	var tween = create_tween().set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_BACK)
 	tween.set_parallel(true)
-	
+
 	# Same animations but with reversed timing
 	tween.tween_property(button, "scale", Vector2(1, 1), 0.3)
 	var current_meta_rotation = button.get_meta("current_rotation")
@@ -194,8 +194,8 @@ func _on_button_pressed(button: Button):
 	tween.set_parallel(true)
 	tween.tween_property(button, "scale", Vector2(0.9, 0.9), 0.1)
 	tween.tween_property(button, "modulate", Color(0.9, 0.9, 0.9, 1.0), 0.1)
-	
-	
+
+
 	# Add a brief flash effect.
 	var flash = ColorRect.new()
 	flash.color = Color(1, 1, 1, 0.3)
@@ -206,23 +206,23 @@ func _on_button_pressed(button: Button):
 	var flash_tween = create_tween()
 	flash_tween.tween_property(flash, "modulate:a", 0.0, 0.2)
 	flash_tween.tween_callback(flash.queue_free)
-	
+
 
 func _on_button_released(button: Button):
 	kill_tweens_from_dict(enter_tweens, button)
 	kill_tweens_from_dict(exit_tweens, button)
-	
+
 	# Create a tween for the button release effect
 	var tween = create_tween()
-	
+
 	# First step: Bounce out with elastic motion (larger than normal)
 	tween.tween_property(button, "scale", Vector2(1.15, 1.15), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
-	
+
 	# Second step: Return to normal size with a slight delay
 	tween.chain()
 	tween.tween_interval(0.1) # Small delay for visual effect
 	tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	
+
 	# Optional: Restore normal color if you had changed it
 	tween.parallel().tween_property(button, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.2)
 
@@ -238,7 +238,7 @@ func _on_button_gui_input(event: InputEvent, button: Button):
 		var tween = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 		tween.tween_property(button, "position", left_position, 0.3)
 		tween.tween_property(button, "rotation", 0, 0.3)
-		
+
 		# Play a click sound (optional)
 		# if $ClickSound: $ClickSound.play()
 
@@ -272,5 +272,5 @@ func _setup_var_tree(var_tree: VarTree) -> void:
 	var_tree.mount_var(self, "IDs", {
 		"font_color": Color.SEASHELL,
 		"format_callback": func(_value: Variant) -> String:
-			return str(ConnectionManager.get_player_list().keys())
+			return str(ConnectionManager.get_player_list().get_client_ids())
 	})
