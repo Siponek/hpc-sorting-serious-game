@@ -31,10 +31,13 @@ HandlerFunc = Callable[[Peer, dict[str, Any]], Awaitable[dict[str, Any]]]
 
 async def send_to_peer(peer: Peer, message: dict[str, Any]) -> bool:
     """Send a JSON message to a peer via WebSocket or SSE queue."""
+    msg_type = message.get("t", "unknown")
+
     # Try WebSocket first
     if peer.ws and not peer.ws.closed:
         try:
             await peer.ws.send_json(message)
+            print(f"[LOBBY] Sent {msg_type} to peer {peer.peer_id} via WS")
             return True
         except Exception as e:
             print(f"[LOBBY] Error sending WS to peer {peer.peer_id}: {e}")
@@ -44,11 +47,13 @@ async def send_to_peer(peer: Peer, message: dict[str, Any]) -> bool:
     if peer.sse_queue:
         try:
             await peer.sse_queue.put(message)
+            print(f"[LOBBY] Queued {msg_type} for peer {peer.peer_id} via SSE (queue_size={peer.sse_queue.qsize()})")
             return True
         except Exception as e:
             print(f"[LOBBY] Error queueing SSE for peer {peer.peer_id}: {e}")
             return False
 
+    print(f"[LOBBY] No transport for peer {peer.peer_id} (ws={peer.ws is not None}, sse={peer.sse_queue is not None})")
     return False
 
 
@@ -58,6 +63,10 @@ async def broadcast_to_lobby(
     exclude_peer_id: int | None = None
 ) -> None:
     """Broadcast a message to all peers in a lobby, optionally excluding one."""
+    msg_type = message.get("t", "unknown")
+    peer_ids = list(lobby.peers.keys())
+    print(f"[LOBBY] Broadcasting {msg_type} to lobby {lobby.code} (peers={peer_ids}, exclude={exclude_peer_id})")
+
     for peer_id, peer in lobby.peers.items():
         if peer_id != exclude_peer_id:
             await send_to_peer(peer, message)

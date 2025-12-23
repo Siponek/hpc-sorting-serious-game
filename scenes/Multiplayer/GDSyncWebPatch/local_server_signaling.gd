@@ -113,9 +113,10 @@ func reset_multiplayer() -> void:
 
 
 func close_lobby() -> void:
-	logger.log_info("Explicitly closing lobby.")
+	logger.log_info("Explicitly closing lobby (is_host=%s, room_code=%s)" % [is_host, current_room_code])
 
-	if is_host and current_room_code != "":
+	# Always notify the signaling server when leaving, regardless of host/client
+	if current_room_code != "":
 		_signaling.leave_lobby()
 
 	reset_multiplayer()
@@ -437,17 +438,20 @@ func _on_peer_joined_signaling(peer_id: int, player_data: Dictionary) -> void:
 
 
 func _on_peer_left_signaling(peer_id: int) -> void:
-	logger.log_info("Peer left via signaling: %d" % peer_id)
+	logger.log_info("Peer left via signaling: %d (in lobby_client_table=%s)" % [peer_id, lobby_client_table.has(peer_id)])
 
 	if lobby_client_table.has(peer_id):
 		lobby_client_table.erase(peer_id)
+		logger.log_info("Removed peer %d from lobby_client_table" % peer_id)
 	if peer_client_table.has(peer_id):
 		peer_client_table.erase(peer_id)
+		logger.log_info("Removed peer %d from peer_client_table" % peer_id)
 
 	# Rebuild lobby targets
 	for cid in lobby_client_table:
 		lobby_client_table[cid].construct_lobby_targets(lobby_client_table)
 
+	logger.log_info("Emitting GDSync.client_left for peer %d" % peer_id)
 	GDSync.client_left.emit.call_deferred(peer_id)
 
 
@@ -456,9 +460,9 @@ func _on_game_packet_received(from_peer: int, packet_base64: String) -> void:
 	var bytes = Marshalls.base64_to_raw(packet_base64)
 
 	# Debug logging
-	logger.log_info("Received packet from peer %d: base64_len=%d, decoded_len=%d" % [from_peer, packet_base64.length(), bytes.size()])
+	logger.log_debug("Received packet from peer %d: base64_len=%d, decoded_len=%d" % [from_peer, packet_base64.length(), bytes.size()])
 	if packet_base64.length() < 100:
-		logger.log_info("  base64: %s" % packet_base64)
+		logger.log_debug("  base64: %s" % packet_base64)
 
 	if bytes.is_empty():
 		logger.log_warning("Received empty packet from peer %d" % from_peer)

@@ -113,6 +113,7 @@ func _parse_sse_event(block: String) -> void:
 
 
 func _handle_sse_event(event_type: String, data: Dictionary) -> void:
+	logger.log_info("SSE event received: type=%s data=%s" % [event_type, str(data)])
 	match event_type:
 		EVT_WELCOME:
 			var peer_id = data.get("peer_id", -1)
@@ -125,7 +126,7 @@ func _handle_sse_event(event_type: String, data: Dictionary) -> void:
 			peer_joined.emit(peer_id, player_data)
 		EVT_PEER_LEFT:
 			var peer_id = data.get("id", -1)
-			logger.log_info("Peer left: " + str(peer_id))
+			logger.log_info("Peer left: " + str(peer_id) + " - emitting peer_left signal")
 			peer_left.emit(peer_id)
 		EVT_LOBBY_CLOSED:
 			var code = data.get("code", "")
@@ -387,12 +388,13 @@ func leave_lobby() -> void:
 		logger.log_warning("Not in a lobby")
 		return
 
+	logger.log_info("Sending leave_lobby request to server (peer_id=%d, lobby=%s)" % [my_peer_id, current_lobby_code])
 	var body = {"peer_id": my_peer_id}
 	var result = await _http_post("/api/lobby/leave", body)
 
 	if result and result.get("success", false):
 		var code = result.get("code", "")
-		logger.log_info("Left lobby: " + code)
+		logger.log_info("Successfully left lobby: " + code)
 		current_lobby_code = ""
 		is_host = false
 		lobby_left.emit(code)
@@ -400,6 +402,7 @@ func leave_lobby() -> void:
 		var err_msg = "Failed to leave lobby"
 		if result:
 			err_msg = result.get("message", err_msg)
+		logger.log_error("Leave lobby failed: " + err_msg)
 		error_received.emit("LEAVE_FAILED", err_msg)
 
 

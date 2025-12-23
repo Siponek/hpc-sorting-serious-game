@@ -124,10 +124,10 @@ func join_existing_lobby(lobby_id_to_join: String, password: String = ""):
 
 func leave_current_lobby():
 	if current_lobby_name_id != "":
-		# logger.log_info("Leaving lobby: ", current_lobby_name_id)
-		# For web platform, explicitly close the room on the signaling server
-		# if we're the host. This uses the new close_lobby() function in LocalServerWebPatch.
-		if OS.has_feature("web") and is_currently_host:
+		logger.log_info("Leaving lobby: ", current_lobby_name_id)
+		# For web platform, notify the signaling server via HTTP (for BOTH host and clients)
+		# This ensures the server broadcasts peer_left to all remaining peers
+		if OS.has_feature("web"):
 			var local_server = GDSync.get_node_or_null("LocalServer")
 			if local_server and local_server.has_method("close_lobby"):
 				local_server.close_lobby()
@@ -284,14 +284,18 @@ func _on_gdsync_client_joined(client_id: int):
 
 
 func _on_gdsync_client_left(client_id: int):
+	logger.log_info("_on_gdsync_client_left called for client_id: ", client_id, ", has_player=", connected_clients.has_player(client_id))
 	if connected_clients.has_player(client_id):
 		logger.log_info("Client left lobby. ID: ", client_id)
 		connected_clients.remove_player(client_id)
+		logger.log_info("Emitting player_list_updated with ", connected_clients.size(), " players")
 		signals.player_list_updated.emit(connected_clients)
 		signals.player_left_lobby.emit(client_id)
 
 		if client_id == local_client_id:
 			_reset_lobby_state()
+	else:
+		logger.log_warning("Client ", client_id, " not found in connected_clients (size=", connected_clients.size(), ")")
 
 
 func _on_gdsync_lobby_closed():
