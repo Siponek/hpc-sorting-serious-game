@@ -308,30 +308,30 @@ func adjust_container_spacing():
 	var first_button_offset: int = int((CARD_WIDTH - Constants.BUTTON_WIDTH) / 2.0)
 	$SwapButtonPanel/CenterContainer.add_theme_constant_override("margin_left", first_button_offset)
 
-	# logger.log_info("Max spacing set to: " + str(max_spacing))
-	# logger.log_info("Card spacing set to: " + str(card_spacing))
-	# logger.log_info("Button spacing set to: " + str(button_spacing))
-	# logger.log_info("Button container offset: " + str(first_button_offset))
+func generate_completed_card_array(card_values: Array[int], name_prefix: String = "Card_") -> Array[Card]:
+	# Step 1: Create card instances
+	var cards: Array[Card] = []
+	for _i in card_values.size():
+		cards.append(card_scene.instantiate())
 
-func generate_completed_card_array(_values_for_cards: Array[int], _name_prefix: String = "Card_") -> Array[Card]:
-	var array_to_be_filled: Array[Card] = []
+	# Step 2: Apply values and names
+	for i in cards.size():
+		cards[i].value = card_values[i]
+		cards[i].name = "%s%d_Val_%d" % [name_prefix, i, card_values[i]]
 
+	# Step 3: Apply colors
+	cards.map(func(card):
+		card.card_color=card_colors[card.value % card_colors.size()]
+		return card
+	)
 
-	for i in range(num_cards):
-		var card_instance = card_scene.instantiate()
-		card_instance.set_card_value(_values_for_cards[i])
-		card_instance.set_card_container_ref(card_container) # Set the reference
-		card_instance.name = _name_prefix + str(i) + "_Val_" + str(_values_for_cards[i])
-		var new_card_style = StyleBoxFlat.new()
-		new_card_style.bg_color = card_colors[card_instance.value % card_colors.size()]
-		card_instance.set_base_style(new_card_style)
-		# Add card to the container
-		# Save the initial relative position and the child index
-		card_instance.container_relative_position = card_instance.position
-		card_instance.original_index = card_instance.get_index()
+	# Step 4: Set container refs
+	cards.map(func(card):
+		card.set_card_container_ref(card_container)
+		return card
+	)
 
-		array_to_be_filled.append(card_instance)
-	return array_to_be_filled
+	return cards
 
 func create_buffer_slots(buffer_size: int = Settings.player_buffer_count) -> Array:
 	# Clamp to valid range [1, num_cards]
