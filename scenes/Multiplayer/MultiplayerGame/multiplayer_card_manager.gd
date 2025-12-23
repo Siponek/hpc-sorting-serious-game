@@ -53,8 +53,9 @@ var my_client_id: int = -1
 var game_state_synced: bool = false
 @onready var buffer_size = Settings.player_buffer_count
 # Track which cards are in OTHER players' buffers
-var cards_in_other_buffers: Dictionary = {} # card_value: player_id
+var cards_in_other_buffers: Dictionary = {}  # card_value: player_id
 const var_tree_node_path: NodePath = "../CanvasLayer/VarTreeMainMenu"
+
 
 # TODO The cards order is not syncing properly, checkout before cloude update
 # To see if the syncing mechanism makes sense.
@@ -80,7 +81,9 @@ func _ready():
 		await get_tree().create_timer(0.5).timeout
 		request_game_state_from_host()
 	if VarTreeHandler.should_enable_var_tree():
-		VarTreeHandler.handle_var_tree(self, var_tree_node_path, _setup_var_tree)
+		VarTreeHandler.handle_var_tree(
+			self, var_tree_node_path, _setup_var_tree
+		)
 
 
 ### Client: Set up structure without generating cards
@@ -328,7 +331,7 @@ func sync_card_moved(
 	# Make sure card is visible and draggable
 	card.visible = true
 	card.set_can_drag(true)
-	card.remove_from_slot() # Reset any slot styling
+	card.remove_from_slot()  # Reset any slot styling
 
 	_update_all_card_indices()
 
@@ -539,7 +542,7 @@ func _on_card_placed_in_slot(card, slot):
 	if should_start_timer and timer_node.timer_started:
 		(
 			logger
-			.log_info(
+			. log_info(
 				"First move detected (slot), broadcasting timer start to all clients"
 			)
 		)

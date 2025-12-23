@@ -21,8 +21,10 @@ class Signals:
 		_logger = logger
 		for sig in get_signal_list():
 			var sig_name: String = sig["name"]
-			connect(sig_name, func(_a=null, _b=null, _c=null):
-				_logger.log_info("Signal emitted: ", sig_name)
+			connect(
+				sig_name,
+				func(_a = null, _b = null, _c = null):
+					_logger.log_info("Signal emitted: ", sig_name)
 			)
 
 
@@ -30,7 +32,9 @@ var signals := Signals.new()
 
 # --- State Variables ---
 var current_lobby_name_id: String = ""
-var connected_clients: MultiplayerTypes.PlayersMap = MultiplayerTypes.PlayersMap.new()
+var connected_clients: MultiplayerTypes.PlayersMap = (
+	MultiplayerTypes.PlayersMap.new()
+)
 var is_currently_host: bool = false
 var local_client_id: int = -1
 var actual_lobby_host_id: int = -1
@@ -86,7 +90,7 @@ func ensure_multiplayer_started():
 	if features:
 		(
 			logger
-			.log_info(
+			. log_info(
 				"Web platform detected: Using WebRTC multiplayer via GDSyncWebPatch."
 			)
 		)
@@ -96,7 +100,7 @@ func ensure_multiplayer_started():
 
 	if not GDSync.is_active():
 		# await needed: LocalServerSignaling.start_local_peer() is async
-		await GDSync.start_local_multiplayer() # ignore, it has overwritten _local_server overwritten by Patch
+		await GDSync.start_local_multiplayer()  # ignore, it has overwritten _local_server overwritten by Patch
 		logger.log_info("Started local multiplayer.")
 	else:
 		logger.log_info("Local multiplayer already started or connected.")
@@ -133,8 +137,8 @@ func leave_current_lobby():
 				local_server.close_lobby()
 
 		GDSync.lobby_leave()
-		if GDSync.lobby_get_player_count() < 1: # Check if you are the last one
-			GDSync.lobby_close() # This might trigger _on_gdsync_lobby_closed
+		if GDSync.lobby_get_player_count() < 1:  # Check if you are the last one
+			GDSync.lobby_close()  # This might trigger _on_gdsync_lobby_closed
 		signals.lobby_closed.emit()
 		_reset_lobby_state()
 	else:
@@ -206,7 +210,7 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 	match error:
 		ENUMS.LOBBY_CREATION_ERROR.LOBBY_ALREADY_EXISTS:
 			error_message += "A lobby with this name already exists. Joining instead."
-			ConnectionManager.join_existing_lobby(lobby_name) # Attempt to join the existing lobby
+			ConnectionManager.join_existing_lobby(lobby_name)  # Attempt to join the existing lobby
 		ENUMS.LOBBY_CREATION_ERROR.NAME_TOO_SHORT:
 			error_message += "Name is too short."
 		ENUMS.LOBBY_CREATION_ERROR.NAME_TOO_LONG:
@@ -227,7 +231,7 @@ func _on_gdsync_lobby_creation_failed(lobby_name: String, error: int):
 	signals.lobby_creation_has_failed.emit(lobby_name, error_message)
 
 
-func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_id here too
+func _on_gdsync_lobby_joined(lobby_name_id: String):  # GDSync might pass client_id here too
 	# logger.log_info("Successfully joined lobby: ", lobby_name_id)
 	current_lobby_name_id = lobby_name_id
 	# Always update local_client_id when joining a lobby
@@ -236,7 +240,10 @@ func _on_gdsync_lobby_joined(lobby_name_id: String): # GDSync might pass client_
 	# Also update the host ID - clients need this to call functions on the host
 	actual_lobby_host_id = GDSync.get_host()
 	logger.log_info(
-		"Lobby joined. local_client_id: ", local_client_id, ", host_id: ", actual_lobby_host_id
+		"Lobby joined. local_client_id: ",
+		local_client_id,
+		", host_id: ",
+		actual_lobby_host_id
 	)
 	# Don't override host status if we're already the host (e.g., host "joining" their own lobby)
 	if not is_currently_host:
@@ -284,18 +291,33 @@ func _on_gdsync_client_joined(client_id: int):
 
 
 func _on_gdsync_client_left(client_id: int):
-	logger.log_info("_on_gdsync_client_left called for client_id: ", client_id, ", has_player=", connected_clients.has_player(client_id))
+	logger.log_info(
+		"_on_gdsync_client_left called for client_id: ",
+		client_id,
+		", has_player=",
+		connected_clients.has_player(client_id)
+	)
 	if connected_clients.has_player(client_id):
 		logger.log_info("Client left lobby. ID: ", client_id)
 		connected_clients.remove_player(client_id)
-		logger.log_info("Emitting player_list_updated with ", connected_clients.size(), " players")
+		logger.log_info(
+			"Emitting player_list_updated with ",
+			connected_clients.size(),
+			" players"
+		)
 		signals.player_list_updated.emit(connected_clients)
 		signals.player_left_lobby.emit(client_id)
 
 		if client_id == local_client_id:
 			_reset_lobby_state()
 	else:
-		logger.log_warning("Client ", client_id, " not found in connected_clients (size=", connected_clients.size(), ")")
+		logger.log_warning(
+			"Client ",
+			client_id,
+			" not found in connected_clients (size=",
+			connected_clients.size(),
+			")"
+		)
 
 
 func _on_gdsync_lobby_closed():

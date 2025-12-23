@@ -1,6 +1,7 @@
 class_name MultiplayerTypes
 extends RefCounted
 
+
 ## Data class representing a single player in the lobby
 class PlayerData:
 	extends RefCounted
@@ -10,7 +11,9 @@ class PlayerData:
 	var color: Color = Color.WHITE
 	var is_host: bool = false
 
-	func _init(p_client_id: int = -1, p_name: String = "", p_is_host: bool = false) -> void:
+	func _init(
+		p_client_id: int = -1, p_name: String = "", p_is_host: bool = false
+	) -> void:
 		client_id = p_client_id
 		name = p_name if not p_name.is_empty() else "Player " + str(p_client_id)
 		is_host = p_is_host
@@ -75,7 +78,9 @@ class PlayersMap:
 		var copy := PlayersMap.new()
 		for id in _players:
 			var player: PlayerData = _players[id]
-			var player_copy := PlayerData.new(player.client_id, player.name, player.is_host)
+			var player_copy := PlayerData.new(
+				player.client_id, player.name, player.is_host
+			)
 			player_copy.color = player.color
 			copy.add_player(player_copy)
 		return copy

@@ -86,7 +86,7 @@ func _ready() -> void:
 	logger.log_info("LocalServerSignaling initialized (HTTP mode).")
 	my_current_client = Client.new()
 	my_current_client.valid = true
-	my_current_client.client_id = 1 # Will be updated when connected
+	my_current_client.client_id = 1  # Will be updated when connected
 
 
 func _connect_signaling_signals() -> void:
@@ -113,7 +113,12 @@ func reset_multiplayer() -> void:
 
 
 func close_lobby() -> void:
-	logger.log_info("Explicitly closing lobby (is_host=%s, room_code=%s)" % [is_host, current_room_code])
+	logger.log_info(
+		(
+			"Explicitly closing lobby (is_host=%s, room_code=%s)"
+			% [is_host, current_room_code]
+		)
+	)
 
 	# Always notify the signaling server when leaving, regardless of host/client
 	if current_room_code != "":
@@ -184,7 +189,9 @@ func create_local_lobby(
 
 	# Create lobby via signaling server
 	var player_data = {
-		"name": GDSync.player_get_data(GDSync.get_client_id(), "Username", "Host")
+		"name":
+		GDSync.player_get_data(GDSync.get_client_id(), "Username", "Host")
+		# Create lobby via signaling server
 	}
 	_signaling.create_lobby(lobby_name, public, player_limit, player_data)
 
@@ -203,7 +210,9 @@ func join_lobby(lobby_name: String, password: String) -> void:
 
 	# Join lobby via signaling server
 	var player_data = {
-		"name": GDSync.player_get_data(GDSync.get_client_id(), "Username", "Player")
+		"name":
+		GDSync.player_get_data(GDSync.get_client_id(), "Username", "Player")
+		# Join lobby via signaling server
 	}
 	_signaling.join_lobby(code, player_data)
 
@@ -241,9 +250,19 @@ func is_local_server() -> bool:
 func _on_signaling_connected() -> void:
 	# Server should return the same ID we sent (GDSync's client_id)
 	var gdsync_id = GDSync.get_client_id()
-	assert(_signaling.my_peer_id == gdsync_id,
-		"LocalServerSignaling: Server returned peer_id %d but expected GDSync's client_id %d" % [_signaling.my_peer_id, gdsync_id])
-	logger.log_info("Connected to signaling server with peer_id: %d (matches GDSync)" % _signaling.my_peer_id)
+	assert(
+		_signaling.my_peer_id == gdsync_id,
+		(
+			"LocalServerSignaling: Server returned peer_id %d but expected GDSync's client_id %d"
+			% [_signaling.my_peer_id, gdsync_id]
+		)
+	)
+	logger.log_info(
+		(
+			"Connected to signaling server with peer_id: %d (matches GDSync)"
+			% _signaling.my_peer_id
+		)
+	)
 	# Update our local client references (ID should already match GDSync's)
 	my_current_client.client_id = _signaling.my_peer_id
 	my_current_client.peer_id = _signaling.my_peer_id
@@ -280,10 +299,18 @@ func _on_lobby_created(
 	code: String, lobby_name: String, host_id: int, your_id: int
 ) -> void:
 	var gdsync_id = GDSync.get_client_id()
-	assert(your_id == gdsync_id,
-		"LocalServerSignaling: Lobby created with your_id %d but expected GDSync's client_id %d" % [your_id, gdsync_id])
+	assert(
+		your_id == gdsync_id,
+		(
+			"LocalServerSignaling: Lobby created with your_id %d but expected GDSync's client_id %d"
+			% [your_id, gdsync_id]
+		)
+	)
 	logger.log_info(
-		"Lobby created: %s '%s' (host=%d, me=%d)" % [code, lobby_name, host_id, your_id]
+		(
+			"Lobby created: %s '%s' (host=%d, me=%d)"
+			% [code, lobby_name, host_id, your_id]
+		)
 	)
 
 	current_room_code = code
@@ -322,12 +349,25 @@ func _on_lobby_joined(
 	code: String, lobby_name: String, host_id: int, your_id: int, players: Array
 ) -> void:
 	var gdsync_id = GDSync.get_client_id()
-	assert(your_id == gdsync_id,
-		"LocalServerSignaling: Lobby joined with your_id %d but expected GDSync's client_id %d" % [your_id, gdsync_id])
-	assert(host_id > 0, "LocalServerSignaling: Invalid host_id from signaling server: %d" % host_id)
+	assert(
+		your_id == gdsync_id,
+		(
+			"LocalServerSignaling: Lobby joined with your_id %d but expected GDSync's client_id %d"
+			% [your_id, gdsync_id]
+		)
+	)
+	assert(
+		host_id > 0,
+		(
+			"LocalServerSignaling: Invalid host_id from signaling server: %d"
+			% host_id
+		)
+	)
 	logger.log_info(
-		"Lobby joined: %s '%s' (host=%d, me=%d, players=%d)"
-		% [code, lobby_name, host_id, your_id, players.size()]
+		(
+			"Lobby joined: %s '%s' (host=%d, me=%d, players=%d)"
+			% [code, lobby_name, host_id, your_id, players.size()]
+		)
 	)
 
 	current_room_code = code
@@ -438,7 +478,12 @@ func _on_peer_joined_signaling(peer_id: int, player_data: Dictionary) -> void:
 
 
 func _on_peer_left_signaling(peer_id: int) -> void:
-	logger.log_info("Peer left via signaling: %d (in lobby_client_table=%s)" % [peer_id, lobby_client_table.has(peer_id)])
+	logger.log_info(
+		(
+			"Peer left via signaling: %d (in lobby_client_table=%s)"
+			% [peer_id, lobby_client_table.has(peer_id)]
+		)
+	)
 
 	if lobby_client_table.has(peer_id):
 		lobby_client_table.erase(peer_id)
@@ -460,7 +505,12 @@ func _on_game_packet_received(from_peer: int, packet_base64: String) -> void:
 	var bytes = Marshalls.base64_to_raw(packet_base64)
 
 	# Debug logging
-	logger.log_debug("Received packet from peer %d: base64_len=%d, decoded_len=%d" % [from_peer, packet_base64.length(), bytes.size()])
+	logger.log_debug(
+		(
+			"Received packet from peer %d: base64_len=%d, decoded_len=%d"
+			% [from_peer, packet_base64.length(), bytes.size()]
+		)
+	)
 	if packet_base64.length() < 100:
 		logger.log_debug("  base64: %s" % packet_base64)
 
@@ -469,7 +519,12 @@ func _on_game_packet_received(from_peer: int, packet_base64: String) -> void:
 		return
 
 	if bytes.size() < 4:
-		logger.log_error("Packet too short (%d bytes) from peer %d, base64: %s" % [bytes.size(), from_peer, packet_base64.substr(0, 50)])
+		logger.log_error(
+			(
+				"Packet too short (%d bytes) from peer %d, base64: %s"
+				% [bytes.size(), from_peer, packet_base64.substr(0, 50)]
+			)
+		)
 		return
 
 	if is_host:
@@ -520,7 +575,20 @@ func _process_host() -> void:
 		if not client.requests_RUDP.is_empty():
 			var pkt = var_to_bytes(client.requests_RUDP)
 			var packet_base64 = Marshalls.raw_to_base64(pkt)
-			logger.log_debug("HOST sending RELIABLE to %d: bytes=%d, base64_len=%d, requests=%d" % [client.client_id, pkt.size(), packet_base64.length(), client.requests_RUDP.size()])
+			(
+				logger
+				. log_debug(
+					(
+						"HOST sending RELIABLE to %d: bytes=%d, base64_len=%d, requests=%d"
+						% [
+							client.client_id,
+							pkt.size(),
+							packet_base64.length(),
+							client.requests_RUDP.size()
+						]
+					)
+				)
+			)
 			_signaling.broadcast_packet(packet_base64, client.client_id)
 			client.requests_RUDP.clear()
 
@@ -528,7 +596,12 @@ func _process_host() -> void:
 		if not client.requests_UDP.is_empty():
 			var pkt = var_to_bytes(client.requests_UDP)
 			var packet_base64 = Marshalls.raw_to_base64(pkt)
-			logger.log_debug("HOST sending UNRELIABLE to %d: bytes=%d, base64_len=%d" % [client.client_id, pkt.size(), packet_base64.length()])
+			logger.log_debug(
+				(
+					"HOST sending UNRELIABLE to %d: bytes=%d, base64_len=%d"
+					% [client.client_id, pkt.size(), packet_base64.length()]
+				)
+			)
 			_signaling.broadcast_packet(packet_base64, client.client_id)
 			client.requests_UDP.clear()
 
@@ -544,12 +617,16 @@ func _process_host_server_requests() -> void:
 		return
 
 	# Get the host's Client object
-	var host_client: Client = lobby_client_table.get(my_current_client.client_id)
+	var host_client: Client = lobby_client_table.get(
+		my_current_client.client_id
+	)
 	if host_client == null:
 		return
 
 	# Package the SERVER requests - this returns bytes with Dictionary wrapper
-	var pkt: PackedByteArray = request_processor.package_requests(ENUMS.PACKET_CHANNEL.SERVER)
+	var pkt: PackedByteArray = request_processor.package_requests(
+		ENUMS.PACKET_CHANNEL.SERVER
+	)
 	var message: Dictionary = bytes_to_var(pkt)
 
 	# Process each SERVER request as if it came from a remote client
@@ -563,8 +640,12 @@ func _process_host_server_requests() -> void:
 ## requests are queued in request_processor but never sent (since
 ## ConnectionController is disabled in LOCAL mode). We handle them here.
 func _process_host_broadcast_requests() -> void:
-	var has_reliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.RELIABLE)
-	var has_unreliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+	var has_reliable = request_processor.has_packets(
+		ENUMS.PACKET_CHANNEL.RELIABLE
+	)
+	var has_unreliable = request_processor.has_packets(
+		ENUMS.PACKET_CHANNEL.UNRELIABLE
+	)
 
 	if not has_reliable and not has_unreliable:
 		return
@@ -583,11 +664,15 @@ func _process_host_broadcast_requests() -> void:
 			request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE)
 		return
 
-	var host_client: Client = lobby_client_table.get(my_current_client.client_id)
+	var host_client: Client = lobby_client_table.get(
+		my_current_client.client_id
+	)
 
 	# Package and broadcast RELIABLE requests
 	if has_reliable:
-		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.RELIABLE)
+		var pkt = request_processor.package_requests(
+			ENUMS.PACKET_CHANNEL.RELIABLE
+		)
 		var message: Dictionary = bytes_to_var(pkt)
 
 		# Extract CLIENT_REQUESTS and queue to each client
@@ -600,7 +685,9 @@ func _process_host_broadcast_requests() -> void:
 
 	# Package and broadcast UNRELIABLE requests
 	if has_unreliable:
-		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+		var pkt = request_processor.package_requests(
+			ENUMS.PACKET_CHANNEL.UNRELIABLE
+		)
 		var message: Dictionary = bytes_to_var(pkt)
 
 		if message.has(ENUMS.PACKET_VALUE.CLIENT_REQUESTS):
@@ -619,31 +706,55 @@ func _process_client() -> void:
 
 	var has_setup = request_processor.has_packets(ENUMS.PACKET_CHANNEL.SETUP)
 	var has_server = request_processor.has_packets(ENUMS.PACKET_CHANNEL.SERVER)
-	var has_reliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.RELIABLE)
-	var has_unreliable = request_processor.has_packets(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+	var has_reliable = request_processor.has_packets(
+		ENUMS.PACKET_CHANNEL.RELIABLE
+	)
+	var has_unreliable = request_processor.has_packets(
+		ENUMS.PACKET_CHANNEL.UNRELIABLE
+	)
 
 	if has_setup:
 		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.SETUP)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
-		logger.log_debug("CLIENT sending SETUP to host %d: bytes=%d" % [host_id, pkt.size()])
+		logger.log_debug(
+			"CLIENT sending SETUP to host %d: bytes=%d" % [host_id, pkt.size()]
+		)
 		_signaling.broadcast_packet(packet_base64, host_id)
 
 	if has_server:
-		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.SERVER)
+		var pkt = request_processor.package_requests(
+			ENUMS.PACKET_CHANNEL.SERVER
+		)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
-		logger.log_debug("CLIENT sending SERVER to host %d: bytes=%d" % [host_id, pkt.size()])
+		logger.log_debug(
+			"CLIENT sending SERVER to host %d: bytes=%d" % [host_id, pkt.size()]
+		)
 		_signaling.broadcast_packet(packet_base64, host_id)
 
 	if has_reliable:
-		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.RELIABLE)
+		var pkt = request_processor.package_requests(
+			ENUMS.PACKET_CHANNEL.RELIABLE
+		)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
-		logger.log_debug("CLIENT sending RELIABLE to host %d: bytes=%d" % [host_id, pkt.size()])
+		logger.log_debug(
+			(
+				"CLIENT sending RELIABLE to host %d: bytes=%d"
+				% [host_id, pkt.size()]
+			)
+		)
 		_signaling.broadcast_packet(packet_base64, host_id)
 
 	if has_unreliable:
-		var pkt = request_processor.package_requests(ENUMS.PACKET_CHANNEL.UNRELIABLE)
+		var pkt = request_processor.package_requests(
+			ENUMS.PACKET_CHANNEL.UNRELIABLE
+		)
 		var packet_base64 = Marshalls.raw_to_base64(pkt)
-		logger.log_debug("CLIENT sending UNRELIABLE to host %d: bytes=%d" % [host_id, pkt.size()])
+		logger.log_debug(
+			(
+				"CLIENT sending UNRELIABLE to host %d: bytes=%d"
+				% [host_id, pkt.size()]
+			)
+		)
 		_signaling.broadcast_packet(packet_base64, host_id)
 
 
@@ -661,7 +772,9 @@ func _process_incoming_packet_as_client(bytes: PackedByteArray) -> void:
 		if packet.has(ENUMS.PACKET_VALUE.CLIENT_REQUESTS):
 			requests = packet[ENUMS.PACKET_VALUE.CLIENT_REQUESTS]
 	else:
-		logger.log_error("Unexpected packet type from host: %s" % typeof(packet))
+		logger.log_error(
+			"Unexpected packet type from host: %s" % typeof(packet)
+		)
 		return
 
 	# Process each request using RequestProcessor's internal methods
@@ -691,7 +804,9 @@ func _process_message_as_client(request: Array) -> void:
 	# because the node might not exist yet when the message arrives
 	if message_type == ENUMS.MESSAGE_TYPE.SET_GDSYNC_OWNER:
 		var node_path: String = request[ENUMS.MESSAGE_DATA.VALUE]
-		var owner_id = request[ENUMS.MESSAGE_DATA.VALUE2] if request.size() >= 4 else null
+		var owner_id = (
+			request[ENUMS.MESSAGE_DATA.VALUE2] if request.size() >= 4 else null
+		)
 		# Use delayed mechanism - will retry after a frame if node doesn't exist
 		session_controller.set_gdsync_owner_delayed(node_path, owner_id)
 		return
@@ -700,7 +815,9 @@ func _process_message_as_client(request: Array) -> void:
 	request_processor.process_message(request)
 
 
-func _process_incoming_packet_as_host(from_peer: int, bytes: PackedByteArray) -> void:
+func _process_incoming_packet_as_host(
+	from_peer: int, bytes: PackedByteArray
+) -> void:
 	if not peer_client_table.has(from_peer):
 		logger.log_warning("Unknown sender peer: " + str(from_peer))
 		return
@@ -719,16 +836,26 @@ func _process_incoming_packet_as_host(from_peer: int, bytes: PackedByteArray) ->
 
 			if target_client < 0:
 				# Broadcast to all: process locally on host AND forward to other clients
-				logger.log_info("Host processing BROADCAST request from %d (type=%d)" % [from.client_id, request[ENUMS.DATA.REQUEST_TYPE]])
+				logger.log_info(
+					(
+						"Host processing BROADCAST request from %d (type=%d)"
+						% [from.client_id, request[ENUMS.DATA.REQUEST_TYPE]]
+					)
+				)
 				_process_client_request_locally(request, from)
 				_broadcast_request(request, from, true)
 			elif target_client == my_current_client.client_id:
 				# Request specifically for the host - process it locally only
-				logger.log_info("Host processing TARGETED request from %d (type=%d)" % [from.client_id, request[ENUMS.DATA.REQUEST_TYPE]])
+				logger.log_info(
+					(
+						"Host processing TARGETED request from %d (type=%d)"
+						% [from.client_id, request[ENUMS.DATA.REQUEST_TYPE]]
+					)
+				)
 				_process_client_request_locally(request, from)
 			else:
 				# Request is for other client(s) - just forward it
-				_broadcast_request(request, from, true) # Always reliable over HTTP
+				_broadcast_request(request, from, true)  # Always reliable over HTTP
 
 
 ## Process a CLIENT_REQUEST locally on the host (when the request targets the host)
@@ -738,7 +865,10 @@ func _process_client_request_locally(request: Array, from: Client) -> void:
 
 	var request_type: int = request[ENUMS.DATA.REQUEST_TYPE]
 	logger.log_debug(
-		"Processing client request locally: type=%d from=%d" % [request_type, from.client_id]
+		(
+			"Processing client request locally: type=%d from=%d"
+			% [request_type, from.client_id]
+		)
 	)
 
 	# Set the sender ID so the host knows who sent the request
@@ -842,7 +972,7 @@ func _put_request(request: Array, client: Client, reliable: bool) -> void:
 
 
 func _send_message(
-	message: int, client: Client, value=null, value2=null, value3=null
+	message: int, client: Client, value = null, value2 = null, value3 = null
 ) -> void:
 	if client == null:
 		return
@@ -1115,7 +1245,7 @@ func set_signaling_server(url: String) -> void:
 
 
 func perform_local_scan() -> void:
-	pass # Not needed - signaling server handles discovery
+	pass  # Not needed - signaling server handles discovery
 
 
 func get_lobby_dictionary(with_data: bool = false) -> Dictionary:

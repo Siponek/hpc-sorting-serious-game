@@ -113,7 +113,9 @@ func _parse_sse_event(block: String) -> void:
 
 
 func _handle_sse_event(event_type: String, data: Dictionary) -> void:
-	logger.log_info("SSE event received: type=%s data=%s" % [event_type, str(data)])
+	logger.log_info(
+		"SSE event received: type=%s data=%s" % [event_type, str(data)]
+	)
 	match event_type:
 		EVT_WELCOME:
 			var peer_id = data.get("peer_id", -1)
@@ -126,7 +128,9 @@ func _handle_sse_event(event_type: String, data: Dictionary) -> void:
 			peer_joined.emit(peer_id, player_data)
 		EVT_PEER_LEFT:
 			var peer_id = data.get("id", -1)
-			logger.log_info("Peer left: " + str(peer_id) + " - emitting peer_left signal")
+			logger.log_info(
+				"Peer left: " + str(peer_id) + " - emitting peer_left signal"
+			)
 			peer_left.emit(peer_id)
 		EVT_LOBBY_CLOSED:
 			var code = data.get("code", "")
@@ -145,7 +149,7 @@ func _handle_sse_event(event_type: String, data: Dictionary) -> void:
 			logger.log_error("Server error: " + code + " - " + message)
 			error_received.emit(code, message)
 		EVT_HEARTBEAT:
-			pass # Just keep-alive, nothing to do
+			pass  # Just keep-alive, nothing to do
 		_:
 			logger.log_warning("Unknown SSE event: " + event_type)
 
@@ -161,10 +165,18 @@ func connect_to_server(server_url: String) -> Error:
 
 	# Send GDSync's client_id to the server - use the ID that GDSync already generated
 	var gdsync_client_id = GDSync.get_client_id()
-	assert(gdsync_client_id > 0, "SignalingClient: GDSync client_id must be positive, got: %d" % gdsync_client_id)
+	assert(
+		gdsync_client_id > 0,
+		(
+			"SignalingClient: GDSync client_id must be positive, got: %d"
+			% gdsync_client_id
+		)
+	)
 
 	# Make HTTP POST to /api/lobby/connect with our client_id
-	var result = await _http_post("/api/lobby/connect", {"client_id": gdsync_client_id})
+	var result = await _http_post(
+		"/api/lobby/connect", {"client_id": gdsync_client_id}
+	)
 	if result == null or not result.get("success", false):
 		var err_msg = "Failed to connect"
 		if result:
@@ -174,7 +186,13 @@ func connect_to_server(server_url: String) -> Error:
 		return ERR_CANT_CONNECT
 
 	my_peer_id = result.get("peer_id", -1)
-	assert(my_peer_id == gdsync_client_id, "SignalingClient: Server returned different peer_id (%d) than requested (%d)" % [my_peer_id, gdsync_client_id])
+	assert(
+		my_peer_id == gdsync_client_id,
+		(
+			"SignalingClient: Server returned different peer_id (%d) than requested (%d)"
+			% [my_peer_id, gdsync_client_id]
+		)
+	)
 	logger.log_info("Connected! Peer ID: " + str(my_peer_id))
 
 	# Start SSE connection
@@ -222,12 +240,17 @@ func _start_sse_connection() -> Error:
 		return err
 
 	# Wait for connection
-	while _sse_client.get_status() == HTTPClient.STATUS_CONNECTING or _sse_client.get_status() == HTTPClient.STATUS_RESOLVING:
+	while (
+		_sse_client.get_status() == HTTPClient.STATUS_CONNECTING
+		or _sse_client.get_status() == HTTPClient.STATUS_RESOLVING
+	):
 		_sse_client.poll()
 		await get_tree().process_frame
 
 	if _sse_client.get_status() != HTTPClient.STATUS_CONNECTED:
-		logger.log_error("SSE connection failed, status: " + str(_sse_client.get_status()))
+		logger.log_error(
+			"SSE connection failed, status: " + str(_sse_client.get_status())
+		)
 		return ERR_CANT_CONNECT
 
 	# Send GET request for SSE
@@ -304,7 +327,8 @@ func create_lobby(
 		"name": lobby_name,
 		"public": public,
 		"player_limit": player_limit,
-		"player": player_data if not player_data.is_empty() else {"name": "Host"}
+		"player":
+		player_data if not player_data.is_empty() else {"name": "Host"}
 	}
 
 	var result = await _http_post("/api/lobby/create", body)
@@ -322,9 +346,7 @@ func create_lobby(
 	current_lobby_code = result.get("code", "")
 	is_host = true
 
-	logger.log_info(
-		"Lobby created: %s '%s'" % [current_lobby_code, lobby_name]
-	)
+	logger.log_info("Lobby created: %s '%s'" % [current_lobby_code, lobby_name])
 	lobby_created.emit(
 		result.get("code", ""),
 		result.get("name", ""),
@@ -350,7 +372,8 @@ func join_lobby(code_or_name: String, player_data: Dictionary = {}) -> void:
 	var body = {
 		"peer_id": my_peer_id,
 		"code": code_or_name.to_upper().strip_edges(),
-		"player": player_data if not player_data.is_empty() else {"name": "Player"}
+		"player":
+		player_data if not player_data.is_empty() else {"name": "Player"}
 	}
 
 	var result = await _http_post("/api/lobby/join", body)
@@ -370,8 +393,10 @@ func join_lobby(code_or_name: String, player_data: Dictionary = {}) -> void:
 	is_host = (my_peer_id == host_id)
 
 	logger.log_info(
-		"Joined lobby: %s (host=%d, me=%d)"
-		% [current_lobby_code, host_id, my_peer_id]
+		(
+			"Joined lobby: %s (host=%d, me=%d)"
+			% [current_lobby_code, host_id, my_peer_id]
+		)
 	)
 	lobby_joined.emit(
 		result.get("code", ""),
@@ -388,7 +413,12 @@ func leave_lobby() -> void:
 		logger.log_warning("Not in a lobby")
 		return
 
-	logger.log_info("Sending leave_lobby request to server (peer_id=%d, lobby=%s)" % [my_peer_id, current_lobby_code])
+	logger.log_info(
+		(
+			"Sending leave_lobby request to server (peer_id=%d, lobby=%s)"
+			% [my_peer_id, current_lobby_code]
+		)
+	)
 	var body = {"peer_id": my_peer_id}
 	var result = await _http_post("/api/lobby/leave", body)
 
@@ -413,9 +443,7 @@ func broadcast_packet(packet_base64: String, target_peer: int = -1) -> void:
 		return
 
 	var body = {
-		"peer_id": my_peer_id,
-		"packet": packet_base64,
-		"target": target_peer
+		"peer_id": my_peer_id, "packet": packet_base64, "target": target_peer
 	}
 
 	# Fire and forget - don't await
@@ -441,6 +469,7 @@ func get_lobby_code() -> String:
 # =============================================================================
 # HTTP Helper Methods
 # =============================================================================
+
 
 func _http_get(path: String) -> Dictionary:
 	var http = HTTPRequest.new()
