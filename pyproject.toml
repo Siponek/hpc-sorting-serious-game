@@ -13,6 +13,7 @@ dependencies = [
 ]
 
 [dependency-groups]
+# gdformatrc is used by this
 dev = ["gdtoolkit>=4.5.0"]
 
 # Make the 'dev' group active for uv run/sync so gdtoolkit is present
@@ -30,15 +31,15 @@ line-length = 100
 
 [tool.ruff.lint]
 select = [
-    "E",      # pycodestyle errors
-    "W",      # pycodestyle warnings
-    "F",      # pyflakes
-    "I",      # isort
-    "B",      # flake8-bugbear
-    "C4",     # flake8-comprehensions
-    "UP",     # pyupgrade
-    "ARG",    # flake8-unused-arguments
-    "SIM",    # flake8-simplify
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
 ]
 ignore = [
     "E501",   # line too long (handled by formatter)
