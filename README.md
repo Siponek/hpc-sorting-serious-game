@@ -8,6 +8,28 @@ https://siponek.github.io/hpc-sorting-serious-game/
 ## Reqiuirements
 - chrome
 - python (for webserver and signaling server)
+  - uv (for project management)
+
+## How to start
+
+In justfile there is a command for starting the webserver and signaling server
+
+```justfile
+[multiplayer]
+signaling-server             # Start the WebRTC signaling server for web multiplayer
+signaling-server-port port   # Start signaling server on a custom port
+test-multiplayer             # Start both signaling server and web server for full multiplayer testing
+```
+
+Install python dependencies using
+```bash
+uv sync
+```
+
+Run build with just command (or you can just start the servers using uv run)
+```just
+just test-multiplayer
+```
 
 ## FAQ
 
