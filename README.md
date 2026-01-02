@@ -31,6 +31,8 @@ Run build with just command (or you can just start the servers using uv run)
 just test-multiplayer
 ```
 
+Make sure to run the game on separate tabs in chrome, since tabs might freeze in the background
+
 ## FAQ
 
 Export to windows need to use [rcedit](https://github.com/electron/rcedit/releases) and [for icon](https://docs.godotengine.org/en/stable/tutorials/export/changing_application_icon_for_windows.html)
