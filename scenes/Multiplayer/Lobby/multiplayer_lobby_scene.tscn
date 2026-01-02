@@ -3,11 +3,12 @@
 [ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_nigir"]
 [ext_resource type="Script" uid="uid://dnjrqxk7epxy1" path="res://scenes/Multiplayer/Lobby/multiplayer_lobby.gd" id="2_f6dde"]
 [ext_resource type="PackedScene" uid="uid://dngqkxgg2h370" path="res://scenes/Multiplayer/Lobby/player_in_lobby_scene.tscn" id="3_t8do3"]
-[ext_resource type="Script" uid="uid://dd4esb2gfoip4" path="res://addons/GD-Sync/Scripts/Types/NodeInstantiator.gd" id="4_51bqt"]
+[ext_resource type="Script" uid="uid://dqh4pwnrr81dp" path="res://addons/GD-Sync/Scripts/Types/NodeInstantiator.gd" id="4_51bqt"]
 [ext_resource type="Texture2D" uid="uid://7i5bw1srgc1e" path="res://res/fontawesome-free-6.7.2-desktop/svgs/regular/circle-xmark.svg" id="4_kotqg"]
 [ext_resource type="Texture2D" uid="uid://cvuoqeuds50x5" path="res://res/fontawesome-free-6.7.2-desktop/svgs/regular/circle-play.svg" id="5_kotqg"]
 
 [node name="MultiplayerLobbyScene" type="Window"]
+oversampling_override = 1.0
 title = "Multiplayer lobby"
 initial_position = 2
 size = Vector2i(1100, 600)

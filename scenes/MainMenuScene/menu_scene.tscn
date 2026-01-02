@@ -1,9 +1,33 @@
-[gd_scene load_steps=5 format=3 uid="uid://cuy0nrm8fn7yh"]
+[gd_scene load_steps=11 format=3 uid="uid://cuy0nrm8fn7yh"]
 
 [ext_resource type="Script" uid="uid://dgpv8ktgd7p5c" path="res://scenes/MainMenuScene/main_menu_options.gd" id="1_brq7r"]
-[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="2_mqqe4"]
+[ext_resource type="PackedScene" uid="uid://dbks3sal7vang" path="res://scenes/CardScene/CardMain.tscn" id="2_ljmws"]
+[ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="2_mqqe4"]
 [ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="3_yuoay"]
 [ext_resource type="Script" uid="uid://bpvwcjxfptkki" path="res://addons/var_tree/var_tree.gd" id="4_mqqe4"]
+[ext_resource type="Shader" uid="uid://bnnk2thf5h5a5" path="res://res/shaders/logo_text.gdshader" id="5_logo"]
+[ext_resource type="Shader" uid="uid://cto1v8g7n3u6e" path="res://res/shaders/card_dance.gdshader" id="6_dance"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_logo"]
+shader = ExtResource("5_logo")
+shader_parameter/split_point = 0.30000001425
+shader_parameter/main_color = Color(0, 0, 0, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_card1"]
+shader = ExtResource("6_dance")
+shader_parameter/sway_angle = 0.12
+shader_parameter/sway_speed = 2.0
+shader_parameter/horizontal_sway = 6.0
+shader_parameter/vertical_bounce = 4.0
+shader_parameter/phase_offset = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_card2"]
+shader = ExtResource("6_dance")
+shader_parameter/sway_angle = 0.15
+shader_parameter/sway_speed = 2.2
+shader_parameter/horizontal_sway = 8.0
+shader_parameter/vertical_bounce = 3.0
+shader_parameter/phase_offset = 1.5
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -16,6 +40,82 @@ metadata/_edit_lock_ = true
 
 [node name="Background" parent="." instance=ExtResource("3_yuoay")]
 layout_mode = 1
+metadata/_edit_lock_ = true
+
+[node name="MainScreenLogo" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MainLogo" type="SubViewportContainer" parent="MainScreenLogo"]
+material = SubResource("ShaderMaterial_logo")
+layout_mode = 0
+offset_left = 374.0
+offset_top = 167.0
+offset_right = 709.0
+offset_bottom = 421.0
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="MainScreenLogo/MainLogo"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(335, 254)
+render_target_update_mode = 4
+
+[node name="LogoText" type="Label" parent="MainScreenLogo/MainLogo/SubViewport"]
+offset_right = 151.0
+offset_bottom = 114.0
+theme = ExtResource("2_mqqe4")
+theme_override_font_sizes/font_size = 51
+text = "Sorting
+with
+Friends"
+vertical_alignment = 1
+
+[node name="Card_1" parent="MainScreenLogo" instance=ExtResource("2_ljmws")]
+material = SubResource("ShaderMaterial_card1")
+layout_mode = 0
+offset_left = 582.0
+offset_top = 177.0
+offset_right = 682.0
+offset_bottom = 327.0
+mouse_filter = 2
+card_color = Color(0.31657094, 0.29062533, 0.31614217, 1)
+value = 13
+interactive = false
+metadata/_edit_lock_ = true
+
+[node name="Card_2" parent="MainScreenLogo" instance=ExtResource("2_ljmws")]
+material = SubResource("ShaderMaterial_card2")
+layout_mode = 0
+offset_left = 682.0
+offset_top = 272.0
+offset_right = 782.0
+offset_bottom = 422.0
+mouse_filter = 2
+value = 37
+interactive = false
+metadata/_edit_lock_ = true
+
+[node name="SideInstrution" type="RichTextLabel" parent="MainScreenLogo"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.261
+anchor_top = 0.67300004
+anchor_right = 0.261
+anchor_bottom = 0.67300004
+offset_left = -2.4400005
+offset_top = 355.07996
+offset_right = 407.39557
+offset_bottom = 439.88263
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.261799
+theme = ExtResource("2_mqqe4")
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
+text = "[color=black][wave amp=30 freq=4]Left mouse button to select an option
+Right mouse button to reset option block[/wave][/color]"
 
 [node name="MainMenuButtons" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -26,6 +126,7 @@ offset_top = -212.0
 offset_right = 300.0
 grow_vertical = 0
 script = ExtResource("1_brq7r")
+metadata/_edit_lock_ = true
 
 [node name="SingleplayerBtn" type="Button" parent="MainMenuButtons"]
 custom_minimum_size = Vector2(0, 50)
@@ -63,11 +164,12 @@ alignment = 0
 
 [node name="VarTreeMainMenu" type="Tree" parent="CanvasLayer"]
 custom_minimum_size = Vector2(500, 150)
-offset_right = 471.0
+offset_right = 500.0
 offset_bottom = 164.0
 columns = 2
 script = ExtResource("4_mqqe4")
 metadata/_custom_type_script = "uid://bpvwcjxfptkki"
+metadata/_edit_lock_ = true
 
 [connection signal="pressed" from="MainMenuButtons/SingleplayerBtn" to="MainMenuButtons" method="_on_singleplayer_btn_pressed"]
 [connection signal="pressed" from="MainMenuButtons/MultiplayerBtn" to="MainMenuButtons" method="_on_multiplayer_btn_pressed"]

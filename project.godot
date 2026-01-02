@@ -10,14 +10,14 @@ config_version=5
 
 [GD-Sync]
 
-version="0.13"
 protectedMode=false
+version="0.13"
 
 [application]
 
 config/name="hpc-sorting-serious-game"
 run/main_scene="res://scenes/MainMenuScene/menu_scene.tscn"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(1, 0.976471, 0.937255, 1)
 boot_splash/image="uid://bhx8dihqjktvc"
 config/icon="uid://bhx8dihqjktvc"
@@ -25,7 +25,7 @@ config/windows_native_icon="res://icon/icon.ico"
 
 [autoload]
 
-Logger="*res://lib/logger/logger.gd"
+CustomLogger="*res://lib/logger/logger.gd"
 Constants="*res://scenes/scripts/constants.gd"
 SceneManager="*res://scene_manager.gd"
 Settings="*res://settings.gd"
@@ -35,12 +35,15 @@ DragState="*res://scenes/scripts/drag_state.gd"
 ToastParty="*res://addons/toastparty/toast-autoload.gd"
 PackRTC="*res://addons/packrtc/scripts/PackRTC.gd"
 GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
+GDSyncWebPatch="*res://scenes/Multiplayer/GDSyncWebPatch/gdsync_web_patch.gd"
 ConnectionManager="*res://scenes/Multiplayer/connection_manager.gd"
 
 [display]
 
 window/size/viewport_width=1151
 window/size/viewport_height=649
+window/size/resizable=false
+window/stretch/mode="canvas_items"
 
 [dotnet]
 
@@ -52,7 +55,7 @@ run/main_run_args="game_debug_id=1"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/awaitable_http_request/plugin.cfg", "res://addons/const_generator/plugin.cfg", "res://addons/nodewebsockets/plugin.cfg", "res://addons/packrtc/plugin.cfg", "res://addons/scene-selector/plugin.cfg", "res://addons/toastparty/plugin.cfg", "res://addons/var_tree/plugin.cfg")
+enabled=PackedStringArray("res://addons/GD-Sync/plugin.cfg", "res://addons/awaitable_http_request/plugin.cfg", "res://addons/const_generator/plugin.cfg", "res://addons/nodewebsockets/plugin.cfg", "res://addons/packrtc/plugin.cfg", "res://addons/scene-selector/plugin.cfg", "res://addons/toastparty/plugin.cfg", "res://addons/var_tree/plugin.cfg")
 
 [rendering]
 

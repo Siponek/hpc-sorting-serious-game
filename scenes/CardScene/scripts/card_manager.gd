@@ -44,22 +44,30 @@ const swap_button_scene: PackedScene = preload(ProjectFiles.Scenes.SWAP_BTN)
 const card_slot_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_SLOT)
 const finish_game_scene: PackedScene = preload(ProjectFiles.Scenes.FINISH_GAME_SCENE)
 
-@onready var show_sorted_button: Button = get_node("./../RightSideButtonsContainer/ShowSortedCardsButton")
+@onready
+var show_sorted_button: Button = get_node("./../RightSideButtonsContainer/ShowSortedCardsButton")
 @onready var button_container: HBoxContainer = $SwapButtonPanel/CenterContainer/SwapButtonContainer
 @onready var card_container: HBoxContainer = $CardPanel/ScrollContainer/MarginContainer/CardContainer
-@onready var slot_container: HBoxContainer = $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer
+@onready
+var slot_container: HBoxContainer = $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer
 @onready var timer_node: TimerController = get_node("./../TopBar/TimerPanel")
-@onready var sorted_cards_container: HBoxContainer = get_node("./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer")
+@onready var sorted_cards_container: HBoxContainer = get_node(
+	"./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer"
+)
 @onready var sorted_cards_panel: PanelContainer = get_node("./../SortedCardsPanel")
 @onready var scroll_container_node: ScrollContainer = $CardPanel/ScrollContainer
-@onready var var_tree: VarTree = get_node("./../CanvasLayer/VarTree")
-@onready var logger := Logger.get_logger(self)
+const VAR_TREE_PATH: NodePath = "./../CanvasLayer/VarTree"
+var var_tree: VarTree = null
+@onready var logger := CustomLogger.get_logger(self)
+
 
 class CardDebugData:
 	var cards_in_slots: int = 0
 	var cards_in_container: int = 0
 
+
 var card_debug_info = CardDebugData.new()
+
 
 func _ready():
 	card_colors.map(func(color: Color): return color.lightened(0.1))
@@ -97,64 +105,104 @@ func _ready():
 	if sorted_cards_panel != null: # sorted_cards_panel is checked in _validate_node_references
 		sorted_cards_panel.visible = false
 	# Var tree mounting for debugging purposes
-	if OS.has_feature("debug"):
-		mount_var_tree_variables()
+	var_tree = VarTreeHandler.handle_var_tree(self, VAR_TREE_PATH, _setup_var_tree)
 
-func mount_var_tree_variables() -> void:
+
+func _setup_var_tree(vt: VarTree) -> void:
 	if _var_tree_mounted:
 		return # Already mounted
 	_var_tree_mounted = true
-	var_tree.mount_var(self, "Client number", {
-		"font_color": Color.CYAN,
-		"format_callback": func(_value: Variant) -> String:
-			return str(Constants.get_game_debug_id())
-	})
-	var_tree.mount_var(self, "dbg_game_info/curr_dragged_card", {
-		"font_color": Color.SEASHELL,
-		"format_callback": func(_value: Variant) -> String:
-			if card_container: # Ensure 'card_container' is available
-				return str(DragState.currently_dragged_card.value) if DragState.currently_dragged_card != null else "None"
-			return "0"
-	})
-	var_tree.mount_var(self, "dbg_game_info/card_count", {
-		"font_color": Color.SEASHELL,
-		"format_callback": func(_value: Variant) -> String:
-			if card_container: # Ensure 'card_container' is available
-				return str(card_container.get_child_count())
-			return "0"
-	})
-	var_tree.mount_var(self, "dbg_game_info/card_slots", {
-		"font_color": Color.SEASHELL,
-		"format_callback": func(_value: Variant) -> String:
-			var sum=0
-			if slot_container:
-				for slot in slot_container.get_children():
-					sum += slot.get_child_count() - 2
-				return str(sum)
-			return "0"
-	})
+	vt.mount_var(
+		self,
+		"Client number",
+		{
+			"font_color": Color.CYAN,
+			"format_callback":
+			func(_value: Variant) -> String: return str(Constants.get_game_debug_id())
+		}
+	)
+	vt.mount_var(
+		self,
+		"dbg_game_info/curr_dragged_card",
+		{
+			"font_color": Color.SEASHELL,
+			"format_callback":
+			func(_value: Variant) -> String:
+				if card_container: # Ensure 'card_container' is available
+					return (
+						str(DragState.currently_dragged_card.value)
+						if DragState.currently_dragged_card != null
+						else "None"
+					)
+				return "0"
+		}
+	)
+	vt.mount_var(
+		self,
+		"dbg_game_info/card_count",
+		{
+			"font_color": Color.SEASHELL,
+			"format_callback":
+			func(_value: Variant) -> String:
+				if card_container: # Ensure 'card_container' is available
+					return str(card_container.get_child_count())
+				return "0"
+		}
+	)
+	vt.mount_var(
+		self,
+		"dbg_game_info/card_slots",
+		{
+			"font_color": Color.SEASHELL,
+			"format_callback":
+			func(_value: Variant) -> String:
+				var sum = 0
+				if slot_container:
+					for slot in slot_container.get_children():
+						sum += slot.get_child_count() - 2
+					return str(sum)
+				return "0"
+		}
+	)
 	if Settings.is_multiplayer:
-		#
-		var_tree.mount_var(self, "dbg_game_mp/multiplayer", {
-			"font_color": Color.AQUA,
-			"format_callback": func(_value: Variant) -> String:
-				return "ON"
-		})
-		var_tree.mount_var(self, "dbg_game_mp/IAmHost", {
-		"font_color": Color.SEASHELL,
-		"format_callback": func(_value: Variant) -> String:
-			return str(ConnectionManager.am_i_host())
-		})
-		var_tree.mount_var(self, "dbg_game_mp/currentLobbyID", {
-			"font_color": Color.SEASHELL,
-			"format_callback": func(_value: Variant) -> String:
-				return str(ConnectionManager.get_current_lobby_id())
-		})
-		var_tree.mount_var(self, "dbg_game_mp/Players count", {
-			"font_color": Color.SEASHELL,
-			"format_callback": func(_value: Variant) -> String:
-				return str(ConnectionManager.get_player_list().size())
-		})
+		vt.mount_var(
+			self,
+			"dbg_game_mp/multiplayer",
+			{
+				"font_color": Color.AQUA,
+				"format_callback": func(_value: Variant) -> String: return "ON"
+			}
+		)
+		vt.mount_var(
+			self,
+			"dbg_game_mp/IAmHost",
+			{
+				"font_color": Color.SEASHELL,
+				"format_callback":
+				func(_value: Variant) -> String: return str(ConnectionManager.am_i_host())
+			}
+		)
+		vt.mount_var(
+			self,
+			"dbg_game_mp/currentLobbyID",
+			{
+				"font_color": Color.SEASHELL,
+				"format_callback":
+				func(_value: Variant) -> String:
+					return str(ConnectionManager.get_current_lobby_id())
+			}
+		)
+		vt.mount_var(
+			self,
+			"dbg_game_mp/Players count",
+			{
+				"font_color": Color.SEASHELL,
+				"format_callback":
+				func(_value: Variant) -> String:
+					return str(ConnectionManager.get_player_list().size())
+			}
+		)
+
 
 func _on_restart_game_button_pressed() -> void:
 	timer_node.reset_timer()
@@ -169,12 +217,14 @@ func _on_restart_game_button_pressed() -> void:
 	fill_card_container(sorted_cards_array, sorted_cards_container)
 	slots = create_buffer_slots()
 
+
 func clear_container(_card_container: Node = null) -> void:
 	if _card_container == null:
 		push_error("CardManager: clear_container called with null _card_container.")
 	# Clear existing children
 	for child in _card_container.get_children():
 		child.queue_free()
+
 
 func fill_card_container(_card_instances_array: Array, _card_container: Node = null) -> void:
 	if _card_container == null:
@@ -183,40 +233,67 @@ func fill_card_container(_card_instances_array: Array, _card_container: Node = n
 	for card_instance in _card_instances_array:
 		_card_container.add_child(card_instance)
 
+
 func _validate_node_references() -> bool:
 	var all_valid = true
 	if not scroll_container_node:
-		logger.log_error("CardManager: scroll_container_node not found. Path: $CardPanel/ScrollContainer")
+		logger.log_error(
+			"CardManager: scroll_container_node not found. Path: $CardPanel/ScrollContainer"
+		)
 		all_valid = false
 	if not card_container:
-		logger.log_error("CardManager: card_container not found. Path: $CardPanel/ScrollContainer/MarginContainer/CardContainer")
+		(
+			logger
+			.log_error(
+				"CardManager: card_container not found. Path: $CardPanel/ScrollContainer/MarginContainer/CardContainer"
+			)
+		)
 		all_valid = false
 	if not slot_container:
-		logger.log_error("CardManager: slot_container not found. Path: $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer")
+		(
+			logger
+			.log_error(
+				"CardManager: slot_container not found. Path: $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer"
+			)
+		)
 		all_valid = false
 	if not timer_node:
 		logger.log_error("CardManager: timer_node not found. Path: ./../TopBar/TimerPanel")
 		all_valid = false
 	if not sorted_cards_container:
-		logger.log_error("CardManager: sorted_cards_container not found. Path: ./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer")
+		(
+			logger
+			.log_error(
+				"CardManager: sorted_cards_container not found. Path: ./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer"
+			)
+		)
 		all_valid = false
 	if not sorted_cards_panel:
 		logger.log_error("CardManager: sorted_cards_panel not found. Path: ./../SortedCardsPanel")
 		all_valid = false
 	if not show_sorted_button:
-		logger.log_error("CardManager: show_sorted_button not found. Path: ./../RightSideButtonsContainer/ShowSortedCardsButton")
+		(
+			logger
+			.log_error(
+				"CardManager: show_sorted_button not found. Path: ./../RightSideButtonsContainer/ShowSortedCardsButton"
+			)
+		)
 		all_valid = false
 	if not button_container:
-		logger.log_error("CardManager: button_container (for swap buttons) not found. Path: $SwapButtonPanel/CenterContainer/SwapButtonContainer")
+		(
+			logger
+			.log_error(
+				"CardManager: button_container (for swap buttons) not found. Path: $SwapButtonPanel/CenterContainer/SwapButtonContainer"
+			)
+		)
 		all_valid = false
-	if not var_tree:
-		logger.log_error("CardManager: var_tree not found. Path: ./../CanvasLayer/VarTree")
-		all_valid = false
+	# var_tree validation is handled by VarTreeHandler
 	if not finish_game_scene:
 		logger.log_error("CardManager: finish_game_scene PackedScene not loaded properly.")
 		all_valid = false
 
 	return all_valid
+
 
 func _connect_signals():
 	# Connect to ScrollContainer's signal for card drops
@@ -224,16 +301,29 @@ func _connect_signals():
 		if scroll_container_node.has_signal("card_dropped_card_container"):
 			# Ensure _on_card_placed_in_container can accept a Card argument if the signal sends one
 			# Or use a dedicated handler like _on_card_dropped_from_scroll_container(card: Card)
-			var error_code = scroll_container_node.connect("card_dropped_card_container", Callable(self, "_on_card_placed_in_container"))
+			var error_code = scroll_container_node.connect(
+				"card_dropped_card_container", Callable(self, "_on_card_placed_in_container")
+			)
 			if error_code != OK:
-				printerr("CardManager: Failed to connect scroll_container_node.card_dropped_card_container. Error: %s" % error_code)
+				printerr(
+					(
+						"CardManager: Failed to connect scroll_container_node.card_dropped_card_container. Error: %s"
+						% error_code
+					)
+				)
 		else:
-			printerr("CardManager: scroll_container_node does not have signal 'card_dropped_card_container'.")
+			printerr(
+				"CardManager: scroll_container_node does not have signal 'card_dropped_card_container'."
+			)
 
 	# Connect ShowSortedCardsButton
 	if show_sorted_button: # Already validated
-		if not show_sorted_button.is_connected("pressed", Callable(self, "_on_show_sorted_cards_button_pressed")):
-			show_sorted_button.connect("pressed", Callable(self, "_on_show_sorted_cards_button_pressed"))
+		if not show_sorted_button.is_connected(
+			"pressed", Callable(self, "_on_show_sorted_cards_button_pressed")
+		):
+			show_sorted_button.connect(
+				"pressed", Callable(self, "_on_show_sorted_cards_button_pressed")
+			)
 			_setup_button_glow_animation(show_sorted_button) # Setup glow after connecting
 		else:
 			logger.log_info("show_sorted_button.pressed already connected.")
@@ -253,7 +343,12 @@ func generate_random_values() -> Array[int]:
 	else:
 		# Generate unique numbers
 		if num_cards > Settings.card_value_range:
-			push_error("Cannot generate %d unique cards_array from a range of 1 to %d. Allowing repeats." % [num_cards, Settings.card_value_range])
+			push_error(
+				(
+					"Cannot generate %d unique cards_array from a range of 1 to %d. Allowing repeats."
+					% [num_cards, Settings.card_value_range]
+				)
+			)
 			# Fallback to allowing repeats if unique generation is impossible
 			for i in range(num_cards):
 				random_values_array.append(rng.randi_range(1, Settings.card_value_range))
@@ -268,6 +363,7 @@ func generate_random_values() -> Array[int]:
 			for i in range(num_cards):
 				random_values_array.append(available_numbers[i]) # Take the first num_cards from the shuffled list
 	return random_values_array
+
 
 func calculate_max_cards():
 	# Get screen width from constants
@@ -284,6 +380,7 @@ func calculate_max_cards():
 
 	# Ensure at least 2 cards_array (for sorting to make sense)
 	return max(2, max_cards)
+
 
 func adjust_container_spacing():
 	# Calculate available width (80% of screen width for cards_array)
@@ -311,37 +408,48 @@ func adjust_container_spacing():
 	var first_button_offset: int = int((CARD_WIDTH - Constants.BUTTON_WIDTH) / 2.0)
 	$SwapButtonPanel/CenterContainer.add_theme_constant_override("margin_left", first_button_offset)
 
-	# logger.log_info("Max spacing set to: " + str(max_spacing))
-	# logger.log_info("Card spacing set to: " + str(card_spacing))
-	# logger.log_info("Button spacing set to: " + str(button_spacing))
-	# logger.log_info("Button container offset: " + str(first_button_offset))
 
-func generate_completed_card_array(_values_for_cards: Array[int], _name_prefix: String = "Card_") -> Array[Card]:
-	var array_to_be_filled: Array[Card] = []
+func generate_completed_card_array(
+	card_values: Array[int], name_prefix: String = "Card_"
+) -> Array[Card]:
+	# Step 1: Create card instances
+	var cards: Array[Card] = []
+	for _i in card_values.size():
+		cards.append(card_scene.instantiate())
 
+	# Step 2: Apply values and names
+	for i in cards.size():
+		cards[i].value = card_values[i]
+		cards[i].name = "%s%d_Val_%d" % [name_prefix, i, card_values[i]]
 
-	for i in range(num_cards):
-		var card_instance = card_scene.instantiate()
-		card_instance.set_card_value(_values_for_cards[i])
-		card_instance.set_card_container_ref(card_container) # Set the reference
-		card_instance.name = _name_prefix + str(i) + "_Val_" + str(_values_for_cards[i])
-		var new_card_style = StyleBoxFlat.new()
-		new_card_style.bg_color = card_colors[card_instance.value % card_colors.size()]
-		card_instance.set_base_style(new_card_style)
-		# Add card to the container
-		# Save the initial relative position and the child index
-		card_instance.container_relative_position = card_instance.position
-		card_instance.original_index = card_instance.get_index()
+	# Step 3: Apply colors
+	cards.map(
+		func(card):
+			card.card_color = card_colors[card.value % card_colors.size()]
+			return card
+	)
 
-		array_to_be_filled.append(card_instance)
-	return array_to_be_filled
+	# Step 4: Set container refs
+	cards.map(
+		func(card):
+			card.set_card_container_ref(card_container)
+			return card
+	)
+
+	return cards
+
 
 func create_buffer_slots(buffer_size: int = Settings.player_buffer_count) -> Array:
 	# Clamp to valid range [1, num_cards]
 	var actual_size = clampi(buffer_size, 1, num_cards)
 
 	if buffer_size != actual_size:
-		push_warning("CardManager: buffer_size (%d) was clamped to %d (valid range: 1-%d)" % [buffer_size, actual_size, num_cards])
+		push_warning(
+			(
+				"CardManager: buffer_size (%d) was clamped to %d (valid range: 1-%d)"
+				% [buffer_size, actual_size, num_cards]
+			)
+		)
 		buffer_size = actual_size
 
 	var _slots: Array = []
@@ -364,21 +472,27 @@ func create_buffer_slots(buffer_size: int = Settings.player_buffer_count) -> Arr
 
 	return _slots
 
-func _on_card_placed_in_container(dropped_card: Card = null, was_in_buffer: bool = false, original_slot: Variant = null):
+
+func _on_card_placed_in_container(
+	dropped_card: Card = null, was_in_buffer: bool = false, original_slot: Variant = null
+):
 	move_count += 1
 	if not timer_node.timer_started:
 		timer_node.start_timer()
 	if check_sorting_order():
 		# Just show a hint that they can finish
-		ToastParty.show({
-			"text": "Cards are sorted! Press 'Finish Game' to complete! 🎉",
-			"bgcolor": Color(0.2, 0.8, 0.2, 0.8),
-			"color": Color(1, 1, 1, 1),
-			"gravity": "bottom",
-			"direction": "center",
-			"text_size": 16,
-			"use_font": true
-		})
+		ToastParty.show(
+			{
+				"text": "Cards are sorted! Press 'Finish Game' to complete! 🎉",
+				"bgcolor": Color(0.2, 0.8, 0.2, 0.8),
+				"color": Color(1, 1, 1, 1),
+				"gravity": "bottom",
+				"direction": "center",
+				"text_size": 16,
+				"use_font": true
+			}
+		)
+
 
 func _on_card_placed_in_slot(card, slot):
 	move_count += 1
@@ -392,15 +506,18 @@ func _on_card_placed_in_slot(card, slot):
 		card.set_can_drag(true)
 
 	if check_sorting_order():
-		ToastParty.show({
-			"text": "Cards are sorted! Press 'Finish Game' to complete! 🎉",
-			"bgcolor": Color(0.2, 0.8, 0.2, 0.8),
-			"color": Color(1, 1, 1, 1),
-			"gravity": "bottom",
-			"direction": "center",
-			"text_size": 16,
-			"use_font": true
-		})
+		ToastParty.show(
+			{
+				"text": "Cards are sorted! Press 'Finish Game' to complete! 🎉",
+				"bgcolor": Color(0.2, 0.8, 0.2, 0.8),
+				"color": Color(1, 1, 1, 1),
+				"gravity": "bottom",
+				"direction": "center",
+				"text_size": 16,
+				"use_font": true
+			}
+		)
+
 
 func _on_show_sorted_cards_button_pressed() -> void:
 	var cards_are_sorted = check_sorting_order()
@@ -411,6 +528,7 @@ func _on_show_sorted_cards_button_pressed() -> void:
 	else:
 		# Cards not sorted - show/hide the sorted reference
 		_toggle_sorted_cards_panel()
+
 
 func _finish_game() -> void:
 	"""Called when player finishes the game (cards are sorted)"""
@@ -441,7 +559,10 @@ func _finish_game() -> void:
 	# Show finish game scene
 	_show_finish_game_scene(final_time_string, final_move_count)
 
-func _show_finish_game_scene(time_string: String, moves: int, finishing_player_id: int = -1) -> void:
+
+func _show_finish_game_scene(
+	time_string: String, moves: int, finishing_player_id: int = -1
+) -> void:
 	"""Load and display the finish game scene"""
 	if not finish_game_scene:
 		logger.log_error("CardManager: Failed to load FinishGameScene.tscn")
@@ -469,33 +590,39 @@ func _show_finish_game_scene(time_string: String, moves: int, finishing_player_i
 	finish_instance.set_time(time_string)
 	finish_instance.set_moves(moves)
 
+
 func _show_completion_toast(time_string: String, moves: int) -> void:
 	"""Fallback: Show completion message as toast"""
 	var text_to_show = "Cards sorted successfully in %s with %d moves! 👍" % [time_string, moves]
-	ToastParty.show({
-		"text": text_to_show,
-		"bgcolor": Color(0, 0, 0, 0.7),
-		"color": Color(1, 1, 1, 1),
-		"gravity": "top",
-		"direction": "center",
-		"text_size": 20,
-		"use_font": true
-	})
+	ToastParty.show(
+		{
+			"text": text_to_show,
+			"bgcolor": Color(0, 0, 0, 0.7),
+			"color": Color(1, 1, 1, 1),
+			"gravity": "top",
+			"direction": "center",
+			"text_size": 20,
+			"use_font": true
+		}
+	)
+
 
 func _toggle_sorted_cards_panel() -> void:
 	"""Toggle the sorted cards reference panel"""
 	var text_to_show = "Cards are NOT sorted! 😒"
 
 	if not sorted_cards_panel.visible:
-		ToastParty.show({
-			"text": text_to_show,
-			"bgcolor": Color(0, 0, 0, 0.7),
-			"color": Color(1, 1, 1, 1),
-			"gravity": "top",
-			"direction": "left",
-			"text_size": 18,
-			"use_font": true
-		})
+		ToastParty.show(
+			{
+				"text": text_to_show,
+				"bgcolor": Color(0, 0, 0, 0.7),
+				"color": Color(1, 1, 1, 1),
+				"gravity": "top",
+				"direction": "left",
+				"text_size": 18,
+				"use_font": true
+			}
+		)
 
 	# Toggle visibility
 	sorted_cards_panel.visible = not sorted_cards_panel.visible
@@ -505,6 +632,7 @@ func _toggle_sorted_cards_panel() -> void:
 		show_sorted_button.text = "Hide Sorted Cards"
 	else:
 		show_sorted_button.text = "Finish Game!"
+
 
 func _setup_button_glow_animation(button: Button):
 	# Define base and glow colors
@@ -558,6 +686,7 @@ func _setup_button_glow_animation(button: Button):
 	tween.tween_property(stylebox_normal, "bg_color", base_button_color, 3)
 	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
+
 func animate_card_swap(card_a, card_b):
 	# Kill any existing tweens on these cards_array
 	var tweens_to_kill = []
@@ -597,6 +726,7 @@ func animate_card_swap(card_a, card_b):
 
 	return tween
 
+
 func check_sorting_order() -> bool:
 	var sorted_correctly = true
 	if card_container.get_child_count() != num_cards:
@@ -611,13 +741,19 @@ func check_sorting_order() -> bool:
 		var current_card = cards_in_container[i].value
 		var previous_card = cards_in_container[i - 1].value
 		if current_card < previous_card:
-			logger.log_info("cards_array[%d] = %d < cards_array[%d] = %d" % [i, current_card, i - 1, previous_card])
+			logger.log_info(
+				(
+					"cards_array[%d] = %d < cards_array[%d] = %d"
+					% [i, current_card, i - 1, previous_card]
+				)
+			)
 			sorted_correctly = false
 			break
 	if not sorted_correctly:
 		logger.log_warning("Cards not sorted correctly!")
 	return sorted_correctly
 	# Calculate the time taken
+
 
 func _on_finish_window_closed():
 	"""Handle finish window closing - reset state and re-enable button"""
@@ -630,12 +766,14 @@ func _on_finish_window_closed():
 	if show_sorted_button:
 		show_sorted_button.disabled = false
 
+
 func _exit_tree():
 	"""Clean up finish window when scene exits"""
 	if finish_window_instance and is_instance_valid(finish_window_instance):
 		logger.log_info("Scene exiting, cleaning up finish window")
 		finish_window_instance.queue_free()
 		finish_window_instance = null
+
 
 func check_player_buffer_contiguity() -> bool:
 	# Build a list of all card values from your cards_array array
