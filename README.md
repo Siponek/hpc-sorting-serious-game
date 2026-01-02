@@ -4,6 +4,7 @@ HPC serious game showcasing how collaborative effort between processes and threa
 12
 ## Test at
 https://siponek.github.io/hpc-sorting-serious-game/
+<img width="1501" height="839" alt="obraz" src="https://github.com/user-attachments/assets/9c20c587-473e-4156-b35f-ec1cb567b055" />
 
 ## Reqiuirements
 - chrome
