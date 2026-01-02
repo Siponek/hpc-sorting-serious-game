@@ -39,6 +39,8 @@ signal card_dropped(card, drop_position)
 
 
 func _ready():
+	if not interactive:
+		self.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Update visuals to match exported values
 	_update_value_label()
 	_apply_color_style()

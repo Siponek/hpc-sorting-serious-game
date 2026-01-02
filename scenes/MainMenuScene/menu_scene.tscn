@@ -79,8 +79,10 @@ offset_left = 582.0
 offset_top = 177.0
 offset_right = 682.0
 offset_bottom = 327.0
+mouse_filter = 2
 card_color = Color(0.31657094, 0.29062533, 0.31614217, 1)
 value = 13
+interactive = false
 metadata/_edit_lock_ = true
 
 [node name="Card_2" parent="MainScreenLogo" instance=ExtResource("2_ljmws")]
@@ -90,7 +92,9 @@ offset_left = 682.0
 offset_top = 272.0
 offset_right = 782.0
 offset_bottom = 422.0
+mouse_filter = 2
 value = 37
+interactive = false
 metadata/_edit_lock_ = true
 
 [node name="SideInstrution" type="RichTextLabel" parent="MainScreenLogo"]
