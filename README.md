@@ -6,14 +6,15 @@ HPC serious game showcasing how collaborative effort between processes and threa
 https://siponek.github.io/hpc-sorting-serious-game/
 <img width="1501" height="839" alt="obraz" src="https://github.com/user-attachments/assets/9c20c587-473e-4156-b35f-ec1cb567b055" />
 
-## Reqiuirements
-- chrome
+## Reqiuirements for singleplayer
+- chrome (tested on chrome
+## Requirements for multiplayer
 - python (for webserver and signaling server)
   - uv (for project management)
 
 ## How to start
 
-In justfile there is a command for starting the webserver and signaling server
+In justfile there is a command for starting the webserver and signaling server. (This is not needed when playing alone!)
 
 ```justfile
 [multiplayer]
