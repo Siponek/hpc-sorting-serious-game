@@ -2,3 +2,6 @@
 	path = git-submodules/GD-Sync
 	url = https://github.com/Siponek/GD-Sync-fork.git
 	branch = fix/local-multiplayer-packets-types
+[submodule "git-submodules/HPC-thesis"]
+	path = git-submodules/HPC-thesis
+	url = https://github.com/Siponek/HPC-thesis.git

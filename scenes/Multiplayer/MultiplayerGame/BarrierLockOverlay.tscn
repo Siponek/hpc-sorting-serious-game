@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3 uid="uid://barrier_lock_overlay"]
+
+[ext_resource type="Script" path="res://scenes/Multiplayer/MultiplayerGame/BarrierLockOverlay.gd" id="1_script"]
+
+[node name="BarrierLockOverlay" type="CanvasLayer"]
+layer = 100
+visible = false
+script = ExtResource("1_script")
+
+[node name="OverlayRect" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="CenterContainer" type="CenterContainer" parent="OverlayRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="OverlayRect/CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="LockLabel" type="Label" parent="OverlayRect/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Blocked at Barrier"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="OverlayRect/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Main thread (Player X) is processing..."
+horizontal_alignment = 1

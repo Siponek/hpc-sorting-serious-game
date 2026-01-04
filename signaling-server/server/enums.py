@@ -11,6 +11,7 @@ from enum import StrEnum
 
 class MessageType(StrEnum):
     """Client -> Server message types."""
+
     CREATE_LOBBY = "create_lobby"
     LIST_LOBBIES = "list_lobbies"
     JOIN_LOBBY = "join_lobby"
@@ -20,6 +21,7 @@ class MessageType(StrEnum):
 
 class ResponseType(StrEnum):
     """Server -> Client response/event types."""
+
     # Responses to client commands
     WELCOME = "welcome"
     LOBBY_CREATED = "lobby_created"
@@ -38,6 +40,7 @@ class ResponseType(StrEnum):
 
 class ErrorCode(StrEnum):
     """Error codes for error responses."""
+
     LOBBY_NOT_FOUND = "LOBBY_NOT_FOUND"
     LOBBY_CLOSED = "LOBBY_CLOSED"
     LOBBY_FULL = "LOBBY_FULL"
@@ -52,6 +55,7 @@ class ErrorCode(StrEnum):
 
 class SignalingDataType(StrEnum):
     """WebRTC signaling message types."""
+
     INITIALIZE = "initialize"
     NEW_CONNECTION = "new_connection"
     PEER_DISCONNECTED = "peer_disconnected"
@@ -64,6 +68,7 @@ class SignalingDataType(StrEnum):
 
 class LobbyCloseReason(StrEnum):
     """Reasons for lobby closure."""
+
     HOST_LEFT = "host_left"
     HOST_DISCONNECTED = "host_disconnected"
     HOST_CLOSED = "host_closed"
@@ -72,6 +77,7 @@ class LobbyCloseReason(StrEnum):
 
 class SSEEventType(StrEnum):
     """SSE event types (for event: field in SSE stream)."""
+
     WELCOME = "welcome"
     PEER_JOINED = "peer_joined"
     PEER_LEFT = "peer_left"

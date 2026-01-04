@@ -26,21 +26,20 @@ def parse_args() -> argparse.Namespace:
         description="WebRTC Signaling Server for PackRTC + Lobby Events"
     )
     parser.add_argument(
-        "--port", "-p",
-        type=int,
-        default=None,
-        help="Port to run the server on (default: 3000)"
+        "--port", "-p", type=int, default=None, help="Port to run the server on (default: 3000)"
     )
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parse_args()
 
     # Set port in environment if provided via CLI
     if args.port is not None:
         import os
+
         os.environ["SERVER_PORT"] = str(args.port)
 
     from server.app import main
+
     main()

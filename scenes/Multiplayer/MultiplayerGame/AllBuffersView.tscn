@@ -1,0 +1,47 @@
+[gd_scene load_steps=5 format=3 uid="uid://cha7dlsh43ntq"]
+
+[ext_resource type="StyleBox" uid="uid://bpuxi2616bv7h" path="res://res/background_styleblox.tres" id="1_lmiy1"]
+[ext_resource type="Script" uid="uid://brhkwrscqti05" path="res://scenes/Multiplayer/MultiplayerGame/AllBuffersView.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="3_w6r5f"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w6r5f"]
+bg_color = Color(0.9490196, 0.91764706, 0.89411765, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 1)
+
+[node name="AllBuffersView" type="PanelContainer"]
+custom_minimum_size = Vector2(400, 300)
+theme_override_styles/panel = ExtResource("1_lmiy1")
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("3_w6r5f")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_w6r5f")
+text = "All Thread Buffers"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BuffersContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
