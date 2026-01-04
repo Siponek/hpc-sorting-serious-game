@@ -1,13 +1,13 @@
 [gd_scene load_steps=11 format=3 uid="uid://cnn7fixt8j8x2"]
 
-[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_ly61b"]
+[ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="1_ly61b"]
 [ext_resource type="Script" uid="uid://do0qtlv3uyb5b" path="res://scenes/timer_controller_script.gd" id="2_s36k4"]
 [ext_resource type="Script" uid="uid://dhd4dqiwmbbgd" path="res://scenes/Multiplayer/MultiplayerGame/multiplayer_card_manager.gd" id="3_s36k4"]
 [ext_resource type="Theme" uid="uid://vuoefmjxurjo" path="res://res/dark_theme.tres" id="3_wbd3l"]
 [ext_resource type="Script" uid="uid://vr5k0agbhj2l" path="res://scenes/scroll_container.gd" id="4_0j1sk"]
 [ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="5_o75xc"]
 [ext_resource type="Script" uid="uid://bpvwcjxfptkki" path="res://addons/var_tree/var_tree.gd" id="6_we6vf"]
-[ext_resource type="Script" uid="uid://dd4esb2gfoip4" path="res://addons/GD-Sync/Scripts/Types/NodeInstantiator.gd" id="8_wbd3l"]
+[ext_resource type="Script" uid="uid://dqh4pwnrr81dp" path="res://addons/GD-Sync/Scripts/Types/NodeInstantiator.gd" id="8_wbd3l"]
 [ext_resource type="PackedScene" uid="uid://dbks3sal7vang" path="res://scenes/CardScene/CardMain.tscn" id="9_0j1sk"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cagap"]
@@ -228,6 +228,7 @@ size_flags_vertical = 3
 alignment = 1
 
 [node name="Background" parent="." instance=ExtResource("5_o75xc")]
+layout_mode = 1
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -246,6 +247,5 @@ scene = ExtResource("9_0j1sk")
 replicate_on_join = false
 sync_starting_changes = true
 excluded_properties = PackedStringArray()
-metadata/_custom_type_script = "uid://dd4esb2gfoip4"
 
 [connection signal="pressed" from="RightSideButtonsContainer/RestartGameButton" to="VBoxContainer" method="_on_restart_game_button_pressed"]

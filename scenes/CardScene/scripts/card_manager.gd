@@ -126,15 +126,11 @@ func _setup_var_tree(vt: VarTree) -> void:
 		"dbg_game_info/curr_dragged_card",
 		{
 			"font_color": Color.SEASHELL,
-			"format_callback":
-			func(_value: Variant) -> String:
-				if card_container: # Ensure 'card_container' is available
-					return (
-						str(DragState.currently_dragged_card.value)
-						if DragState.currently_dragged_card != null
-						else "None"
-					)
-				return "0"
+			"format_callback": func(_value: Variant) -> String: return (
+			(str(DragState.currently_dragged_card.value) if DragState.currently_dragged_card != null else "None")
+			if card_container
+			else "0"
+		)
 		}
 	)
 	vt.mount_var(
@@ -143,10 +139,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 		{
 			"font_color": Color.SEASHELL,
 			"format_callback":
-			func(_value: Variant) -> String:
-				if card_container: # Ensure 'card_container' is available
-					return str(card_container.get_child_count())
-				return "0"
+			func(_value: Variant) -> String: return str(card_container.get_child_count()) if card_container else "0"
 		}
 	)
 	vt.mount_var(
@@ -155,13 +148,16 @@ func _setup_var_tree(vt: VarTree) -> void:
 		{
 			"font_color": Color.SEASHELL,
 			"format_callback":
-			func(_value: Variant) -> String:
-				var sum = 0
-				if slot_container:
-					for slot in slot_container.get_children():
-						sum += slot.get_child_count() - 2
-					return str(sum)
-				return "0"
+			func(_value: Variant) -> String: return (
+				str(
+					slot_container.get_children().reduce(
+						func(accum, slot): return accum + slot.get_child_count() - 2,
+						0
+					)
+				)
+				if slot_container
+				else "0"
+			)
 		}
 	)
 	if Settings.is_multiplayer:
@@ -188,8 +184,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 			{
 				"font_color": Color.SEASHELL,
 				"format_callback":
-				func(_value: Variant) -> String:
-					return str(ConnectionManager.get_current_lobby_id())
+					func(_value: Variant) -> String: return str(ConnectionManager.get_current_lobby_id())
 			}
 		)
 		vt.mount_var(
@@ -198,8 +193,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 			{
 				"font_color": Color.SEASHELL,
 				"format_callback":
-				func(_value: Variant) -> String:
-					return str(ConnectionManager.get_player_list().size())
+				func(_value: Variant) -> String: return str(ConnectionManager.get_player_list().size())
 			}
 		)
 
