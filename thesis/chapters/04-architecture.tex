@@ -1,7 +1,7 @@
 \chapter{System Design and Architecture}
 \label{ch:architecture}
 
-This chapter describes the comprehensive design and architecture of the HPC Sorting Serious Game. We present the system from multiple perspectives: high-level scene structure, core component design, multiplayer networking architecture, mobile UI considerations, and detailed data flow patterns.
+This chapter describes the comprehensive design and architecture of the HPC Sorting Serious Game. We present the system from multiple perspectives: high-level scene structure, core component design, multiplayer networking architecture, responsive UI considerations, and detailed data flow patterns.
 
 %-----------------------------------------------------------------------
 \section{Architectural Overview}
@@ -24,7 +24,7 @@ The architecture adheres to several key design principles:
 
     \item \textbf{Host-Authoritative Multiplayer}: One client (the host) serves as the authoritative source of truth to prevent cheating and simplify conflict resolution.
 
-    \item \textbf{Mobile-First UI}: All interfaces are designed primarily for touch input on small screens, with responsive layouts that adapt to different device sizes.
+    \item \textbf{Responsive UI}: All interfaces are designed with responsive layouts that adapt to different screen sizes and support both touch and mouse input.
 
     \item \textbf{State Synchronization}: Clear patterns for synchronizing game state across multiple clients using the GDSync framework.
 \end{enumerate}
@@ -36,11 +36,11 @@ The architecture adheres to several key design principles:
 The system is organized into distinct logical layers:
 
 \begin{description}
-    \item[Presentation Layer] Handles all visual rendering, animations, user input (touch events), and UI components (menus, dialogs, toasts).
+    \item[Presentation Layer] Handles all visual rendering, animations, user input (touch/mouse events), and UI components (menus, dialogs, toasts).
 
     \item[Game Logic Layer] Implements core game mechanics including card sorting validation, buffer management, timer control, and game state transitions.
 
-    \item[Networking Layer] Manages peer-to-peer connections via WebRTC, state synchronization through GDSync, lobby system for player matchmaking, and host election.
+    \item[Networking Layer] Manages relay server connections via HTTP/SSE, state synchronization through GDSync, lobby system for player matchmaking, and host election.
 
     \item[Framework Layer] Provides reusable utilities including scene management, settings persistence, theme management, logging, and debug tools.
 \end{description}
@@ -62,7 +62,7 @@ The entry point of the application, providing navigation to all major features.
     \item Display game title and branding
     \item Provide navigation buttons to single-player and multiplayer modes
     \item Access to settings (theme, audio, controls)
-    \item Exit to system (on Android)
+    \item Exit game or close browser tab
 \end{itemize}
 
 \paragraph*{Key Components:}
@@ -122,7 +122,7 @@ SinglePlayerScene (Control)
 
 \paragraph*{Key Design Decisions:}
 \begin{itemize}
-    \item \textbf{ScrollContainer for Cards}: Enables viewing large numbers of cards (50--200) on small mobile screens by providing vertical scrolling.
+    \item \textbf{ScrollContainer for Cards}: Enables viewing large numbers of cards (50--200) on screens of various sizes by providing vertical scrolling.
 
     \item \textbf{FlowContainer Layout}: Automatically wraps cards to multiple rows based on screen width, providing responsive layout.
 
@@ -152,7 +152,7 @@ Handles player matchmaking, room creation/joining, and connection management bef
 \begin{lstlisting}[language=Python, caption={Lobby scene structure}]
 LobbyScene (Control)
 |-- ConnectionManager (Node) [Script: connection_manager.gd]
-|   |-- WebRTCConnection (Node)
+|   |-- HTTPSSEConnection (Node)
 |   |-- SignalingClient (WebSocketClient)
 |   +-- PeerConnections (Dictionary)
 |-- UI (Control)
@@ -177,7 +177,7 @@ LobbyScene (Control)
     \item Host creates room → receives unique room code from signaling server
     \item Host shares room code with other players (via messaging, email, etc.)
     \item Other players enter room code and click Join
-    \item Signaling server facilitates WebRTC peer discovery and connection
+    \item Relay server facilitates peer discovery and connection via HTTP/SSE
     \item Direct peer-to-peer connections established (no server relay for game data)
     \item When all players ready, host initiates game scene transition
     \item GDSync framework ensures all clients load the multiplayer game scene synchronously
@@ -584,7 +584,7 @@ var cards_in_other_buffers: Dictionary = {}
 \subsection{Scroll Container and Layout}
 \label{subsec:scroll-container}
 
-Managing 50--200 cards on a mobile screen requires efficient layout and scrolling.
+Managing 50--200 cards on screen requires efficient layout and scrolling.
 
 \paragraph*{Architecture:}
 
@@ -604,7 +604,7 @@ CardScrollContainer (ScrollContainer)
     \item \textbf{HFlowContainer}: Automatically wraps cards to multiple rows based on available width
     \item \textbf{Responsive Card Size}: Cards scale based on screen width to fit approximately 4--6 per row
     \item \textbf{Vertical Scrolling Only}: Horizontal scrolling disabled for simpler interaction
-    \item \textbf{Touch-Optimized}: Large touch targets, scroll physics tuned for mobile
+    \item \textbf{Input-Optimized}: Large click/touch targets, smooth scroll physics
 \end{itemize}
 
 \paragraph*{Drop Target Detection:}
@@ -656,7 +656,7 @@ The game uses a \textbf{peer-to-peer (P2P) mesh network} topology with \textbf{h
 
 \paragraph*{Connection Characteristics:}
 \begin{itemize}
-    \item Each player has direct WebRTC connection to every other player
+    \item Each player connects through the relay server to communicate with other players
     \item No dedicated server required for gameplay (signaling server only used for initial connection)
     \item Low latency for small groups (2--4 players)
     \item Host election occurs if original host disconnects
@@ -692,7 +692,7 @@ Used for host-initiated events:
 \subsection{GDSync Integration}
 \label{subsec:gdsync-integration}
 
-GDSync is a third-party multiplayer framework for Godot that provides high-level abstractions for state synchronization. Importantly, \textbf{GDSync internally handles all WebRTC connection management}, including peer discovery, connection establishment, and data channel management. The game primarily interacts with GDSync's RPC API rather than directly managing WebRTC connections.
+GDSync is a third-party multiplayer framework for Godot that provides high-level abstractions for state synchronization. For web browser compatibility, \textbf{a custom HTTP/SSE transport layer was implemented} to replace GDSync's native networking. The game primarily interacts with GDSync's RPC API, which then uses the custom transport layer for browser-based communication.
 
 \paragraph*{Key Features Used:}
 \begin{itemize}
@@ -700,8 +700,15 @@ GDSync is a third-party multiplayer framework for Godot that provides high-level
     \item \textbf{Node Replication}: Automatically sync node properties
     \item \textbf{Ownership System}: Track which peer owns which nodes
     \item \textbf{Authority Modes}: Specify who can call functions ("any\_peer", "authority")
-    \item \textbf{WebRTC Abstraction}: GDSync internally manages WebRTC connections, signaling, and peer-to-peer data channels
+    \item \textbf{Transport Abstraction}: Custom HTTP/SSE transport layer provides browser-compatible networking
 \end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/diagrams/http-sse-architecture.png}
+    \caption{HTTP/SSE relay architecture: star topology with centralized relay server}
+    \label{fig:http-sse-architecture}
+\end{figure}
 
 \paragraph*{Configuration:}
 
@@ -751,7 +758,7 @@ func host_broadcast_state():
 \begin{enumerate}
     \item Host creates room → signaling server assigns unique code
     \item Host shares code with players
-    \item Players connect via WebRTC signaling
+    \item Players connect via relay server
     \item Each player establishes direct P2P connection with all others
     \item Host waits for all players ready
     \item Host triggers synchronized scene transition
@@ -970,14 +977,14 @@ Player 3 Client (owner):
 \end{itemize}
 
 %-----------------------------------------------------------------------
-\section{Mobile UI/UX Design}
-\label{sec:mobile-ui-ux}
+\section{Responsive UI/UX Design}
+\label{sec:responsive-ui-ux}
 
 %-----------------------------------------------------------------------
 \subsection{Design Constraints}
 \label{subsec:design-constraints}
 
-Mobile platforms impose several constraints that significantly influenced design decisions:
+Web platforms and varying screen sizes impose several constraints that significantly influenced design decisions:
 
 \begin{itemize}
     \item \textbf{Screen Size}: 5--7 inch displays, approximately 1080x2400 pixels
@@ -1104,7 +1111,7 @@ Based on testing and design constraints:
 \begin{itemize}
     \item \textbf{Maximum Cards}: 200 (UI becomes difficult with more)
     \item \textbf{Maximum Players}: 4 (P2P mesh becomes inefficient beyond this)
-    \item \textbf{Target Frame Rate}: 60 FPS on mid-range devices (2020+ Android phones)
+    \item \textbf{Target Frame Rate}: 60 FPS in modern web browsers
     \item \textbf{Network Latency Tolerance}: Acceptable gameplay up to 200ms RTT
     \item \textbf{Minimum Screen Size}: 5-inch display (smaller makes cards too small)
 \end{itemize}
@@ -1122,10 +1129,10 @@ This chapter presented the comprehensive architecture of the HPC Sorting Serious
     \item Multiplayer networking architecture with host-authoritative model
     \item GDSync framework integration for state synchronization
     \item Detailed data flow diagrams for single-player and multiplayer scenarios
-    \item Mobile UI/UX design strategies and constraints
+    \item Responsive UI/UX design strategies and constraints
     \item Performance optimization considerations
 \end{itemize}
 
-The architecture balances educational effectiveness with technical feasibility, prioritizing clarity of HPC concept representation while maintaining acceptable performance on mobile devices. The modular, component-based design allows for future extensions and modifications, fulfilling the extensibility objective outlined in Chapter~\ref{ch:introduction}.
+The architecture balances educational effectiveness with technical feasibility, prioritizing clarity of HPC concept representation while maintaining acceptable performance across web browsers. The modular, component-based design allows for future extensions and modifications, fulfilling the extensibility objective outlined in Chapter~\ref{ch:introduction}.
 
 The next chapter will detail the implementation of this architecture, including development tools, code organization, and specific technical challenges encountered during realization of this design.

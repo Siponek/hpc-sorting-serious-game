@@ -18,7 +18,7 @@ This thesis adopts the Design Science Research (DSR) methodology \citep{hevner20
 The DSR process consists of six iterative activities:
 
 \begin{enumerate}
-    \item \textbf{Problem Identification and Motivation}: Identify the research problem (teaching HPC concepts) and justify the value of a solution (serious game on mobile platforms).
+    \item \textbf{Problem Identification and Motivation}: Identify the research problem (teaching HPC concepts) and justify the value of a solution (web-based serious game).
 
     \item \textbf{Define Objectives of a Solution}: Infer solution objectives from problem definition and existing knowledge (create engaging, accessible, educational multiplayer game).
 
@@ -38,7 +38,7 @@ DSR is appropriate for this research because:
 \begin{itemize}
     \item The goal is to create a functional artifact (serious game) rather than merely analyze existing phenomena
     \item The problem is practical and relevant to HPC education
-    \item The solution requires integrating knowledge from multiple domains (pedagogy, game design, parallel computing, mobile development)
+    \item The solution requires integrating knowledge from multiple domains (pedagogy, game design, parallel computing, web development)
     \item Evaluation can be both utility-based (does it work?) and design-based (is it well-constructed?)
 \end{itemize}
 
@@ -59,7 +59,7 @@ The game development followed an iterative, incremental approach:
 \paragraph*{Phase 2: Single-Player Implementation (Weeks 4--7)}
 \begin{itemize}
     \item Implemented card generation, shuffling, and rendering
-    \item Developed drag-and-drop mechanics for mobile touch input
+    \item Developed drag-and-drop mechanics for touch and mouse input
     \item Created buffer zones for private card storage
     \item Implemented sorting validation and game completion logic
     \item Added timer and move counting
@@ -67,10 +67,10 @@ The game development followed an iterative, incremental approach:
 
 \paragraph*{Phase 3: Multiplayer Foundation (Weeks 8--12)}
 \begin{itemize}
-    \item Integrated WebRTC for peer-to-peer connections
+    \item Developed HTTP/SSE relay server for web browser compatibility
     \item Implemented lobby system for matchmaking
     \item Developed basic state synchronization
-    \item Integrated GDSync framework
+    \item Integrated GDSync framework with custom web transport layer
     \item Tested connection establishment and stability
 \end{itemize}
 
@@ -85,9 +85,9 @@ The game development followed an iterative, incremental approach:
 
 \paragraph*{Phase 5: Polish and Testing (Weeks 17--20)}
 \begin{itemize}
-    \item UI/UX improvements for mobile usability
+    \item UI/UX improvements for web usability
     \item Performance optimization (rendering, networking)
-    \item Extensive testing on real Android devices
+    \item Extensive testing across web browsers
     \item Documentation and code cleanup
     \item Preparation for evaluation and thesis writing
 \end{itemize}
@@ -96,7 +96,7 @@ The game development followed an iterative, incremental approach:
 \section{Requirements Analysis}
 \label{sec:requirements}
 
-A comprehensive requirements analysis was conducted to ensure the game met educational, functional, and non-functional objectives.
+A comprehensive requirements analysis was conducted to ensure the game met educational and functional objectives.
 
 %-----------------------------------------------------------------------
 \subsection{Educational Requirements}
@@ -166,7 +166,7 @@ Functional requirements specify what the system must do:
 
 \paragraph*{FR3: Multiplayer Mode}
 \begin{itemize}
-    \item Enable 2--4 players to connect via P2P networking
+    \item Enable 2--4 players to connect via server-relayed networking
     \item Provide lobby for matchmaking and game configuration
     \item Display shared container visible to all players (OpenMP shared memory)
     \item Synchronize card movements across all clients
@@ -192,60 +192,17 @@ Functional requirements specify what the system must do:
     \item Confetti or celebration effects upon game completion
 \end{itemize}
 
-%-----------------------------------------------------------------------
-\subsection{Non-Functional Requirements}
-\label{subsec:nonfunctional-requirements}
-
-Non-functional requirements specify quality attributes and constraints:
-
-\paragraph*{NFR1: Performance}
+\paragraph*{FR6: Quality Attributes}
 \begin{itemize}
-    \item Target 60 FPS on mid-range Android devices (2020+)
+    \item Target 60 FPS in modern web browsers
     \item Game initialization and card generation under 2 seconds
-    \item Network latency tolerance up to 200ms for playable experience
     \item Support up to 200 cards without significant performance degradation
-\end{itemize}
-
-\paragraph*{NFR2: Usability}
-\begin{itemize}
-    \item Intuitive touch interface requiring no tutorial for basic gameplay
+    \item Intuitive interface requiring no tutorial for basic gameplay
     \item Responsive drag-and-drop with visual feedback
-    \item Readable text and cards on 5-inch screens
-    \item Support both portrait and landscape orientations
-\end{itemize}
-
-\paragraph*{NFR3: Reliability}
-\begin{itemize}
-    \item No crashes during normal gameplay
     \item Graceful handling of network disconnections
-    \item State recovery after brief network interruptions
-    \item Data validation to prevent inconsistent game states
-\end{itemize}
-
-\paragraph*{NFR4: Portability}
-\begin{itemize}
-    \item Primary target: Android 7.0+ (API level 24+)
-    \item Desirable: iOS 12+ support
-    \item Desirable: Web export (HTML5) for browser play
-    \item Architecture should allow future platform additions
-\end{itemize}
-
-\paragraph*{NFR5: Maintainability}
-\begin{itemize}
-    \item Clean code structure with clear separation of concerns
-    \item Comprehensive inline documentation and comments
-    \item Modular design allowing feature additions
-    \item Version-controlled codebase (Git)
+    \item Clean code structure with modular design
     \item Open-source license (MIT) for educational reuse
-\end{itemize}
-
-\paragraph*{NFR6: Accessibility}
-\begin{itemize}
     \item No account creation or authentication required
-    \item Free to download and play
-    \item Minimal permissions (network access only)
-    \item Offline single-player mode
-    \item Low data usage for multiplayer
 \end{itemize}
 
 %-----------------------------------------------------------------------
@@ -264,14 +221,15 @@ Game engines were evaluated based on:
 \begin{itemize}
     \item License and cost
     \item 2D rendering capabilities
-    \item Mobile platform support
+    \item Web platform support (HTML5 export)
     \item Learning curve and documentation
     \item Community support and plugin ecosystem
     \item Multiplayer/networking support
-    \item Performance on mobile devices
+    \item Performance in browsers
 \end{itemize}
 
 \paragraph*{Alternatives Considered:}
+\par
 
 \begin{table}[htbp]
     \centering
@@ -283,11 +241,11 @@ Game engines were evaluated based on:
         \midrule
         Free/Open Source   & Partial        & Partial         & Yes            & Yes              \\
         2D Performance     & Good           & Fair            & Excellent      & Excellent        \\
-        Mobile Support     & Excellent      & Good            & Excellent      & Good             \\
+        Web Export         & Good           & Fair            & Excellent      & Good             \\
         Learning Curve     & Medium         & Steep           & Gentle         & Medium           \\
         Networking APIs    & Good           & Excellent       & Good           & Fair             \\
         Community Size     & Large          & Large           & Medium         & Small            \\
-        File Size (APK)    & Large          & Very Large      & Small          & Medium           \\
+        Export Size        & Large          & Very Large      & Small          & Medium           \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -299,15 +257,15 @@ Godot Engine was selected because:
 \begin{enumerate}
     \item \textbf{Cost}: Completely free and open-source (MIT license), no royalties, subscriptions, or hidden fees. Critical for educational projects with no budget.
 
-    \item \textbf{2D Optimization}: Godot is specifically optimized for 2D games, unlike Unity and Unreal which prioritize 3D. This results in better performance and smaller APK sizes.
+    \item \textbf{2D Optimization}: Godot is specifically optimized for 2D games, unlike Unity and Unreal which prioritize 3D. This results in better performance and smaller export sizes.
 
-    \item \textbf{Lightweight}: Export builds are significantly smaller (10--20 MB) compared to Unity (50--100 MB) or Unreal (100+ MB), important for mobile distribution.
+    \item \textbf{Lightweight}: Web export builds are significantly smaller (10--20 MB) compared to Unity (50--100 MB) or Unreal (100+ MB), important for fast loading in browsers.
 
     \item \textbf{GDScript}: Python-like scripting language is accessible to students who may examine the source code. Lower barrier to entry than C\# (Unity) or C++ (Unreal).
 
     \item \textbf{Scene Architecture}: Godot's scene-based architecture promotes modular design and code reuse, aligning well with software engineering best practices.
 
-    \item \textbf{Built-in Multiplayer}: High-level networking APIs simplify P2P connection management, though third-party frameworks (GDSync) provide additional abstractions.
+    \item \textbf{Built-in Multiplayer}: High-level networking APIs available, though third-party frameworks (GDSync) and custom transport layers were needed for web browser compatibility.
 
     \item \textbf{Active Community}: Growing community with extensive tutorials, documentation, and plugins. Version 4.x introduced significant improvements over 3.x.
 
@@ -401,39 +359,57 @@ GDSync introduced some difficulties:
 Despite these challenges, GDSync provided net benefits by significantly reducing the amount of low-level networking code required.
 
 %-----------------------------------------------------------------------
-\subsection{Networking Technology: WebRTC}
-\label{subsec:webrtc-selection}
+\subsection{Networking Technology: HTTP/SSE Relay}
+\label{subsec:http-sse-selection}
 
-\paragraph*{Alternatives Considered:}
+\paragraph*{Web Browser Constraints:}
+
+Web browsers impose significant restrictions on networking that prevented use of traditional approaches:
 
 \begin{itemize}
-    \item \textbf{WebSocket}: Reliable, bi-directional communication; requires server infrastructure
-    \item \textbf{TCP Sockets}: Low-level control; complex NAT traversal, no built-in encryption
-    \item \textbf{WebRTC}: Peer-to-peer data channels with NAT traversal; modern standard
+    \item \textbf{No UDP Access}: Browsers cannot open raw UDP sockets, eliminating ENet and similar protocols
+    \item \textbf{WebRTC Complexity}: While browsers support WebRTC, GDSync's native WebRTC implementation does not function in browser-exported Godot games due to sandboxing
+    \item \textbf{No LAN Discovery}: Browser security prevents local network peer discovery
 \end{itemize}
 
-\paragraph*{Decision Rationale:}
+\paragraph*{Solution: HTTP + Server-Sent Events (SSE)}
 
-WebRTC was chosen because:
+To overcome browser limitations, a custom relay server architecture was developed:
 
 \begin{enumerate}
-    \item \textbf{Serverless Gameplay}: P2P connections eliminate server costs for actual gameplay
-    \item \textbf{NAT Traversal}: Built-in STUN/TURN support handles firewall and NAT issues
-    \item \textbf{Low Latency}: Direct peer connections minimize round-trip time
-    \item \textbf{Security}: Encrypted by default (DTLS)
-    \item \textbf{Cross-Platform}: Available on Android, iOS, web browsers, desktop
-    \item \textbf{Godot Support}: Good integration via official WebRTC plugin and GDSync
+    \item \textbf{HTTP POST for Commands}: All game packets sent via standard HTTP POST requests
+    \item \textbf{SSE for Real-time Events}: Server-Sent Events provide push notifications to clients
+    \item \textbf{Server Relay}: All communication passes through the relay server rather than peer-to-peer
+    \item \textbf{Star Topology}: Clients connect to server; host receives, processes, and broadcasts via server
 \end{enumerate}
 
-\paragraph*{Signaling Server:}
+\paragraph*{Relay Server Implementation:}
 
-WebRTC requires a signaling server only for connection establishment:
+The relay server (Python/aiohttp) provides:
 \begin{itemize}
-    \item Lightweight Node.js server for exchanging connection information
-    \item Minimal infrastructure cost (can use free-tier hosting)
-    \item Does not relay game data—only coordinates initial handshake
-    \item Room-based matchmaking with unique codes
+    \item \texttt{POST /api/lobby/connect} --- Client registration and peer ID assignment
+    \item \texttt{POST /api/lobby/create} --- Create lobby with room code
+    \item \texttt{POST /api/lobby/join} --- Join existing lobby by code
+    \item \texttt{POST /api/lobby/broadcast} --- Send game packets to other peers
+    \item \texttt{GET /api/lobby/events} --- SSE stream for receiving real-time events
 \end{itemize}
+
+\paragraph*{Trade-offs:}
+
+This architecture has trade-offs compared to peer-to-peer approaches:
+\begin{itemize}
+    \item \textbf{Advantage}: Universal browser compatibility without plugins
+    \item \textbf{Advantage}: Simplified connection establishment (no STUN/TURN configuration)
+    \item \textbf{Trade-off}: Requires running relay server infrastructure
+    \item \textbf{Trade-off}: Higher latency due to server hop (acceptable for turn-based card game)
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/diagrams/http-sse-sequence.png}
+    \caption{HTTP/SSE relay message flow: connection, lobby creation, and gameplay synchronization}
+    \label{fig:http-sse-sequence}
+\end{figure}
 
 %-----------------------------------------------------------------------
 \subsection{Supporting Plugins and Tools}
@@ -485,16 +461,16 @@ The core challenge was translating abstract parallel computing concepts into tan
     \label{tab:concept-mapping-methodology}
     \begin{tabular}{@{}p{3.5cm}p{4cm}p{5cm}@{}}
         \toprule
-        \textbf{HPC Concept}   & \textbf{Real-World Analogy}        & \textbf{Game Mechanic}             \\
+        \textbf{HPC Concept}   & \textbf{Real-World Analogy}        & \textbf{Game Mechanic}               \\
         \midrule
-        Sequential Execution   & Single student working alone       & Single player in solo mode         \\
-        Thread (OpenMP)        & Student with access to shared desk & Player in multiplayer mode         \\
-        Shared Memory          & Desk visible to all students       & Shared card container              \\
-        Thread-Local Storage   & Student's private notebook         & Player's private buffer zones      \\
-        Parallel Execution     & Students work simultaneously       & Multiple players, no turn-taking   \\
-        Synchronization        & Students coordinate access         & Shared container access patterns   \\
-        Memory Access Overhead & Time to reach shared desk          & Network latency to shared data     \\
-        Speedup                & Multiple students finish faster    & Timer comparison: solo vs. multi   \\
+        Sequential Execution   & Single student working alone       & Single player in solo mode           \\
+        Thread (OpenMP)        & Student with access to shared desk & Player in multiplayer mode           \\
+        Shared Memory          & Desk visible to all students       & Shared card container                \\
+        Thread-Local Storage   & Student's private notebook         & Player's private buffer zones        \\
+        Parallel Execution     & Students work simultaneously       & Multiple players, no turn-taking     \\
+        Synchronization        & Students coordinate access         & Shared container access patterns     \\
+        Memory Access Overhead & Time to reach shared desk          & Network latency to shared data       \\
+        Speedup                & Multiple students finish faster    & Timer comparison: solo vs. multi     \\
         Load Balancing         & Even distribution of work          & Fair work distribution among players \\
         \bottomrule
     \end{tabular}
@@ -526,14 +502,13 @@ The pedagogical mapping was validated through:
 
 \paragraph*{Interaction Design:}
 
-Card interactions were designed around mobile touch paradigms:
+Card interactions were designed to work with both touch and mouse input:
 
 \begin{itemize}
-    \item \textbf{Tap to Select}: Quick tap selects a card (alternative to drag)
-    \item \textbf{Drag to Move}: Long-press initiates drag, release drops card
-    \item \textbf{Swipe to Scroll}: Vertical swipe scrolls card container
+    \item \textbf{Click/Tap to Select}: Quick click or tap selects a card (alternative to drag)
+    \item \textbf{Drag to Move}: Click-and-hold initiates drag, release drops card
+    \item \textbf{Scroll}: Vertical scroll moves through card container
     \item \textbf{Visual Feedback}: Cards scale up when dragged, drop zones highlight
-    \item \textbf{Haptic Feedback}: Vibration on card pickup (optional)
 \end{itemize}
 
 \paragraph*{Color Coding:}
@@ -560,7 +535,7 @@ Colors convey semantic meaning:
 The game's success was evaluated across multiple dimensions:
 
 \begin{enumerate}
-    \item \textbf{Technical Performance}: Frame rate, network latency, memory usage, battery consumption
+    \item \textbf{Technical Performance}: Frame rate, memory usage, browser compatibility
     \item \textbf{Functional Completeness}: Implementation of all required features
     \item \textbf{Usability}: Ease of use, learnability, satisfaction
     \item \textbf{Educational Effectiveness}: Conceptual understanding, engagement, learning outcomes
@@ -571,8 +546,7 @@ The game's success was evaluated across multiple dimensions:
 \subparagraph{Technical Benchmarking:}
 \begin{itemize}
     \item Performance profiling using Godot's built-in tools
-    \item Frame rate monitoring on target devices
-    \item Network latency measurement with varying connection qualities
+    \item Frame rate monitoring in target browsers
     \item Memory usage tracking during extended gameplay
 \end{itemize}
 
@@ -604,20 +578,20 @@ The game's success was evaluated across multiple dimensions:
     \item \textbf{Version Control}: Git with GitHub repository
 \end{itemize}
 
-\paragraph*{Testing Devices:}
+\paragraph*{Testing Environment:}
 \begin{itemize}
-    \item Primary: Google Pixel 6 (Android 13)
-    \item Secondary: Samsung Galaxy A52 (Android 12)
-    \item Tertiary: OnePlus 8T (Android 11)
-    \item Emulators: Android Studio AVD for additional testing
+    \item Primary: Chrome 120+ (Windows, macOS)
+    \item Secondary: Firefox 120+ (Windows, Linux)
+    \item Tertiary: Safari 17+ (macOS)
+    \item Local development server for testing
 \end{itemize}
 
 \paragraph*{Build and Deployment:}
 \begin{itemize}
-    \item Android APK built via Godot export templates
+    \item Web export (HTML5) built via Godot export templates
     \item Debug builds for development testing
     \item Release builds with optimizations for distribution
-    \item APK signing for Google Play compatibility (future)
+    \item Static file hosting for deployment
 \end{itemize}
 
 %-----------------------------------------------------------------------
@@ -628,8 +602,8 @@ This chapter described the comprehensive methodology employed to develop the HPC
 
 \begin{itemize}
     \item \textbf{Research Approach}: Design Science Research framework with iterative development
-    \item \textbf{Requirements}: Educational, functional, and non-functional requirements derived from learning objectives
-    \item \textbf{Technology Selection}: Justified choices of Godot Engine, GDScript, GDSync, and WebRTC based on project needs
+    \item \textbf{Requirements}: Educational and functional requirements derived from learning objectives
+    \item \textbf{Technology Selection}: Justified choices of Godot Engine, GDScript, GDSync, and HTTP/SSE relay architecture based on project needs
     \item \textbf{Game Design}: Systematic mapping of HPC concepts to game mechanics with UX design principles
     \item \textbf{Evaluation}: Multi-faceted evaluation approach combining technical, usability, and educational assessment
 \end{itemize}

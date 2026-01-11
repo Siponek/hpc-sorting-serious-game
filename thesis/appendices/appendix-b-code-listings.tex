@@ -1,446 +1,116 @@
 %-----------------------------------------------------------------------
-% Appendix B: Code Listings
+% Appendix B: Code Reference
 %-----------------------------------------------------------------------
 
-% Set default language for all listings in this file
-\lstset{
-    language=Python,
-    basicstyle=\ttfamily\small,
-    breaklines=true,
-    showstringspaces=false,
-    numbers=left,
-    numberstyle=\tiny\color{gray},
-    mathescape=false
-}
+\section{Source Code Repository}
+\label{app:b:repository}
 
-\section{Introduction}
-\label{app:b:introduction}
-
-This appendix provides key code listings from the HPC Sorting Serious Game implementation. Complete source code is available in the open-source repository.
-
-%-----------------------------------------------------------------------
-\section{Core Game Logic}
-\label{app:b:core-logic}
-
-\subsection{Card Component}
-\label{app:b:card-component}
-
-\begin{lstlisting}[caption={Card script (card.gd)}, label={lst:app-card}]
-extends Control
-class_name Card
-
-signal card_selected(card: Card)
-signal card_dragged(card: Card, position: Vector2)
-signal card_dropped(card: Card, target)
-
-@export var card_value: int = 0
-@export var card_id: int = 0
-
-var is_dragging: bool = false
-var is_selected: bool = false
-var original_position: Vector2
-var drag_offset: Vector2
-
-@onready var label: Label = $Label
-@onready var background: ColorRect = $Background
-
-func _ready():
-    update_display()
-    setup_input_handling()
-
-func setup_input_handling():
-    gui_input.connect(_on_gui_input)
-
-func _on_gui_input(event: InputEvent):
-    if event is InputEventScreenTouch:
-        if event.pressed:
-            start_drag()
-        else:
-            end_drag()
-    elif event is InputEventScreenDrag and is_dragging:
-        handle_drag(event.position)
-
-func start_drag():
-    is_dragging = true
-    original_position = global_position
-    drag_offset = get_global_mouse_position() - global_position
-    z_index = 100  # Bring to front
-    scale = Vector2(1.1, 1.1)  # Slightly enlarge
-    card_selected.emit(self)
-
-func handle_drag(position: Vector2):
-    global_position = get_global_mouse_position() - drag_offset
-    card_dragged.emit(self, global_position)
-
-func end_drag():
-    if not is_dragging:
-        return
-
-    is_dragging = false
-    scale = Vector2(1.0, 1.0)
-    z_index = 0
-
-    var drop_target = find_drop_target()
-    if drop_target:
-        card_dropped.emit(self, drop_target)
-    else:
-        # Return to original position
-        global_position = original_position
-
-func find_drop_target() -> Node:
-    # Check for overlapping drop zones
-    var mouse_pos = get_global_mouse_position()
-    var space_state = get_world_2d().direct_space_state
-    var query = PhysicsPointQueryParameters2D.new()
-    query.position = mouse_pos
-    var results = space_state.intersect_point(query)
-
-    for result in results:
-        if result.collider.has_method("accept_card"):
-            return result.collider
-
-    return null
-
-func update_display():
-    if label:
-        label.text = str(card_value)
-
-    if background:
-        if is_selected:
-            background.color = Color.YELLOW
-        else:
-            background.color = Color.WHITE
-
-func set_card_value(value: int):
-    card_value = value
-    update_display()
-
-func get_card_value() -> int:
-    return card_value
-\end{lstlisting}
-
-%-----------------------------------------------------------------------
-\subsection{Card Manager}
-\label{app:b:card-manager}
-
-\begin{lstlisting}[caption={Card Manager script (card\_manager.gd)}]
-extends Node
-class_name CardManager
-
-signal cards_generated(count: int)
-signal cards_shuffled()
-signal sorting_complete()
-
-const CARD_SCENE = preload("res://scenes/card.tscn")
-
-var cards: Array[Card] = []
-var card_id_counter: int = 0
-
-func generate_cards(count: int) -> Array[Card]:
-    cards.clear()
-
-    for i in range(count):
-        var card = CARD_SCENE.instantiate()
-        card.card_id = card_id_counter
-        card.set_card_value(i + 1)
-        cards.append(card)
-        card_id_counter += 1
-
-    cards_generated.emit(count)
-    return cards
-
-func shuffle_cards():
-    var rng = RandomNumberGenerator.new()
-    rng.randomize()
-
-    for i in range(cards.size() - 1, 0, -1):
-        var j = rng.randi_range(0, i)
-        var temp = cards[i]
-        cards[i] = cards[j]
-        cards[j] = temp
-
-    cards_shuffled.emit()
-
-func is_sorted(card_array: Array) -> bool:
-    if card_array.size() < 2:
-        return true
-
-    for i in range(card_array.size() - 1):
-        if card_array[i].get_card_value() > card_array[i + 1].get_card_value():
-            return false
-
-    return true
-
-func check_global_sorted() -> bool:
-    if is_sorted(cards):
-        sorting_complete.emit()
-        return true
-    return false
-
-func get_card_by_id(id: int) -> Card:
-    for card in cards:
-        if card.card_id == id:
-            return card
-    return null
-\end{lstlisting}
-
-%-----------------------------------------------------------------------
-\section{Multiplayer Networking}
-\label{app:b:multiplayer-networking}
-
-\subsection{Lobby Manager}
-\label{app:b:lobby-manager}
-
-\begin{lstlisting}[caption={Lobby Manager script (lobby\_manager.gd)}]
-extends Node
-class_name LobbyManager
-
-signal player_joined(player_id: int, player_name: String)
-signal player_left(player_id: int)
-signal game_started()
-
-var players: Dictionary = {}  # player_id -> player_info
-var is_host: bool = false
-var room_code: String = ""
-
-func create_lobby() -> String:
-    is_host = true
-    room_code = generate_room_code()
-    add_local_player()
-    return room_code
-
-func join_lobby(code: String) -> bool:
-    room_code = code
-    # Connect to host via GDSync/WebRTC
-    var success = await connect_to_host(room_code)
-    if success:
-        add_local_player()
-    return success
-
-func generate_room_code() -> String:
-    var rng = RandomNumberGenerator.new()
-    rng.randomize()
-    var code = ""
-    for i in range(6):
-        code += str(rng.randi_range(0, 9))
-    return code
-
-func add_local_player():
-    var local_id = multiplayer.get_unique_id()
-    var player_info = {
-        "id": local_id,
-        "name": "Player " + str(players.size() + 1),
-        "ready": false
-    }
-    players[local_id] = player_info
-
-    if multiplayer.is_server():
-        broadcast_player_list()
-
-@rpc("any_peer", "call_remote", "reliable")
-func rpc_player_joined(player_id: int, player_name: String):
-    players[player_id] = {
-        "id": player_id,
-        "name": player_name,
-        "ready": false
-    }
-    player_joined.emit(player_id, player_name)
-
-@rpc("any_peer", "call_remote", "reliable")
-func rpc_player_left(player_id: int):
-    players.erase(player_id)
-    player_left.emit(player_id)
-
-@rpc("authority", "call_remote", "reliable")
-func rpc_start_game():
-    game_started.emit()
-    # Transition to game scene
-    get_tree().change_scene_to_file("res://scenes/multiplayer_game.tscn")
-
-func broadcast_player_list():
-    for peer_id in multiplayer.get_peers():
-        for player_id in players:
-            var player = players[player_id]
-            rpc_player_joined.rpc_id(peer_id, player_id, player["name"])
-
-func connect_to_host(code: String) -> bool:
-    # Implementation depends on signaling server details
-    # This is a placeholder for WebRTC connection logic
-    return true
-
-func start_game():
-    if not is_host:
-        return
-
-    rpc_start_game.rpc()
-    game_started.emit()
-\end{lstlisting}
-
-%-----------------------------------------------------------------------
-\subsection{State Synchronization}
-\label{app:b:state-sync}
-
-\begin{lstlisting}[caption={State synchronization with GDSync}]
-extends Node
-
-# Synchronized card movement
-@GDSync.rpc(call_local=true)
-func sync_move_card(card_id: int, target_container_id: int, position: Vector2):
-    var card = CardManager.get_card_by_id(card_id)
-    var container = get_node(target_container_id)
-
-    if card and container:
-        # Remove from current parent
-        if card.get_parent():
-            card.get_parent().remove_child(card)
-
-        # Add to new container
-        container.add_child(card)
-        card.global_position = position
-
-        Logger.info("Card %d moved to container %s" % [card_id, container.name])
-
-# Synchronized visibility management
-@GDSync.sync(mode=GDSync.SYNC_MODE.AUTHORITY)
-var card_ownership: Dictionary = {}  # card_id -> owner_player_id
-
-func update_card_visibility():
-    var local_player_id = multiplayer.get_unique_id()
-
-    for card_id in card_ownership:
-        var card = CardManager.get_card_by_id(card_id)
-        var owner_id = card_ownership[card_id]
-
-        # Cards are visible if:
-        # 1. In shared container (owner_id == -1)
-        # 2. Owned by local player
-        if owner_id == -1 or owner_id == local_player_id:
-            card.visible = true
-        else:
-            card.visible = false
-
-# Host-authoritative game state
-@GDSync.rpc(call_local=false)
-func request_move_card(card_id: int, target_id: int):
-    if not multiplayer.is_server():
-        return
-
-    # Validate move on host
-    if is_valid_move(card_id, target_id):
-        # Broadcast to all clients
-        sync_move_card.rpc(card_id, target_id, Vector2.ZERO)
-    else:
-        # Reject move
-        Logger.warn("Invalid move rejected: card %d to %d" % [card_id, target_id])
-
-func is_valid_move(card_id: int, target_id: int) -> bool:
-    # Implement game-specific validation logic
-    return true
-\end{lstlisting}
-
-%-----------------------------------------------------------------------
-\section{UI Components}
-\label{app:b:ui-components}
-
-\subsection{Toast Notification System}
-\label{app:b:toast-system}
-
-\begin{lstlisting}[caption={Toast notification usage}]
-# Show informational toast
-ToastParty.show_toast("Player joined the game!", ToastParty.LENGTH_SHORT)
-
-# Show success toast
-ToastParty.show_toast("Sorting complete!", ToastParty.LENGTH_LONG, ToastParty.TYPE_SUCCESS)
-
-# Show error toast
-ToastParty.show_toast("Connection failed", ToastParty.LENGTH_LONG, ToastParty.TYPE_ERROR)
-
-# Custom toast with positioning
-ToastParty.show_toast_at_position(
-    "Card moved to buffer",
-    Vector2(100, 100),
-    ToastParty.LENGTH_SHORT
-)
-\end{lstlisting}
-
-%-----------------------------------------------------------------------
-\section{Utility Functions}
-\label{app:b:utilities}
-
-\subsection{Performance Profiling}
-\label{app:b:profiling}
-
-\begin{lstlisting}[caption={Simple performance profiler}]
-extends Node
-class_name Profiler
-
-var start_times: Dictionary = {}
-
-func start_timer(label: String):
-    start_times[label] = Time.get_ticks_msec()
-
-func end_timer(label: String) -> float:
-    if not start_times.has(label):
-        Logger.error("Timer '%s' not started" % label)
-        return 0.0
-
-    var elapsed = Time.get_ticks_msec() - start_times[label]
-    start_times.erase(label)
-    Logger.info("Timer '%s': %d ms" % [label, elapsed])
-    return elapsed
-
-func measure_fps() -> float:
-    return Engine.get_frames_per_second()
-\end{lstlisting}
-
-%-----------------------------------------------------------------------
-\section{Configuration Files}
-\label{app:b:configuration}
-
-\subsection{Project Configuration}
-\label{app:b:project-config}
-
-\begin{lstlisting}[caption={project.godot (excerpt)}, language=Python]
-[application]
-config/name="HPC Sorting Serious Game"
-config/version="1.0.0"
-run/main_scene="res://scenes/main_menu.tscn"
-config/features=PackedStringArray("4.2", "Mobile")
-config/icon="res://icon.png"
-
-[display]
-window/size/viewport_width=1080
-window/size/viewport_height=1920
-window/size/mode=2
-window/handheld/orientation=1
-
-[input_devices]
-pointing/emulate_touch_from_mouse=true
-
-[rendering]
-renderer/rendering_method="mobile"
-textures/vram_compression/import_etc2_astc=true
-\end{lstlisting}
-
-%-----------------------------------------------------------------------
-\section{Build and Export}
-\label{app:b:build-export}
-
-\subsection{Android Export Configuration}
-\label{app:b:android-export}
-
-Key export settings for Android:
+The complete source code for the HPC Sorting Serious Game is available as an open-source project:
 
 \begin{itemize}
-    \item \textbf{Min SDK}: 24 (Android 7.0)
-    \item \textbf{Target SDK}: 33 (Android 13)
-    \item \textbf{Permissions}:
-          \begin{itemize}
-              \item \texttt{INTERNET} (for multiplayer)
-              \item \texttt{ACCESS\_NETWORK\_STATE} (check connectivity)
-          \end{itemize}
-    \item \textbf{Architecture}: ARM64
-    \item \textbf{Export Mode}: Release (optimized)
+    \item \textbf{Repository}: \url{https://github.com/szymonzinkowicz/hpc-sorting-serious-game}
+    \item \textbf{License}: MIT License
+    \item \textbf{Language}: GDScript (Godot 4.x)
+    \item \textbf{Documentation}: README and inline comments
 \end{itemize}
+
+\section{Project Structure}
+\label{app:b:structure}
+
+The project follows Godot Engine conventions:
+
+\begin{verbatim}
+hpc-sorting-serious-game/
++-- project.godot         # Project configuration
++-- scenes/               # Scene files (.tscn)
+|   +-- main_menu.tscn
+|   +-- singleplayer_game.tscn
+|   +-- multiplayer_game.tscn
+|   +-- components/       # Reusable UI components
++-- scripts/              # GDScript source files
+|   +-- card.gd           # Card logic
+|   +-- card_manager.gd   # Card generation/shuffling
+|   +-- game_manager.gd   # Game state management
+|   +-- networking/       # GDSync integration
++-- assets/               # Textures, fonts, audio
++-- addons/               # GDSync plugin
++-- export_presets.cfg    # Web export configuration
+\end{verbatim}
+
+\section{Key Components}
+\label{app:b:components}
+
+\subsection{Card System}
+
+The card system handles drag-and-drop interaction and visual state:
+
+\begin{itemize}
+    \item \texttt{card.gd}: Individual card with value, drag handling, visual feedback
+    \item \texttt{card\_manager.gd}: Generation, shuffling, sorting validation
+    \item \texttt{card\_container.gd}: Drop zones (shared container, private buffers)
+\end{itemize}
+
+\subsection{Networking}
+
+Multiplayer functionality uses GDSync with HTTP/SSE transport:
+
+\begin{itemize}
+    \item \texttt{lobby\_manager.gd}: Room creation, joining, player management
+    \item \texttt{state\_sync.gd}: Card movement synchronization across clients
+    \item \texttt{http\_transport.gd}: Custom transport layer for web compatibility
+\end{itemize}
+
+\subsection{Game Logic}
+
+Core game mechanics:
+
+\begin{itemize}
+    \item \texttt{game\_manager.gd}: Mode selection, timer, win condition checking
+    \item \texttt{sorting\_validator.gd}: Checks if cards are in correct order
+    \item \texttt{performance\_tracker.gd}: Measures time, moves for metrics
+\end{itemize}
+
+\section{Configuration}
+\label{app:b:configuration}
+
+\subsection{Web Export Settings}
+
+Key settings in \texttt{export\_presets.cfg} for web deployment:
+
+\begin{itemize}
+    \item \textbf{Export Mode}: WebAssembly (WASM)
+    \item \textbf{Threads}: Single-threaded (for browser compatibility)
+    \item \textbf{VRAM Compression}: Disabled (better compatibility)
+    \item \textbf{Canvas Resize Policy}: Responsive
+\end{itemize}
+
+\subsection{GDSync Configuration}
+
+The HTTP/SSE relay server URL and settings are configured in the project autoload.
+
+\section{Building and Running}
+\label{app:b:building}
+
+\subsection{Development}
+
+\begin{enumerate}
+    \item Install Godot Engine 4.x
+    \item Clone the repository
+    \item Open \texttt{project.godot} in Godot Editor
+    \item Press F5 to run locally
+\end{enumerate}
+
+\subsection{Web Export}
+
+\begin{enumerate}
+    \item In Godot: Project $\rightarrow$ Export
+    \item Select ``Web'' preset
+    \item Click ``Export Project''
+    \item Deploy \texttt{index.html} and assets to web server
+\end{enumerate}
+
+\subsection{Relay Server}
+
+The HTTP/SSE relay server (Python/aiohttp) is in the \texttt{signaling-server/} directory. See Appendix~\ref{app:c} for API documentation.
 
 %-----------------------------------------------------------------------

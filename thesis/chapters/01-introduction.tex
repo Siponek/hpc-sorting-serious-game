@@ -56,7 +56,7 @@ This thesis aims to capture that pedagogical effectiveness in a scalable, digita
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.85\textwidth]{figures/diagrams/physical-to-digital-mapping.pdf}
+	\includegraphics[width=0.85\textwidth]{figures/diagrams/physical-to-digital-mapping.png}
 	\caption{Transformation from physical classroom experiments to digital serious game, preserving pedagogical effectiveness while overcoming physical limitations}
 	\label{fig:physical-to-digital}
 \end{figure}
@@ -78,7 +78,7 @@ This overarching problem decomposes into three interrelated challenges:
 
 	\item \textbf{Technical Challenge}: How can we implement real-time multiplayer gameplay across diverse devices with acceptable latency and consistent state synchronization?
 
-	\item \textbf{Design Challenge}: How can we balance educational effectiveness with engagement and playability while accommodating mobile and desktop platforms?
+	\item \textbf{Design Challenge}: How can we balance educational effectiveness with engagement and playability across different screen sizes and devices?
 \end{itemize}
 
 Detailed requirements analysis appears in Chapter~\ref{ch:methodology}.
@@ -97,9 +97,9 @@ The primary objective of this thesis is to develop a functional serious game pro
 
 	\item \textbf{Implement Web-First Functionality}: Develop the game as a web application that runs in browsers with responsive design across different screen sizes and devices
 
-	\item \textbf{Create Multiplayer Capability}: Implement real-time, peer-to-peer multiplayer functionality enabling 2--4 players to collaborate, simulating distributed computing scenarios
+	\item \textbf{Create Multiplayer Capability}: Implement real-time multiplayer functionality enabling 2--4 players to collaborate, simulating distributed computing scenarios
 
-	\item \textbf{Evaluate Technical Feasibility}: Assess challenges and solutions for multiplayer game development, particularly regarding state synchronization using the GDSync framework and WebRTC communication
+	\item \textbf{Evaluate Technical Feasibility}: Assess challenges and solutions for web-based multiplayer game development, particularly regarding state synchronization using the GDSync framework and HTTP/SSE relay architecture
 
 	\item \textbf{Document Development Process}: Provide comprehensive documentation of technology choices, implementation challenges, and solutions to guide future developers of educational games
 \end{enumerate}
@@ -120,10 +120,11 @@ The game presents players with a deck of numbered cards that must be sorted in a
 \paragraph*{Multiplayer Mode (OpenMP Shared-Memory Parallelism):} Represents shared-memory parallelism where multiple threads cooperate on a single address space. All players work collaboratively with cards visible in a shared container (representing shared memory), each player uses private buffer zones for local sorting (representing thread-local storage), and players work simultaneously without forced turn-taking (representing OpenMP's implicit synchronization and parallel execution model).
 
 The complete architecture and pedagogical mapping are detailed in Chapters~\ref{ch:methodology} and~\ref{ch:architecture}.
+\par
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.9\textwidth]{figures/diagrams/sequential-vs-openmp-modes.pdf}
+	\includegraphics[width=0.9\textwidth]{figures/diagrams/sequential-vs-openmp-modes.png}
 	\caption{Comparison of game modes: Single-player represents sequential execution (left) where one player sorts all cards independently; Multiplayer represents OpenMP shared-memory parallelism (right) where multiple players collaborate with a shared container and private buffers}
 	\label{fig:game-modes-comparison}
 \end{figure}
@@ -137,7 +138,7 @@ The game is built using open-source technologies:
 	\item \textbf{Godot Engine 4.x}: Lightweight game engine with excellent 2D capabilities and web export support
 	\item \textbf{GDScript}: Python-like scripting language for rapid development
 	\item \textbf{GDSync Framework}: Multiplayer state synchronization framework
-	\item \textbf{WebRTC}: Real-time peer-to-peer communication without dedicated servers
+	\item \textbf{HTTP/SSE Relay Server}: Custom server for real-time web-based multiplayer communication
 \end{itemize}
 
 The rationale for these technology choices is detailed in Chapter~\ref{ch:methodology}.
@@ -153,7 +154,7 @@ This thesis makes four primary contributions to the fields of HPC education, ser
 
 	\item \textbf{Technical Implementation}: A functional web-based serious game demonstrating real-time multiplayer synchronization for OpenMP simulation, responsive UI/UX for displaying 50+ interactive elements across diverse screen sizes, and solutions to web platform constraints including state consistency and network latency management.
 
-	\item \textbf{Comprehensive Documentation}: Detailed analysis of technical challenges (particularly GDSync framework issues, multiplayer synchronization, and mobile UI constraints) and solutions, providing practical guidance for educational game developers.
+	\item \textbf{Comprehensive Documentation}: Detailed analysis of technical challenges (particularly GDSync framework issues, multiplayer synchronization, and web browser constraints) and solutions, providing practical guidance for educational game developers.
 
 	\item \textbf{Open-Source Platform}: A freely available, extensible system for HPC education research, suitable for future academic publications and immediate classroom deployment.
 \end{enumerate}
@@ -166,15 +167,15 @@ Detailed discussion of these contributions and their implications appears in Cha
 
 The remainder of this thesis is organized as follows:
 
-\textbf{Chapter~\ref{ch:background}} reviews parallel computing fundamentals (focusing on OpenMP shared-memory parallelism), serious games in education, mobile game development challenges, and multiplayer architecture patterns, identifying gaps in existing HPC educational tools.
+\textbf{Chapter~\ref{ch:background}} reviews parallel computing fundamentals (focusing on OpenMP shared-memory parallelism), serious games in education, web game development challenges, and multiplayer architecture patterns, identifying gaps in existing HPC educational tools.
 
 \textbf{Chapter~\ref{ch:methodology}} describes the Design Science Research methodology, requirements analysis, and technology selection decisions.
 
-\textbf{Chapter~\ref{ch:architecture}} presents the system design and architecture, including scene structure, component design, multiplayer networking, and mobile UI/UX considerations.
+\textbf{Chapter~\ref{ch:architecture}} presents the system design and architecture, including scene structure, component design, multiplayer networking, and responsive UI/UX considerations.
 
-\textbf{Chapter~\ref{ch:implementation}} details the technical implementation, including development environment, single-player and multiplayer implementation, and mobile-specific optimizations.
+\textbf{Chapter~\ref{ch:implementation}} details the technical implementation, including development environment, single-player and multiplayer implementation, and web-specific optimizations.
 
-\textbf{Chapter~\ref{ch:problems}} provides an honest analysis of difficulties encountered during development, including GDSync framework issues, multiplayer synchronization challenges, and mobile UI/UX constraints.
+\textbf{Chapter~\ref{ch:problems}} provides an honest analysis of difficulties encountered during development, including GDSync framework issues, multiplayer synchronization challenges, and web browser constraints.
 
 \textbf{Chapter~\ref{ch:results}} presents completed system features, technical performance metrics, platform compatibility assessment, and preliminary evaluation of educational effectiveness.
 

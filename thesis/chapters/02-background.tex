@@ -1,7 +1,7 @@
 \chapter{Background and Literature Review}
 \label{ch:background}
 
-This chapter provides the foundational knowledge and contextual background necessary to understand the HPC Sorting Serious Game. We review key concepts in parallel computing, serious games in education, mobile game development, and multiplayer networking architectures.
+This chapter provides the foundational knowledge and contextual background necessary to understand the HPC Sorting Serious Game. We review key concepts in parallel computing, serious games in education, web-based game development, and multiplayer networking architectures.
 
 %-----------------------------------------------------------------------
 \section{Parallel Computing Fundamentals}
@@ -76,7 +76,7 @@ for (int i = 0; i < N; i++) {
 \label{subsec:mpi}
 
 \begin{mdframed}[backgroundcolor=yellow!10, linecolor=orange, linewidth=2pt]
-\textbf{Note:} This section provides background on MPI for completeness and context within the broader HPC landscape. \textbf{The game implemented in this thesis focuses exclusively on OpenMP shared-memory parallelism.} MPI distributed-memory concepts are discussed here for educational context but are \textbf{not implemented} in the current version. See Chapter~\ref{ch:conclusion} for discussion of MPI as potential future work.
+    \textbf{Note:} This section provides background on MPI for completeness and context within the broader HPC landscape. \textbf{The game implemented in this thesis focuses exclusively on OpenMP shared-memory parallelism.} MPI distributed-memory concepts are discussed here for educational context but are \textbf{not implemented} in the current version. See Chapter~\ref{ch:conclusion} for discussion of MPI as potential future work.
 \end{mdframed}
 
 MPI (Message Passing Interface) is the de facto standard for distributed-memory parallel programming. It provides a rich set of communication primitives for sending and receiving messages between processes, enabling scalable parallel computing on clusters and supercomputers.
@@ -239,71 +239,97 @@ Few games specifically target parallel computing education. Notable exceptions i
     \item \textbf{CUDA Learning Games}: GPU programming challenges
 \end{itemize}
 
-However, these tools typically focus on visualization rather than hands-on, game-like interaction, and few target mobile platforms or provide multiplayer experiences.
+However, these tools typically focus on visualization rather than hands-on, game-like interaction, and few provide multiplayer experiences.
 
 %-----------------------------------------------------------------------
-\section{Mobile Game Development}
-\label{sec:mobile-game-dev}
+\subsection{Serious Games for HPC Education}
+\label{subsec:serious-games-hpc}
 
-Mobile platforms present unique opportunities and challenges for educational game development.
+High-Performance Computing education faces unique challenges that serious games can address:
 
-%-----------------------------------------------------------------------
-\subsection{Mobile Platform Advantages}
-\label{subsec:mobile-advantages}
+\paragraph*{Why Games for HPC?}
 
-\textbf{Ubiquity:} Smartphones are nearly universal in developed countries. Students already carry powerful computing devices, eliminating barriers to access.
+\begin{enumerate}
+    \item \textbf{Abstract Concepts}: HPC involves invisible processes (threads, messages, synchronization) that are difficult to visualize through static diagrams
+    \item \textbf{Temporal Dynamics}: Parallelism involves timing, race conditions, and coordination that unfold over time---games naturally model dynamic systems
+    \item \textbf{Scale Mismatch}: Real HPC systems involve millions of operations per second; games can slow down and make these concepts observable
+    \item \textbf{Hands-On Experience}: Students learn parallelism best by experiencing coordination challenges firsthand
+\end{enumerate}
 
-\textbf{Accessibility:} Mobile games enable learning anywhere, anytime—during commutes, study sessions, or breaks—supporting flexible, self-paced education.
-
-\textbf{Touch Interfaces:} Direct manipulation through touch is intuitive and natural, reducing the learning curve compared to keyboard/mouse interfaces or command-line tools.
-
-\textbf{Social Integration:} Mobile platforms naturally support multiplayer experiences, social sharing, and collaborative learning through built-in connectivity.
-
-%-----------------------------------------------------------------------
-\subsection{Mobile Development Challenges}
-\label{subsec:mobile-challenges}
-
-\textbf{Screen Real Estate:} Displaying complex information on 5--7 inch screens requires careful UI design. Educational games must balance information density with usability.
-
-\textbf{Performance Constraints:} Mobile devices have limited CPU, GPU, memory, and battery resources compared to desktops. Games must optimize rendering, minimize network usage, and manage power consumption.
-
-\textbf{Platform Fragmentation:} Android devices vary widely in screen size, resolution, OS version, and hardware capabilities. iOS is more uniform but still requires adaptive design.
-
-\textbf{Input Limitations:} Touch input lacks the precision of mouse pointers and the expressiveness of keyboards. Drag-and-drop interactions must accommodate finger size and occlusion.
-
-%-----------------------------------------------------------------------
-\subsection{Game Engines for Mobile}
-\label{subsec:mobile-game-engines}
-
-Several game engines support mobile development with varying trade-offs:
+\paragraph*{Mapping HPC Concepts to Game Mechanics:}
+The following mappings enable intuitive understanding of HPC concepts through gameplay (see Table~\ref{tab:hpc-game-mapping}).
 
 \begin{table}[htbp]
     \centering
-    \caption{Comparison of mobile game engines}
-    \label{tab:mobile-engines}
-    \begin{tabular}{@{}lllll@{}}
+    \caption{HPC concepts mapped to game mechanics}
+    \label{tab:hpc-game-mapping}
+    \begin{tabular}{@{}ll@{}}
         \toprule
-        \textbf{Engine} & \textbf{License} & \textbf{Languages} & \textbf{2D Support} & \textbf{Learning Curve} \\
+        \textbf{HPC Concept}   & \textbf{Game Mechanic}                   \\
         \midrule
-        Unity           & Proprietary      & C\#                & Good                & Medium                  \\
-        Unreal          & Proprietary      & C++/Blueprints     & Fair                & Steep                   \\
-        Godot           & Open Source      & GDScript/C++       & Excellent           & Gentle                  \\
-        Cocos2d         & Open Source      & C++/Lua            & Excellent           & Medium                  \\
+        Threads/Processes      & Players                                  \\
+        Shared Memory          & Shared game board/container              \\
+        Thread-Local Storage   & Private player inventory                 \\
+        Synchronization        & Turn-taking or barriers                  \\
+        Race Conditions        & Conflicting simultaneous actions         \\
+        Speedup                & Time comparison (1 player vs. N players) \\
+        Communication Overhead & Time to transfer items between players   \\
+        Load Balancing         & Equal distribution of work               \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\paragraph*{Godot Engine:}
+\paragraph*{Advantages of Game-Based HPC Learning:}
 
-Godot emerged as the optimal choice for this project due to:
+\begin{itemize}
+    \item \textbf{No Prerequisites}: Students can experience parallel concepts before learning programming syntax
+    \item \textbf{Misconception Surfacing}: Games reveal incorrect mental models (e.g., ``more threads always faster'')
+    \item \textbf{Quantifiable Learning}: Performance metrics (time, moves) provide concrete feedback
+    \item \textbf{Collaborative Learning}: Multiplayer games naturally create discussion and peer learning
+    \item \textbf{Scalable Delivery}: Web-based games reach students regardless of institutional HPC infrastructure
+\end{itemize}
+
+%-----------------------------------------------------------------------
+\section{Web-Based Game Development}
+\label{sec:web-game-dev}
+
+Web browsers provide a universal platform for educational game deployment, eliminating installation barriers and enabling access from any device with a modern browser.
+
+%-----------------------------------------------------------------------
+\subsection{Web Platform Advantages}
+\label{subsec:web-advantages}
+
+\textbf{Accessibility:} Web games require no installation—students access the game via URL, eliminating software distribution challenges and platform compatibility concerns.
+
+\textbf{Cross-Platform:} A single web build runs on Windows, macOS, Linux, and even mobile browsers, maximizing reach with minimal development overhead.
+
+\textbf{Instant Updates:} Deploying updates is immediate—no app store approval processes or user-initiated updates required.
+
+\textbf{Low Barrier:} Modern browsers include powerful JavaScript engines, WebGL for graphics, and APIs for real-time communication.
+
+%-----------------------------------------------------------------------
+\subsection{Web Development Challenges}
+\label{subsec:web-challenges}
+
+\textbf{Browser Sandboxing:} Security restrictions prevent raw socket access, UDP communication, and local peer discovery—complicating multiplayer networking.
+
+\textbf{Performance Overhead:} WebAssembly and JavaScript have overhead compared to native code, though performance is acceptable for 2D games.
+
+\textbf{Networking Limitations:} Traditional peer-to-peer networking (like WebRTC data channels) can be complex to configure and may not work reliably across all network configurations.
+
+%-----------------------------------------------------------------------
+\subsection{Game Engines for Web}
+\label{subsec:web-game-engines}
+
+Godot Engine emerged as the optimal choice for this project due to:
 
 \begin{itemize}
     \item Completely free and open-source (MIT license)
     \item Excellent 2D rendering performance
-    \item Lightweight engine suitable for mobile targets
+    \item Lightweight web exports (smaller than Unity or Unreal)
     \item GDScript language similar to Python (accessible for students)
     \item Active community and extensive documentation
-    \item Built-in export templates for Android and iOS
+    \item Built-in HTML5 export templates
     \item Scene-based architecture promotes modular design
 \end{itemize}
 
@@ -375,39 +401,38 @@ Peer-to-peer (P2P) networks eliminate dedicated servers by allowing clients to c
 \end{itemize}
 
 %-----------------------------------------------------------------------
-\subsection{WebRTC for Game Networking}
-\label{subsec:webrtc}
+\subsection{Web Transport Technologies}
+\label{subsec:web-transport}
 
-WebRTC (Web Real-Time Communication) is a modern technology for P2P communication in browsers and applications:
+Web browsers offer several options for real-time communication, each with trade-offs:
 
-\paragraph*{Key Features:}
+\paragraph*{HTTP Polling:}
 \begin{itemize}
-    \item Peer-to-peer data channels with low latency
-    \item Built-in NAT traversal (STUN/TURN)
-    \item Encrypted communication (DTLS)
-    \item No plugins required—native browser support
-    \item Available in mobile platforms (Android, iOS)
+    \item Client repeatedly requests updates from server
+    \item Simple to implement, universally supported
+    \item Higher latency and server load due to frequent requests
+    \item Suitable for low-frequency updates
 \end{itemize}
 
-\paragraph*{Connection Process:}
-\begin{enumerate}
-    \item Peers exchange connection information (Session Description Protocol)
-    \item STUN servers discover public IP addresses
-    \item ICE (Interactive Connectivity Establishment) negotiates optimal connection path
-    \item TURN servers relay traffic if direct connection impossible
-    \item Encrypted data channels established
-\end{enumerate}
+\paragraph*{Server-Sent Events (SSE):}
+\begin{itemize}
+    \item Server pushes events to client over HTTP
+    \item Simpler than WebSocket (HTTP-based, no special protocol)
+    \item Unidirectional (server to client only)
+    \item Automatic reconnection built into browser API
+    \item Good browser support and proxy compatibility
+\end{itemize}
 
-\paragraph*{Suitability for Educational Games:}
+\paragraph*{HTTP + SSE Relay Architecture:}
 
-WebRTC is ideal for educational multiplayer games because:
+For web-based multiplayer games requiring broad browser compatibility, a relay server architecture using HTTP POST for client-to-server communication and SSE for server-to-client events provides:
 
 \begin{itemize}
-    \item No server costs for gameplay (only signaling)
-    \item Low latency enables real-time interaction
-    \item Cross-platform support (mobile, web, desktop)
-    \item Open standard with good library support
-    \item Secure by default
+    \item Universal browser support without WebSocket complexity
+    \item Works through firewalls and proxies that block WebSocket
+    \item Simplified connection establishment (no STUN/TURN required)
+    \item Trade-off: All traffic routes through server (no P2P)
+    \item Acceptable latency for turn-based or slower-paced games
 \end{itemize}
 
 %-----------------------------------------------------------------------
@@ -500,7 +525,7 @@ Existing tools generally fall into two categories:
     \item \textbf{Programming environments}: Require coding skills, deterring beginners
 \end{enumerate}
 
-Few tools bridge the gap between conceptual understanding and practical implementation. Fewer still are designed for mobile platforms or incorporate game mechanics to enhance engagement.
+Few tools bridge the gap between conceptual understanding and practical implementation. Fewer still are designed for web platforms or incorporate game mechanics to enhance engagement.
 
 %-----------------------------------------------------------------------
 \subsection{Serious Games for Computing Education}
@@ -586,9 +611,9 @@ This chapter established the foundational knowledge necessary to understand the 
 
     \item \textbf{Serious Games}: Examined theoretical foundations, empirical evidence, and successful examples of game-based learning in computer science education.
 
-    \item \textbf{Web and Mobile Development}: Discussed advantages and challenges of web-first platforms for educational games, and the rationale for selecting Godot Engine with web export capabilities.
+    \item \textbf{Web Development}: Discussed advantages and challenges of web platforms for educational games, and the rationale for selecting Godot Engine with web export capabilities.
 
-    \item \textbf{Multiplayer Architecture}: Compared client-server and peer-to-peer models, introduced WebRTC, and justified the host-authoritative approach for OpenMP simulation.
+    \item \textbf{Multiplayer Architecture}: Compared client-server and peer-to-peer models, introduced web transport technologies (HTTP/SSE), and justified the host-authoritative approach for OpenMP simulation.
 
     \item \textbf{Related Work}: Identified gaps in existing parallel computing educational tools and serious games, motivating the development of this project.
 \end{itemize}
