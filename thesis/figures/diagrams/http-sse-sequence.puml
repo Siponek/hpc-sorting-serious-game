@@ -1,0 +1,66 @@
+@startuml http-sse-sequence
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+
+title HTTP/SSE Relay - Message Flow
+
+actor "Player 1\n(Host)" as P1 #LightBlue
+actor "Player 2" as P2 #LightGreen
+participant "Relay Server" as RS #Orange
+
+== Connection Phase ==
+
+P1 -> RS : POST /api/lobby/connect
+activate RS
+RS --> P1 : {peer_id: 1}
+deactivate RS
+
+P1 -> RS : GET /api/lobby/events
+activate RS #LightGreen
+note right: SSE stream opened\n(kept alive)
+
+P2 -> RS : POST /api/lobby/connect
+RS --> P2 : {peer_id: 2}
+
+P2 -> RS : GET /api/lobby/events
+note right: SSE stream opened
+
+== Lobby Creation ==
+
+P1 -> RS : POST /api/lobby/create
+RS --> P1 : {room_code: "ABC123"}
+RS -[#Green]-> P1 : SSE: lobby_created
+
+== Lobby Join ==
+
+P2 -> RS : POST /api/lobby/join\n{code: "ABC123"}
+RS --> P2 : {success: true}
+RS -[#Green]-> P1 : SSE: peer_joined {peer_id: 2}
+RS -[#Green]-> P2 : SSE: lobby_joined
+
+== Gameplay (Card Movement) ==
+
+P1 -> RS : POST /api/lobby/broadcast\n{type: "card_move", data: {...}}
+RS --> P1 : {success: true}
+RS -[#Green]-> P2 : SSE: game_packet\n{from: 1, type: "card_move", ...}
+
+P2 -> RS : POST /api/lobby/broadcast\n{type: "card_move", data: {...}}
+RS --> P2 : {success: true}
+RS -[#Green]-> P1 : SSE: game_packet\n{from: 2, type: "card_move", ...}
+
+== Disconnection ==
+
+P2 -> RS : POST /api/lobby/disconnect
+RS --> P2 : {success: true}
+RS -[#Green]-> P1 : SSE: peer_left {peer_id: 2}
+deactivate RS
+
+legend right
+  |= Method |= Purpose |
+  | HTTP POST | Client -> Server actions |
+  | SSE Event | Server -> Client notifications |
+endlegend
+
+@enduml
