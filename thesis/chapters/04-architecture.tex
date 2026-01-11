@@ -78,6 +78,13 @@ MainMenuScene (Control)
 +-- VersionLabel (Label)
 \end{lstlisting}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{resources/images/main-menu/main-menu-scene.png}
+    \caption{Main menu interface showing the game title, mode selection buttons, and animated card decorations}
+    \label{fig:main-menu-scene}
+\end{figure}
+
 %-----------------------------------------------------------------------
 \subsection{Single-Player Game Scene}
 \label{subsec:singleplayer-scene}
@@ -130,6 +137,20 @@ SinglePlayerScene (Control)
 
     \item \textbf{Single CardManager Node}: Centralized logic for game state, validation, and event coordination.
 \end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{resources/images/singleplayer/single-player-game.png}
+    \caption{Single-player game interface showing numbered cards in the shared container and empty buffer zones below}
+    \label{fig:single-player-game}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{resources/images/singleplayer/single-player-buffer-card-01.png}
+    \caption{Single-player game with a card (100) placed in the buffer zone, demonstrating thread-local storage simulation}
+    \label{fig:single-player-buffer}
+\end{figure}
 
 %-----------------------------------------------------------------------
 \subsection{Multiplayer Lobby Scene}
