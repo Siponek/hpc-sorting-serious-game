@@ -378,57 +378,34 @@
 }%%%% endif
 {%%%% else
   \renewcommand{\maketitle}{
-    \begin{titlepage}%
-      {%
-        \begin{tabular}[b]{l}
-          \includegraphics[width=.7\textwidth]{\@logohorizontal} \\
-        \end{tabular}
-
-        %\hrulefill
-
-        \vfill
-
-        \begin{center}\LARGE
-          {\bfseries \@title}\\
-          \ \\
-          \ \\
-          \@author
-        \end{center}
-
-        \vfill
-
-        {\large
-          Master Thesis  %%\hfill {\bfseries DIBRIS-TH-\@submityear-\@technumber}
-          %%%Technical Reports Series \hfill {\bf DISI-TR-\@submityear-\@technumber}
-        }
-        %\hrulefill
-
-
-        \vskip 50\p@
-        {\normalsize
-          Universit\`a di Genova, DIBRIS
-          Via Opera Pia, 13
-          16145 Genova, Italy\\
-          \hfill {\texttt https://www.dibris.unige.it/}}}%
-      \vfil\null
-    \end{titlepage}%
-
-    \begin{titlepage}\begin{center}
-        \null\vfil
-        \includegraphics[width=.2\textwidth]
-        {\@logovertical}\vskip 40\p@
+    \begin{titlepage}
+      \begin{center}
+        \includegraphics[width=.5\textwidth]{\@logohorizontal}
+        \vskip 30\p@
         {\Large\bfseries
           \degreetext
           \ifthenelse{\boolean{draftthesis}}
-          {\vskip 0\p@\large (Draft Copy)}{}\vskip 40\p@}
-        {\LARGE   \bfseries\@title \vskip 60\p@}
-        {\Large
-          \@author \vskip 60\p@
-          Advisor: \@advisor  \hskip \fill  Examiner: \@examiner \vskip 10\p@
+          {\vskip 0\p@\large (Draft Copy)}{}
+        }
+        \vskip 40\p@
+        {\LARGE \bfseries \@title}
+        \vskip 40\p@
+        {\Large \@author}
+        \vskip 60\p@
+        {\large
+          Advisor: \@advisor \hfill Examiner: \@examiner
         }
         \vfill
         {\Large \@submitmonth, \@submityear}
-      \end{center}\end{titlepage}
+      \end{center}
+      \vskip 30\p@
+      {\normalsize
+        Universit\`a di Genova, DIBRIS\\
+        Via Opera Pia, 13\\
+        16145 Genova, Italy\\
+        \texttt{https://www.dibris.unige.it/}
+      }
+    \end{titlepage}
   }
 }%%%%endelse
 

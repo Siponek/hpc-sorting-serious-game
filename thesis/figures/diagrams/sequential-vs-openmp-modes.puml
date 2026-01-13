@@ -1,0 +1,73 @@
+@startuml sequential-vs-openmp-modes
+!theme plain
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam packageStyle rectangle
+
+title Comparison: Sequential vs OpenMP Game Modes
+
+package "Single-Player Mode\n(Sequential Execution)" as SEQ #LightGray {
+    rectangle "Shared Container\n[All Cards Visible]" as SEQ_CONTAINER #White {
+        card "5" as c1
+        card "12" as c2
+        card "3" as c3
+        card "18" as c4
+        card "7" as c5
+        card "1" as c6
+    }
+
+    rectangle "Work Buffer\n[Player's Private Space]" as SEQ_BUFFER #LightYellow {
+        card "1" as b1
+        card "3" as b2
+    }
+
+    actor "Player 1" as P1 #LightBlue
+}
+
+package "Multiplayer Mode\n(OpenMP Parallelism)" as OMP #LightGreen {
+    rectangle "Shared Container\n[Visible to All]" as OMP_CONTAINER #White {
+        card "5" as oc1
+        card "12" as oc2
+        card "18" as oc3
+        card "15" as oc4
+    }
+
+    rectangle "Player 1 Private\n[Thread-Local]" as OMP_BUF1 #PaleGreen {
+        card "1" as ob1
+        card "3" as ob2
+    }
+
+    rectangle "Player 2 Private\n[Thread-Local]" as OMP_BUF2 #PeachPuff {
+        card "7" as ob3
+        card "9" as ob4
+    }
+
+    actor "P1" as OP1 #PaleGreen
+    actor "P2" as OP2 #PeachPuff
+}
+
+P1 --> SEQ_CONTAINER : sorts alone
+P1 --> SEQ_BUFFER : uses
+
+OP1 --> OMP_CONTAINER : shared\naccess
+OP2 --> OMP_CONTAINER : shared\naccess
+OP1 --> OMP_BUF1 : private
+OP2 --> OMP_BUF2 : private
+
+note bottom of SEQ
+  **Sequential Execution**
+  * One player sorts all cards
+  * No parallelism
+  * Baseline for comparison
+end note
+
+note bottom of OMP
+  **OpenMP Shared Memory**
+  * Multiple players collaborate
+  * Shared container = shared memory
+  * Private buffers = thread-local storage
+end note
+
+center footer Pedagogical Mapping: Sequential Execution vs. Shared-Memory Parallelism (OpenMP)
+
+@enduml

@@ -2,38 +2,37 @@
 
 HPC serious game showcasing how collaborative effort between processes and threads can speedup sorting. The game should support Android as a platform first.
 12
+## Test at
+https://siponek.github.io/hpc-sorting-serious-game/
+<img width="1501" height="839" alt="obraz" src="https://github.com/user-attachments/assets/9c20c587-473e-4156-b35f-ec1cb567b055" />
+
 ## Reqiuirements
+- chrome
+- python (for webserver and signaling server)
+  - uv (for project management)
 
-- No login required
-- webserver with localhost
-- target webpage and phone
-- cards single rectangle with number inside
+## How to start
 
-### Functionalities
+In justfile there is a command for starting the webserver and signaling server
 
-- Select how many cards you want to sort from menu
-- Click two cards and swap them (Possibly to put card in a buffer)
-- Should mimic smart algorythm
-- Big button for start the time and stop the time when he click stop the time (Timer is the most important part)
-- Start the server (maybe start the exe next to godot app and act as a host)
+```justfile
+[multiplayer]
+signaling-server             # Start the WebRTC signaling server for web multiplayer
+signaling-server-port port   # Start signaling server on a custom port
+test-multiplayer             # Start both signaling server and web server for full multiplayer testing
+```
 
-## Roadmap
+Install python dependencies using
+```bash
+uv sync
+```
 
-- [x] Implement a screen with cards that players choses the range of values amount of cards (e.g. 15-1000 with 64 cards to sort)
-- [x] Implement a screen with cards that players can sort
+Run build with just command (or you can just start the servers using uv run)
+```just
+just test-multiplayer
+```
 
----
-
-- [x] Implement a screen with cards that players can sort in parallel
-- [x] Implement a screen with cards that players can sort in parallel with threads
-- [x] Implement a screen with cards that players can sort in parallel with processes
-- [x] Implement a screen with cards that players can sort in parallel with processes and threads
-- [x] Implement a screen with cards that players can sort in parallel with processes and threads and shared memory
-- [x] Implement a screen with cards that players can sort in parallel with processes and threads and shared memory and message passing
-
-## Using Godot 4 with C# support
-
-With c# it is necessary to export binaries for other platforms to work e.g. android.
+Make sure to run the game on separate tabs in chrome, since tabs might freeze in the background
 
 ## FAQ
 

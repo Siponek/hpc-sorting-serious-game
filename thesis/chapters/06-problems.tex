@@ -95,6 +95,13 @@ GDSync's "protected mode" (default) prevented RPC calls from being executed betw
     \item Debugging difficult due to lack of visibility into framework internals
 \end{itemize}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{resources/images/GDSync-protected.png}
+    \caption{GDSync's Protected Mode toggle in the plugin settings. When enabled (default), it blocks remote calls on Nodes that haven't been explicitly exposed via \texttt{GDSync.expose\_func()} or \texttt{GDSync.expose\_var()}}
+    \label{fig:gdsync-protected}
+\end{figure}
+
 \paragraph*{Investigation Process:}
 
 \begin{enumerate}

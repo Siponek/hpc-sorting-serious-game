@@ -320,7 +320,14 @@ Logger.error("Failed to synchronize card state")
 \subsection{Runtime Variable Inspection}
 \label{subsec:vartree}
 
-VarTree plugin allows real-time inspection and modification of variables during gameplay for debugging purposes.
+VarTree plugin allows real-time inspection and modification of variables during gameplay for debugging purposes. This tool displays GDSync connection state variables such as client ID, host status, current lobby, and player count.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{resources/images/var-tree-preview.png}
+    \caption{VarTree debug panel showing GDSync runtime variables: Debug ID, clientID, IAmHost flag, currentLobbyID, and Players count}
+    \label{fig:var-tree-preview}
+\end{figure}
 
 %-----------------------------------------------------------------------
 \section{Code Quality and Best Practices}

@@ -5,6 +5,11 @@
 _gdformat +args:
     uv run --with gdtoolkit gdformat {{args}}
 
+# Internal: Run gdlint with arguments
+_gdlint +args:
+    uv run --with gdtoolkit gdlint {{args}}
+
+
 # Format GDScript files (default: scenes directory, or specify custom path)
 [group('formatting')]
 format path="./scenes":
@@ -24,3 +29,7 @@ format-changed:
 [group('formatting')]
 format-staged:
     git diff --staged --name-only --diff-filter=ACMR "*.gd" | xargs -r just _gdformat
+
+[group('linting')]
+lint path="./scenes":
+    just _gdlint {{path}}
