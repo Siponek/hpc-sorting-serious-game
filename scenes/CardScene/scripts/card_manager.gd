@@ -133,8 +133,8 @@ func _setup_var_tree(vt: VarTree) -> void:
 		)
 		}
 	)
-	vt.mount_var(
-		self,
+	#TODO something shitty is happening here indentation level and formatter cannot fix it
+	vt.mount_var(self,
 		"dbg_game_info/card_count",
 		{
 			"font_color": Color.SEASHELL,

@@ -1,14 +1,10 @@
 # This justfile works with windows
 
-set windows-powershell := true
+set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
 # Import formatter recipes
 
 import 'justfiles/formatter.justfile'
-
-# Import thesis compilation recipes
-
-import 'justfiles/thesis.justfile'
 
 # Import web export recipes
 
@@ -18,6 +14,7 @@ import 'justfiles/web-export.justfile'
 
 import 'justfiles/multiplayer.justfile'
 
+import? "git-submodules/HPC-thesis/justfile"
 
 default:
     @just --list
