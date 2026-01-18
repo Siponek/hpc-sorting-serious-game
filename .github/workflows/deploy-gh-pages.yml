@@ -15,14 +15,73 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Check branch requirements
+        run: |
+          echo "============================================"
+          echo "  DEPLOYMENT REQUIREMENTS"
+          echo "============================================"
+          echo "This deployment is only available from the 'gh-pages' branch."
+          echo "Current branch: ${{ github.ref_name }}"
+          echo ""
+          if [ "${{ github.ref_name }}" != "gh-pages" ]; then
+            echo "::error::Deployment must be triggered from 'gh-pages' branch!"
+            echo ""
+            echo "  HOW TO DEPLOY"
+            echo "--------------------------------------------"
+            echo "1. Create a PR from your branch to 'gh-pages'"
+            echo "2. Merge the PR"
+            echo "3. Run this workflow from the 'gh-pages' branch"
+            echo "============================================"
+            exit 1
+          fi
+          echo "✓ Branch requirement satisfied"
+          echo "============================================"
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: false
 
-      - name: Rename web-export.html to index.html
+      - name: Validate web export exists
+        run: |
+          if [ ! -d "exports/web-export" ]; then
+            echo "::error::Directory 'exports/web-export' not found!"
+            echo ""
+            echo "============================================"
+            echo "  HOW TO FIX"
+            echo "============================================"
+            echo "1. Open the Godot project"
+            echo "2. Go to Project → Export..."
+            echo "3. Select the 'Web' export preset"
+            echo "4. Click 'Export Project' and save to 'exports/web-export/'"
+            echo "5. Commit and push the exported files"
+            echo "============================================"
+            exit 1
+          fi
+
+          if [ ! -f "exports/web-export/web-export.html" ]; then
+            echo "::error::File 'exports/web-export/web-export.html' not found!"
+            echo ""
+            echo "============================================"
+            echo "  HOW TO FIX"
+            echo "============================================"
+            echo "The web export directory exists but is missing the main HTML file."
+            echo "Expected file: exports/web-export/web-export.html"
+            echo ""
+            echo "1. Re-export the project from Godot"
+            echo "2. Make sure the export name is 'web-export.html'"
+            echo "3. Commit and push the changes"
+            echo "============================================"
+            exit 1
+          fi
+
+          echo "✓ Web export validated successfully"
+
+      - name: Prepare build directory
         run: |
           cp -r exports/web-export build
-          cd build
-          mv web-export.html index.html
+          mv build/web-export.html build/index.html
+          echo "✓ Build directory prepared"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
