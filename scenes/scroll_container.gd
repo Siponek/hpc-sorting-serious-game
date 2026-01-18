@@ -4,11 +4,11 @@ extends ScrollContainer
 # we want to be able to scroll through the cards when there are too many cards to fit on the screen
 # and we want to be able to drag and drop cards between the slots. The dynamic container cannot be used for that
 # Because we need clear indication where we can drag the cards to.
-@onready var logger = Logger.get_logger(self)
+@onready var logger = CustomLogger.get_logger(self)
 var CARD_CONTAINER_PATH: String
 
 const DROP_PLACEHOLDER_SCENE: PackedScene = preload(
-	"res://scenes/CardScene/DropIndicator.tscn"
+	ProjectFiles.Scenes.DROP_INDICATOR
 )
 var current_drop_placeholder: Control = null
 ### Tracks if a card is being dragged over this container

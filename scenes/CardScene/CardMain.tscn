@@ -1,13 +1,23 @@
-[gd_scene load_steps=3 format=3 uid="uid://dbks3sal7vang"]
+[gd_scene load_steps=4 format=3 uid="uid://dbks3sal7vang"]
 
 [ext_resource type="Script" uid="uid://o0xvip7mrsr3" path="res://scenes/CardScene/scripts/card.gd" id="1_kd2ju"]
 [ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="2_6f7gc"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6f7gc"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [node name="Card" type="Control"]
 custom_minimum_size = Vector2(100, 150)
 layout_mode = 3
 anchors_preset = 0
+mouse_filter = 1
+theme = ExtResource("2_6f7gc")
 script = ExtResource("1_kd2ju")
+value = -1
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 1
@@ -18,6 +28,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("2_6f7gc")
+theme_override_styles/panel = SubResource("StyleBoxFlat_6f7gc")
 
 [node name="Value" type="Label" parent="."]
 custom_minimum_size = Vector2(100, 150)
@@ -29,6 +40,6 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_6f7gc")
 theme_override_font_sizes/font_size = 32
-text = "42"
+text = "-1"
 horizontal_alignment = 1
 vertical_alignment = 1

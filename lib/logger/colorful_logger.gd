@@ -88,10 +88,9 @@ func _print_colored(level: LogLevel, message: String) -> void:
 	var level_text: String = LogLevel.keys()[level]
 	var cs := _callsite(3) # Adjusted depth to get actual caller
 
-	# Clickable location in editor output: res://file.gd:line
-	var loc := (
-		"%s:%d" % [cs.get("source", "res://unknown"), int(cs.get("line", 0))]
-	)
+	# Location with just filename:line
+	var source_path: String = cs.get("source", "unknown")
+	var loc := "%s:%d" % [source_path.get_file(), int(cs.get("line", 0))]
 	var func_name := str(cs.get("function", "<unknown>"))
 
 	# Editor automatically detects res://...:line as clickable
@@ -120,6 +119,11 @@ func _print_colored(level: LogLevel, message: String) -> void:
 func log_info(message: String, arg1=null, arg2=null, arg3=null, arg4=null, arg5=null, arg6=null, arg7=null, arg8=null, arg9=null, arg10=null) -> void:
 	var full_message = _format_message(message, [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10])
 	_print_colored(LogLevel.INFO, full_message)
+
+func log_debug(message: String, arg1=null, arg2=null, arg3=null, arg4=null, arg5=null, arg6=null, arg7=null, arg8=null, arg9=null, arg10=null) -> void:
+	var full_message = _format_message(message, [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10])
+	if Constants.LOG_DEBUG_MODE:
+		_print_colored(LogLevel.INFO, "[DEBUG] " + full_message)
 
 
 func log_warning(message: String, arg1=null, arg2=null, arg3=null, arg4=null, arg5=null, arg6=null, arg7=null, arg8=null, arg9=null, arg10=null) -> void:

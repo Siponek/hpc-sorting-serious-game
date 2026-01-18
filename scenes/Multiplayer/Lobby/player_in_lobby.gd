@@ -7,6 +7,8 @@ const kick_button_path: NodePath = "MarginContainer/HBoxContainer/KickPlayerButt
 @export var display_name: String = "Player":
 	set(value):
 		display_name = value
+		if not player_name_label:
+			player_name_label = get_node_or_null(player_name_label_path)
 		if player_name_label:
 			player_name_label.text = value
 
@@ -23,7 +25,7 @@ const kick_button_path: NodePath = "MarginContainer/HBoxContainer/KickPlayerButt
 			kick_button.set_meta("client_id", value)
 @onready var player_name_label: Label = get_node_or_null(player_name_label_path)
 @onready var kick_button: Button = get_node_or_null(kick_button_path)
-@onready var logger = Logger.get_logger(self)
+@onready var logger = CustomLogger.get_logger(self)
 var client_id: int = -1
 
 
@@ -43,24 +45,38 @@ func _ready() -> void:
 # 	logger.log_info("Multiplayer ready for client ID: ", client_id)
 
 
-func setup_player_display(id: int, data: Dictionary) -> void:
+## Setup player display from PlayerData (local calls)
+func setup_player_display(player: MultiplayerTypes.PlayerData) -> void:
 	logger.log_info(
-		"Setting up player display for ID: ", id, " with data: ", data
+		"Setting up player display for ID: ",
+		player.client_id,
+		" with name: ",
+		player.name
 	)
 	# Set root node properties - these will sync automatically
-	self.set_client_id(id)
-	self.set_player_name(data.get("name", "Player " + str(id)))
-	if data.has("color"):
-		self.display_color = data.get("color")
-	if GDSync.is_gdsync_owner(self) or data.get("is_host", false):
+	self.set_client_id(player.client_id)
+	self.set_player_name(player.name)
+	self.display_color = player.color
+	if GDSync.is_gdsync_owner(self) or player.is_host:
 		kick_button.visible = false
 	else:
 		kick_button.visible = true
 
 
+## Setup player display from Dictionary (remote GDSync calls)
+func setup_player_display_from_dict(data: Dictionary) -> void:
+	var player := MultiplayerTypes.PlayerData.from_dict(
+		data.get("client_id", -1), data
+	)
+	setup_player_display(player)
+
+
 func set_player_name(_name: String) -> void:
 	if not _name or _name.is_empty():
 		_name = "Player " + str(client_id)  # Fallback name if none provided
+	if !player_name_label:
+		# @onready not yet initialized - try to get the node directly
+		player_name_label = get_node_or_null(player_name_label_path)
 	if !player_name_label:
 		push_error(
 			"PlayerInLobby: player_name_label is not found. Ensure the scene structure is correct."

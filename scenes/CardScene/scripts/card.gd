@@ -1,7 +1,22 @@
+@tool
 class_name Card
 extends Control
+
+# make the value and color accesible from editor to change
+@export var card_color: Color = Color(1, 1, 1, 1):
+	set(new_color):
+		card_color = new_color
+		_apply_color_style()
+
+@export var value: int = 0:
+	set(new_val):
+		value = new_val
+		_update_value_label()
+
+## Set to false for decorative cards (e.g., main menu logo)
+@export var interactive: bool = true
+
 var card_container_ref: Node = null
-var value: int = 0
 var can_drag: bool = true
 var is_dragging: bool = false
 var current_slot = null
@@ -20,10 +35,16 @@ signal card_grabbed(card)
 signal card_dropped(card, drop_position)
 
 @onready var panel_node: Panel = $Panel
-@onready var logger = Logger.get_logger(self)
+@onready var logger = CustomLogger.get_logger(self)
 
 
 func _ready():
+	if not interactive:
+		self.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Update visuals to match exported values
+	_update_value_label()
+	_apply_color_style()
+
 	#TODO make this somehow detached so multiplayer doesnt have to pick this way, or al least single source of truth
 	if Settings.is_multiplayer:
 		SCROLL_CONTAINER_PATH = "MultiPlayerScene/VBoxContainer/CardPanel/ScrollContainer"
@@ -33,28 +54,38 @@ func _ready():
 	# (Optional:) Save the card's container index
 	if get_parent() != null:
 		original_index = get_parent().get_child_count() - 1
-	# Ensure styles are initialized
-	if not managed_base_style:
-		var current_theme_style = panel_node.get_theme_stylebox("panel")
-		if current_theme_style is StyleBoxFlat:
-			managed_base_style = current_theme_style.duplicate()
-		else:
-			managed_base_style = StyleBoxFlat.new()
-			managed_base_style.bg_color = Color.DARK_GRAY  # Default fallback
-			managed_base_style.set_corner_radius_all(5)
-	_generate_hover_style()
-	_generate_swap_highlight_style()
-	_apply_current_style()
 
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 
 
-## Call this from CardManager to set the card's specific color/style
-func set_base_style(new_style: StyleBoxFlat):
-	managed_base_style = new_style.duplicate()
-	_generate_hover_style()
-	_apply_current_style()  # Apply the new base style immediately
+func _update_value_label():
+	if not is_node_ready():
+		return
+	if has_node("Value"):
+		$Value.text = str(value)
+
+
+func _apply_color_style():
+	if not is_node_ready():
+		return
+	if not has_node("Panel"):
+		return
+	# Get existing style from theme and duplicate it (preserve all theme settings)
+	var current_style = $Panel.get_theme_stylebox("panel")
+	if current_style is StyleBoxFlat:
+		managed_base_style = current_style.duplicate()
+	else:
+		# Fallback if no StyleBoxFlat in theme
+		managed_base_style = StyleBoxFlat.new()
+		managed_base_style.set_corner_radius_all(5)
+	# Only override the color
+	managed_base_style.bg_color = card_color
+	$Panel.add_theme_stylebox_override("panel", managed_base_style)
+	# Generate derived styles (only at runtime, not in editor)
+	if not Engine.is_editor_hint():
+		_generate_hover_style()
+		_generate_swap_highlight_style()
 
 
 func set_card_size(new_padding: Vector2):
@@ -69,7 +100,12 @@ func set_card_container_ref(container: Node):
 ## Set the value of the card and update the label
 func set_card_value(new_value: int):
 	value = new_value
-	$Value.text = str(value)
+
+
+## Backwards compatibility - extracts color from StyleBox and applies it
+func set_base_style(style: StyleBoxFlat):
+	if style:
+		card_color = style.bg_color
 
 
 # Add this function to your card.gd script

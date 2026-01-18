@@ -5,7 +5,7 @@ const multiplayer_lobby_scene: PackedScene = preload(
 )
 var lobby_id_to_join: String = "wololo"
 var selected_lobby_id_from_list: String = ""  # To store ID from ItemList
-@onready var logger = Logger.get_logger(self)
+@onready var logger = CustomLogger.get_logger(self)
 @onready
 var lobby_start_name_input: LineEdit = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/NameServerLineEdit  # Get lobby name from UI
 @onready
@@ -26,19 +26,19 @@ func _on_about_to_popup() -> void:
 
 func _ready() -> void:
 	# Connect signals from conection manager
-	ConnectionManager.lobby_created_successfully.connect(
+	ConnectionManager.signals.lobby_created_successfully.connect(
 		_on_connection_manager_lobby_created
 	)
-	ConnectionManager.lobby_creation_has_failed.connect(
+	ConnectionManager.signals.lobby_creation_has_failed.connect(
 		_on_connection_manager_lobby_creation_failed
 	)
-	ConnectionManager.joined_lobby_successfully.connect(
+	ConnectionManager.signals.joined_lobby_successfully.connect(
 		_on_connection_manager_joined_lobby
 	)
-	ConnectionManager.failed_to_join_lobby.connect(
+	ConnectionManager.signals.failed_to_join_lobby.connect(
 		_on_connection_manager_failed_to_join_lobby
 	)
-	ConnectionManager.discovered_lobbies_updated.connect(
+	ConnectionManager.signals.discovered_lobbies_updated.connect(
 		_on_connection_manager_lobbies_updated
 	)
 	lobby_start_name_input.text_changed.connect(
@@ -142,7 +142,6 @@ func _on_join_game_button_pressed() -> void:
 		)
 		return
 
-	# ConnectionManager.ensure_multiplayer_started() # Ensure GDSync is active
 	ConnectionManager.join_existing_lobby(lobby_id_to_attempt_join)
 
 
@@ -228,6 +227,9 @@ func _on_connection_manager_failed_to_join_lobby(
 ):
 	ToastParty.show(
 		{"text": error_message, "bgcolor": Color.RED, "color": Color.WHITE}
+	)
+	logger.log_error(
+		"Failed to join lobby via ConnectionManager: ", error_message
 	)
 
 
