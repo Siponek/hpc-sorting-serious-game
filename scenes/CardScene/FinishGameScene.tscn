@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://dsix5r7ccx5yb"]
 
-[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_jwrws"]
+[ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="1_jwrws"]
 [ext_resource type="Script" uid="uid://dxj1u8a7gsgfd" path="res://scenes/CardScene/scripts/finish_game_scene.gd" id="2_finish"]
 
 [sub_resource type="Gradient" id="Gradient_jwrws"]
@@ -54,6 +54,7 @@ hue_variation_max = 1.0
 script = ExtResource("2_finish")
 
 [node name="FinishGameWindow" type="Window" parent="."]
+oversampling_override = 1.0
 initial_position = 1
 size = Vector2i(300, 350)
 theme = ExtResource("1_jwrws")
@@ -69,6 +70,7 @@ grow_vertical = 2
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 19.0
 grow_horizontal = 2
 grow_vertical = 2
 

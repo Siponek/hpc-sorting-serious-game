@@ -119,7 +119,7 @@ func _on_kick_player_button_pressed() -> void:
 	ToastParty.show(
 		{
 			"text": "Kick button pressed for player ID: " + str(client_id),
-			"bgcolor": Color.RED,
+			"bgcolor": Color(Color.RED, 0.75),
 			"color": Color.WHITE
 		}
 	)
