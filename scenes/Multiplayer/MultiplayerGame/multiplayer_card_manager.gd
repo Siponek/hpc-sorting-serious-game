@@ -54,7 +54,13 @@ var game_state_synced: bool = false
 @onready var buffer_size = Settings.player_buffer_count
 # Track which cards are in OTHER players' buffers
 var cards_in_other_buffers: Dictionary = {}  # card_value: player_id
-const var_tree_node_path: NodePath = "../CanvasLayer/VarTreeMainMenu"
+
+# Barrier synchronization feature
+var barrier_manager: BarrierManager
+@export var barrier_control_panel: PanelContainer
+@export var barrier_lock_overlay: CanvasLayer
+@export var all_buffers_view: PanelContainer
+var interaction_locked: bool = false
 
 
 # TODO The cards order is not syncing properly, checkout before cloude update
@@ -67,6 +73,21 @@ func _ready():
 	logger.log_info(
 		"Starting initialization. Host: ", is_host, " Client ID: ", my_client_id
 	)
+
+	# Add to group for interaction lock check
+	add_to_group("card_manager")
+
+	# Initialize barrier manager
+	barrier_manager = BarrierManager.new()
+	barrier_manager.set_barrier_mode(Settings.barrier_mode)
+	barrier_manager.barrier_state_changed.connect(_on_barrier_state_changed)
+
+	# Connect barrier control panel signals
+	if barrier_control_panel:
+		barrier_control_panel.barrier_requested.connect(_on_barrier_requested)
+		barrier_control_panel.release_requested.connect(
+			_on_release_barrier_requested
+		)
 
 	setup_multiplayer_sync()
 
@@ -81,9 +102,7 @@ func _ready():
 		await get_tree().create_timer(0.5).timeout
 		request_game_state_from_host()
 	if VarTreeHandler.should_enable_var_tree():
-		VarTreeHandler.handle_var_tree(
-			self, var_tree_node_path, _setup_var_tree
-		)
+		VarTreeHandler.handle_var_tree(var_tree_node, _setup_var_tree)
 
 
 ### Client: Set up structure without generating cards
@@ -103,16 +122,24 @@ func _initialize_client_structure():
 	adjust_container_spacing()
 	slots = create_buffer_slots()
 
-	if not _validate_node_references():
-		push_error("MultiplayerCardManager: Critical node references missing")
-		return
-
 	_connect_signals()
 
 	if sorted_cards_panel:
 		sorted_cards_panel.visible = false
 
 	logger.log_info("Client structure ready, waiting for game state")
+
+
+func _connect_signals():
+	super._connect_signals()
+	# Connect buffer view card drop signal for barrier mode
+	if (
+		scroll_container_node
+		and scroll_container_node.has_signal("buffer_view_card_dropped")
+	):
+		scroll_container_node.buffer_view_card_dropped.connect(
+			_on_buffer_view_card_dropped
+		)
 
 
 func setup_multiplayer_sync():
@@ -125,6 +152,12 @@ func setup_multiplayer_sync():
 	GDSync.expose_func(self.sync_game_finished)
 	# Host function that clients can call to request current state
 	GDSync.expose_func(self.send_current_state_to)
+
+	# Barrier synchronization functions
+	GDSync.expose_func(self.barrier_thread_reached)
+	GDSync.expose_func(self.barrier_activate)
+	GDSync.expose_func(self.barrier_card_picked)
+	GDSync.expose_func(self.barrier_release)
 
 	logger.log_info("Sync functions exposed")
 
@@ -335,12 +368,12 @@ func sync_card_moved(
 
 	_update_all_card_indices()
 
-	logger.log_info("Card ", card_value, " moved to index ", to_index)
+	logger.log_debug("Card ", card_value, " moved to index ", to_index)
 
 
 func sync_card_entered_buffer(card_value: int, entering_player_id: int):
 	"""Notify all players that a card entered someone's buffer"""
-	logger.log_info(
+	logger.log_debug(
 		"Card ", card_value, " entered player ", entering_player_id, "'s buffer"
 	)
 
@@ -355,7 +388,7 @@ func sync_card_entered_buffer(card_value: int, entering_player_id: int):
 	# Remove from container if it's there
 	if card.get_parent() == card_container:
 		card_container.remove_child(card)
-		logger.log_info(
+		logger.log_debug(
 			"Removed card ", card_value, " from container (entered buffer)"
 		)
 
@@ -416,7 +449,7 @@ func sync_card_left_buffer(
 
 		card_container.add_child(card)
 		card_container.move_child(card, to_index)
-		logger.log_info(
+		logger.log_debug(
 			"Added card ", card_value, " back to container at index ", to_index
 		)
 
@@ -427,7 +460,7 @@ func sync_card_left_buffer(
 
 	_update_all_card_indices()
 
-	logger.log_info("Card ", card_value, " now visible at index ", to_index)
+	logger.log_debug("Card ", card_value, " now visible at index ", to_index)
 
 
 func _find_card_by_value(value: int) -> Card:
@@ -482,7 +515,7 @@ func _on_card_placed_in_container(
 
 	var new_index = moved_card.get_index()
 
-	logger.log_info(
+	logger.log_debug(
 		"Card ",
 		moved_card.value,
 		" placed. Current slot: ",
@@ -495,7 +528,7 @@ func _on_card_placed_in_container(
 
 	if was_in_buffer:
 		# Card is leaving MY buffer and going to container
-		logger.log_info(
+		logger.log_debug(
 			"Broadcasting card ",
 			moved_card.value,
 			" leaving my buffer to index ",
@@ -511,7 +544,7 @@ func _on_card_placed_in_container(
 		)
 	else:
 		# Card is just moving within container
-		logger.log_info(
+		logger.log_debug(
 			"Broadcasting card ",
 			moved_card.value,
 			" moved from ",
@@ -642,3 +675,477 @@ func sync_game_finished(
 
 	# Show finish screen with the winning player's stats
 	_show_finish_game_scene(time_string, moves, finishing_player_id)
+
+
+#region Barrier Synchronization Functions
+
+
+func _on_barrier_requested():
+	"""Called when local thread (player) clicks barrier button"""
+	logger.log_info(
+		"Barrier requested by player ",
+		my_client_id,
+		" - current state: ",
+		barrier_manager.current_state
+	)
+
+	# Block only during active barrier processing
+	if (
+		barrier_manager.current_state
+		== BarrierManager.BarrierState.BARRIER_ACTIVE
+	):
+		logger.log_info("Blocked: barrier is active")
+		return
+	# Block if this player already reached the barrier
+	if barrier_manager.has_thread_reached_barrier(my_client_id):
+		logger.log_info("Blocked: player already at barrier")
+		return
+
+	logger.log_info(
+		"Broadcasting barrier_thread_reached for player ", my_client_id
+	)
+	GDSync.call_func(self.barrier_thread_reached, [my_client_id])
+	# Also update local state (GDSync.call_func only broadcasts to others, not to self)
+	barrier_thread_reached(my_client_id)
+
+
+func barrier_thread_reached(thread_id: int):
+	"""Received by all when a thread reaches the barrier"""
+	logger.log_info(
+		"barrier_thread_reached: thread ",
+		thread_id,
+		" (I am ",
+		my_client_id,
+		")"
+	)
+	var all_thread_ids = ConnectionManager.get_player_list().get_client_ids()
+	logger.log_info(
+		"All thread IDs: ",
+		all_thread_ids,
+		" - current state: ",
+		barrier_manager.current_state
+	)
+
+	if barrier_manager.current_state == BarrierManager.BarrierState.RUNNING:
+		# First thread at barrier - start waiting
+		logger.log_info("First thread at barrier - entering waiting state")
+		barrier_manager.enter_waiting_state(thread_id, all_thread_ids)
+		logger.log_info(
+			"Main thread assigned: ", barrier_manager.main_thread_id
+		)
+		_update_barrier_ui_waiting()
+	else:
+		# Already waiting - mark this thread as at barrier
+		logger.log_info(
+			"Thread ", thread_id, " joining barrier (already waiting)"
+		)
+		barrier_manager.mark_thread_at_barrier(thread_id)
+
+		# If this is ME reaching the barrier, disable my button
+		if thread_id == my_client_id and barrier_control_panel:
+			logger.log_info("Disabling my barrier button")
+			barrier_control_panel.set_barrier_state(true, false, false)
+
+	# Update UI to show this thread reached barrier
+	if barrier_control_panel:
+		barrier_control_panel.set_thread_at_barrier(thread_id, true)
+
+	# Check if all threads at barrier
+	logger.log_info("Threads at barrier: ", barrier_manager.threads_at_barrier)
+	if barrier_manager.all_threads_at_barrier(all_thread_ids):
+		logger.log_info("All threads at barrier! Initiating processing...")
+		_initiate_barrier_processing()
+
+
+func _initiate_barrier_processing():
+	"""Host initiates barrier processing after all threads arrive"""
+	logger.log_info("_initiate_barrier_processing called - is_host: ", is_host)
+	if not is_host:
+		logger.log_info("Not host, skipping barrier processing initiation")
+		return
+
+	# Collect all buffer snapshots
+	var snapshots: Array = []
+
+	# Add own buffer snapshot
+	var my_snapshot = _get_my_buffer_snapshot()
+	snapshots.append(my_snapshot)
+	logger.log_info("My buffer snapshot: ", my_snapshot)
+
+	# For other threads' buffers, use cards_in_other_buffers tracking
+	var buffers_by_owner: Dictionary = {}
+	for card_value in cards_in_other_buffers:
+		var owner_id = cards_in_other_buffers[card_value]
+		if owner_id not in buffers_by_owner:
+			buffers_by_owner[owner_id] = []
+		buffers_by_owner[owner_id].append(card_value)
+
+	for owner_id in buffers_by_owner:
+		snapshots.append(
+			{"owner_id": owner_id, "card_values": buffers_by_owner[owner_id]}
+		)
+
+	logger.log_info("All snapshots: ", snapshots)
+	logger.log_info(
+		"Broadcasting barrier_activate with main_thread: ",
+		barrier_manager.main_thread_id
+	)
+	GDSync.call_func(
+		self.barrier_activate, [barrier_manager.main_thread_id, snapshots]
+	)
+	# Also update local state (GDSync.call_func only broadcasts to others, not to self)
+	barrier_activate(barrier_manager.main_thread_id, snapshots)
+
+
+func barrier_activate(main_thread_id: int, buffer_snapshots: Array):
+	"""All threads receive this when barrier activates"""
+	logger.log_info(
+		"barrier_activate received - main_thread: ",
+		main_thread_id,
+		", I am: ",
+		my_client_id
+	)
+	logger.log_info("Buffer snapshots: ", buffer_snapshots)
+	barrier_manager.main_thread_id = main_thread_id
+	barrier_manager.activate_barrier()
+
+	if my_client_id == main_thread_id:
+		logger.log_info("I am the main thread - entering main thread mode")
+		_enter_main_thread_mode(buffer_snapshots)
+	else:
+		logger.log_info("I am NOT the main thread - entering blocked mode")
+		_enter_blocked_mode()
+
+
+func _enter_main_thread_mode(buffer_snapshots: Array):
+	"""Main thread enters processing mode - can access all buffers"""
+	logger.log_info("Entering main thread mode")
+	interaction_locked = false
+
+	if all_buffers_view:
+		all_buffers_view.clear_buffers()
+		for snap_dict in buffer_snapshots:
+			var thread_name = _get_player_name(snap_dict.owner_id)
+			logger.log_info(
+				"Adding buffer for thread ",
+				snap_dict.owner_id,
+				" (",
+				thread_name,
+				"): ",
+				snap_dict.card_values
+			)
+			all_buffers_view.add_thread_buffer(
+				snap_dict.owner_id, thread_name, snap_dict.card_values
+			)
+		buffer_zone_container.visible = false
+		all_buffers_view.show_view()
+	else:
+		logger.log_warning("all_buffers_view is null!")
+
+	if barrier_control_panel:
+		barrier_control_panel.set_barrier_state(false, true, true)
+
+
+func _enter_blocked_mode():
+	"""Non-main threads enter blocked mode - cannot move cards"""
+	logger.log_info("Entering blocked mode - interaction_locked = true")
+	interaction_locked = true
+
+	var main_thread_name = _get_player_name(barrier_manager.main_thread_id)
+	if barrier_lock_overlay:
+		logger.log_info(
+			"Showing lock overlay for main thread: ", main_thread_name
+		)
+		barrier_lock_overlay.show_overlay(main_thread_name)
+	else:
+		logger.log_warning("barrier_lock_overlay is null!")
+
+	if barrier_control_panel:
+		barrier_control_panel.set_barrier_state(false, false, true)
+
+
+func _on_buffer_view_card_dropped(
+	card_value: int, from_thread_id: int, target_index: int
+):
+	"""Main thread dropped a card from AllBuffersView to main container"""
+	logger.log_info(
+		"Buffer view card dropped: value=",
+		card_value,
+		" from_thread=",
+		from_thread_id,
+		" target_index=",
+		target_index
+	)
+	if not barrier_manager.is_main_thread(my_client_id):
+		logger.log_warning("Not main thread, ignoring buffer view card drop")
+		return
+
+	logger.log_info(
+		"Broadcasting barrier_card_picked: value=",
+		card_value,
+		" target_index=",
+		target_index
+	)
+
+	GDSync.call_func(
+		self.barrier_card_picked, [card_value, from_thread_id, target_index]
+	)
+	# Also update local state (GDSync.call_func only broadcasts to others, not to self)
+	barrier_card_picked(card_value, from_thread_id, target_index)
+
+
+func _on_buffer_card_selected(card_value: int, from_thread_id: int):
+	"""Main thread selected a card from another thread's buffer (click fallback)"""
+	logger.log_info(
+		"Card selected from buffer: value=",
+		card_value,
+		" from_thread=",
+		from_thread_id
+	)
+	if not barrier_manager.is_main_thread(my_client_id):
+		logger.log_warning("Not main thread, ignoring card selection")
+		return
+
+	# Get the target index (end of main container)
+	var target_index = card_container.get_child_count()
+	logger.log_info(
+		"Broadcasting barrier_card_picked: value=",
+		card_value,
+		" target_index=",
+		target_index
+	)
+
+	GDSync.call_func(
+		self.barrier_card_picked, [card_value, from_thread_id, target_index]
+	)
+	# Also update local state (GDSync.call_func only broadcasts to others, not to self)
+	barrier_card_picked(card_value, from_thread_id, target_index)
+
+
+func barrier_card_picked(
+	card_value: int, from_thread_id: int, target_index: int
+):
+	"""Sync card pick from buffer to main container"""
+	logger.log_info(
+		"barrier_card_picked: value=",
+		card_value,
+		" from=",
+		from_thread_id,
+		" to_index=",
+		target_index
+	)
+
+	# Step 1: Update tracking dictionary
+	if card_value in cards_in_other_buffers:
+		cards_in_other_buffers.erase(card_value)
+		logger.log_info("Removed card from cards_in_other_buffers tracking")
+
+	# Step 2: Update AllBuffersView UI for main thread
+	if all_buffers_view and all_buffers_view.visible:
+		all_buffers_view.remove_card_from_buffer(card_value, from_thread_id)
+
+	# Step 3: Transfer card from buffer to main container
+	_transfer_card_to_container(card_value, from_thread_id, target_index)
+
+
+func _on_release_barrier_requested():
+	"""Main thread finished - release the barrier"""
+	logger.log_info("Release barrier requested")
+	if not barrier_manager.is_main_thread(my_client_id):
+		logger.log_warning("Not main thread, ignoring release request")
+		return
+	logger.log_info("Broadcasting barrier_release")
+	GDSync.call_func(self.barrier_release, [])
+	# Also update local state (GDSync.call_func only broadcasts to others, not to self)
+	barrier_release()
+
+
+func barrier_release():
+	"""All threads: barrier released, return to running state"""
+	logger.log_info("barrier_release received - releasing barrier")
+	barrier_manager.release_barrier()
+	_exit_barrier_mode()
+
+
+func _exit_barrier_mode():
+	"""Clean up barrier UI and return to running state"""
+	logger.log_info("Exiting barrier mode - interaction_locked = false")
+	interaction_locked = false
+
+	if barrier_lock_overlay:
+		barrier_lock_overlay.hide_overlay()
+
+	if all_buffers_view:
+		all_buffers_view.hide_view()
+		buffer_zone_container.visible = true
+
+	if barrier_control_panel:
+		barrier_control_panel.reset_ui()
+
+
+func _update_barrier_ui_waiting():
+	"""Update UI when first thread reaches barrier"""
+	if barrier_control_panel:
+		barrier_control_panel.update_status("Waiting at barrier...")
+
+		# Only disable button if THIS player has reached the barrier
+		var my_reached = barrier_manager.has_thread_reached_barrier(
+			my_client_id
+		)
+		barrier_control_panel.set_barrier_state(my_reached, false, false)
+
+		# Add thread status indicators
+		var players = ConnectionManager.get_player_list()
+		for player in players.get_all_players():
+			barrier_control_panel.add_thread_status(
+				player.client_id, player.name
+			)
+			if barrier_manager.has_thread_reached_barrier(player.client_id):
+				barrier_control_panel.set_thread_at_barrier(
+					player.client_id, true
+				)
+
+
+func _on_barrier_state_changed(new_state: BarrierManager.BarrierState):
+	"""Handle barrier state changes"""
+	match new_state:
+		BarrierManager.BarrierState.RUNNING:
+			if barrier_control_panel:
+				barrier_control_panel.update_status("Running")
+		BarrierManager.BarrierState.WAITING_AT_BARRIER:
+			if barrier_control_panel:
+				barrier_control_panel.update_status("Waiting at barrier...")
+		BarrierManager.BarrierState.BARRIER_ACTIVE:
+			if barrier_control_panel:
+				barrier_control_panel.update_status("Barrier active")
+
+
+func _get_my_buffer_snapshot() -> Dictionary:
+	"""Get current state of local thread's buffer"""
+	var card_values: Array = []
+
+	for slot in slots:
+		if slot.occupied_by and slot.occupied_by is Card:
+			card_values.append(slot.occupied_by.value)
+
+	return {"owner_id": my_client_id, "card_values": card_values}
+
+
+func _get_player_name(player_id: int) -> String:
+	"""Get player/thread name by ID"""
+	var players = ConnectionManager.get_player_list()
+	for player in players.get_all_players():
+		if player.client_id == player_id:
+			return player.name
+	return "Thread " + str(player_id)
+
+
+#endregion
+
+#region Card State Management Helpers
+## These functions handle card state transitions during barrier operations.
+## The flow when main thread picks a card from another player's buffer:
+##   1. _detach_card_from_slot() - Owner removes card from their buffer slot
+##   2. _get_or_create_card() - Find existing card or create new instance
+##   3. _reset_card_for_container() - Reset visual state to standard dimensions
+##   4. _place_card_in_container() - Add card to main container at position
+
+
+func _detach_card_from_slot(card_value: int) -> void:
+	"""
+	Detach a card from this player's buffer slot without destroying it.
+	The card remains in cards_array and will be reparented to the main container.
+	Called only on the buffer owner's client.
+	"""
+	for slot in slots:
+		if slot.occupied_by and slot.occupied_by is Card:
+			if slot.occupied_by.value == card_value:
+				var card = slot.occupied_by
+				# Clear slot reference
+				slot.occupied_by = null
+				slot._update_panel_visibility()
+				# Clear card's slot reference
+				card.current_slot = null
+				# Orphan the card (remove from scene tree but don't destroy)
+				if card.get_parent():
+					card.get_parent().remove_child(card)
+				logger.log_debug(
+					"Detached card ", card_value, " from buffer slot"
+				)
+				break
+
+
+func _get_or_create_card(card_value: int) -> Card:
+	"""
+	Get an existing card from cards_array or create a new instance.
+	New cards are added to cards_array for tracking.
+	"""
+	var card = _find_card_by_value(card_value)
+	if card != null:
+		return card
+
+	# Card doesn't exist - create new instance
+	card = card_scene.instantiate()
+	card.set_card_value(card_value)
+	card.set_card_container_ref(card_container)
+	card.name = "Card_Val_" + str(card_value)
+
+	var new_card_style = StyleBoxFlat.new()
+	new_card_style.bg_color = card_colors[card_value % card_colors.size()]
+	card.set_base_style(new_card_style)
+
+	cards_array.append(card)
+	logger.log_debug("Created new card instance for value ", card_value)
+	return card
+
+
+func _reset_card_for_container(card: Card) -> void:
+	"""
+	Reset a card's visual state to standard dimensions for the main container.
+	This ensures cards coming from buffer views (mini size) are restored.
+	"""
+	card.set_card_size(Vector2(Constants.CARD_WIDTH, Constants.CARD_HEIGHT))
+	card.set_can_drag(true)
+	card.visible = true
+	card.current_slot = null
+
+
+func _place_card_in_container(card: Card, index: int) -> void:
+	"""
+	Place a card in the main container at the specified index.
+	Handles orphaning from previous parent and index bounds.
+	"""
+	if card.get_parent():
+		card.get_parent().remove_child(card)
+
+	card_container.add_child(card)
+	var clamped_index = min(index, card_container.get_child_count() - 1)
+	card_container.move_child(card, clamped_index)
+	_update_all_card_indices()
+
+
+func _transfer_card_to_container(
+	card_value: int, from_thread_id: int, target_index: int
+) -> void:
+	"""
+	High-level function to transfer a card from a buffer to the main container.
+	Handles the complete flow: detach (if owner) -> get/create -> reset -> place.
+	"""
+	# If this is MY buffer, detach the card from the slot
+	if from_thread_id == my_client_id:
+		logger.log_info("Detaching card ", card_value, " from my buffer")
+		_detach_card_from_slot(card_value)
+
+	# Get or create the card instance
+	var card = _get_or_create_card(card_value)
+
+	# Reset to standard container state
+	_reset_card_for_container(card)
+
+	# Place in container
+	_place_card_in_container(card, target_index)
+	logger.log_info(
+		"Card ", card_value, " placed in container at index ", target_index
+	)
+
+#endregion

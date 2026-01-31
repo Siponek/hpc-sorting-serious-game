@@ -6,7 +6,7 @@ var singleplayer_options_dialog_scene: PackedScene = preload(ProjectFiles.Scenes
 var multiplayer_options_dialog_scene: PackedScene = preload(ProjectFiles.Scenes.MULTIPLAYER_OPTIONS)
 var game_options_dialog_scene: PackedScene = preload(ProjectFiles.Scenes.GAME_OPTIONS)
 
-const var_tree_node_path: NodePath = "../CanvasLayer/VarTreeMainMenu"
+@export var var_tree_node: VarTree
 
 var enter_tweens: Dictionary = {}
 var exit_tweens: Dictionary = {}
@@ -38,7 +38,7 @@ class ButtonMoveInfo:
 
 
 func _ready() -> void:
-	VarTreeHandler.handle_var_tree(self, var_tree_node_path, _setup_var_tree)
+	VarTreeHandler.handle_var_tree(var_tree_node, _setup_var_tree)
 	var button_number: int = 0
 	for child in get_children():
 		if child is Button:

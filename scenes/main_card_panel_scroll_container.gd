@@ -19,6 +19,9 @@ var dragged_card_from_container_node: Card = null
 signal card_dropped_card_container(
 	dropped_card: Card, was_in_buffer: bool, original_slot: Variant
 )
+signal buffer_view_card_dropped(
+	card_value: int, source_thread_id: int, target_index: int
+)
 var card_container: HBoxContainer
 
 
@@ -54,6 +57,12 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		return
 
 	var incoming_card_data: Card = data  # This is the data from _get_drag_data, which is the card itself
+
+	# Handle buffer view cards specially (from AllBuffersView during barrier mode)
+	if incoming_card_data.buffer_view_source_id >= 0:
+		_handle_buffer_view_card_drop(at_position, incoming_card_data)
+		return
+
 	var card_to_place: Card = null
 	var final_insert_index: int = -1
 	# --- Handle the incoming card ---
@@ -296,3 +305,55 @@ func _process(_delta: float) -> void:
 					current_drop_placeholder
 				)
 		is_dragging_card_over_self = false
+
+
+func _handle_buffer_view_card_drop(
+	at_position: Vector2, buffer_card: Card
+) -> void:
+	"""Handle dropping a card from AllBuffersView (barrier mode)"""
+	var target_index: int = 0
+
+	# Calculate target index based on drop position
+	if (
+		is_dragging_card_over_self
+		and current_drop_placeholder != null
+		and current_drop_placeholder.is_inside_tree()
+		and current_drop_placeholder.visible
+	):
+		target_index = current_drop_placeholder.get_index()
+		current_drop_placeholder.get_parent().remove_child(
+			current_drop_placeholder
+		)
+	else:
+		# Fallback calculation
+		var card_spacing = card_container.get_theme_constant(
+			"separation", "HBoxContainer"
+		)
+		var effective_card_width = Constants.CARD_WIDTH + card_spacing
+		var drop_x_in_container = at_position.x + scroll_horizontal
+		if effective_card_width > 0:
+			target_index = int(
+				(
+					(drop_x_in_container + effective_card_width / 2.0)
+					/ effective_card_width
+				)
+			)
+
+		var num_cards = 0
+		for child in card_container.get_children():
+			if child is Card:
+				num_cards += 1
+		target_index = clamp(target_index, 0, num_cards)
+
+	# Emit signal for card manager to handle barrier logic
+	buffer_view_card_dropped.emit(
+		buffer_card.value, buffer_card.buffer_view_source_id, target_index
+	)
+
+	# Clean up the buffer view card (it's just a visual representation)
+	buffer_card.queue_free()
+
+	# Reset drag state
+	DragState.currently_dragged_card = null
+	DragState.card_dragged_from_main_container = false
+	is_dragging_card_over_self = false

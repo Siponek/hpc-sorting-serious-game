@@ -13,6 +13,8 @@ var card_count_spinbox: SpinBox = $MarginContainer/VBoxContainer2/HBoxContainerC
 @onready
 var card_range_spinbox: SpinBox = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/CardRangeSpinBox
 @onready
+var barrier_mode_option: OptionButton = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions/BarrierModeOptionButton
+@onready
 var options_container = $MarginContainer/VBoxContainer2/HBoxContainerCardOptions
 @onready var logger = CustomLogger.get_logger(self)
 
@@ -29,7 +31,7 @@ func _ready():
 				{
 					"text":
 					"Error: PlayerInLobby scene is not loaded in NodeInstantiator!",
-					"bgcolor": Color.RED,
+					"bgcolor": Color(Color.RED, 0.65),
 				}
 			)
 		)
@@ -75,7 +77,7 @@ func _ready():
 						+ str(ConnectionManager.get_my_client_id())
 						+ ")"
 					),
-					"bgcolor": Color.GREEN,  # ...
+					"bgcolor": Color(Color.GREEN, 0.65),  # ...
 				}
 			)
 		)
@@ -96,7 +98,7 @@ func _ready():
 						+ str(ConnectionManager.get_my_client_id())
 						+ ")"
 					),
-					"bgcolor": Color.DARK_GREEN,  # ...
+					"bgcolor": Color(Color.DARK_GREEN, 0.65),  # ...
 				}
 			)
 		)
@@ -105,6 +107,7 @@ func _ready():
 		buffer_spinbox.editable = false
 		card_count_spinbox.editable = false
 		card_range_spinbox.editable = false
+		barrier_mode_option.disabled = true
 
 
 func set_lobby_id(id: String) -> void:
@@ -131,7 +134,7 @@ func _on_cm_player_joined(player: MultiplayerTypes.PlayerData):
 			{
 				"text":
 				player.name + " (" + str(player.client_id) + ") joined!",
-				"bgcolor": Color.LIGHT_GREEN,
+				"bgcolor": Color(Color.LIGHT_GREEN, 0.65),
 				"color": Color.BLACK
 			}
 		]
@@ -139,7 +142,7 @@ func _on_cm_player_joined(player: MultiplayerTypes.PlayerData):
 	ToastParty.show(
 		{
 			"text": player.name + " (" + str(player.client_id) + ") joined!",
-			"bgcolor": Color.LIGHT_GREEN,
+			"bgcolor": Color(Color.LIGHT_GREEN, 0.65),
 			"color": Color.BLACK
 		}
 	)
@@ -150,7 +153,7 @@ func _on_cm_player_left(client_id: int):
 	ToastParty.show(
 		{
 			"text": "Player (" + str(client_id) + ") left.",  # Ideally, get player name before they are removed from CM's list
-			"bgcolor": Color.LIGHT_CORAL,
+			"bgcolor": Color(Color.LIGHT_CORAL, 0.65),
 			"color": Color.BLACK
 		}
 	)
@@ -216,7 +219,10 @@ func update_player_list_ui(players_map: MultiplayerTypes.PlayersMap):
 func _on_cm_lobby_closed():
 	logger.log_info("Lobby closed event from CM.")
 	ToastParty.show(
-		{"text": "The lobby has been closed.", "bgcolor": Color.GRAY}
+		{
+			"text": "The lobby has been closed.",
+			"bgcolor": Color(Color.GRAY, 0.65)
+		}
 	)
 	self.close_requested.emit()  # Close this lobby window
 
@@ -234,14 +240,20 @@ func _on_start_game_button_pressed() -> void:
 		# Show preparation message
 		GDSync.call_func(
 			ToastParty.show,
-			[{"text": "Host is starting the game...", "bgcolor": Color.BLUE}]
+			[
+				{
+					"text": "Host is starting the game...",
+					"bgcolor": Color(Color.BLUE, 0.65)
+				}
+			]
 		)
 
 		# Read current values from SpinBoxes
 		var game_settings := {
 			"buffer_slots": int(buffer_spinbox.value),
 			"cards_count": int(card_count_spinbox.value),
-			"card_range": int(card_range_spinbox.value)
+			"card_range": int(card_range_spinbox.value),
+			"barrier_mode": int(barrier_mode_option.selected)
 		}
 
 		logger.log_info("Broadcasting settings:")
@@ -278,12 +290,14 @@ func sync_game_settings(settings: Dictionary):
 	Settings.player_buffer_count = settings.buffer_slots
 	Settings.cards_count = settings.cards_count
 	Settings.card_value_range = settings.card_range
+	Settings.barrier_mode = settings.get("barrier_mode", 0)
 	Settings.is_multiplayer = true
 
 	logger.log_info("Settings applied:")
 	logger.log_info("  - Buffer count: ", Settings.player_buffer_count)
 	logger.log_info("  - Cards count: ", Settings.cards_count)
 	logger.log_info("  - Card range: ", Settings.card_value_range)
+	logger.log_info("  - Barrier mode: ", Settings.barrier_mode)
 
 
 func sync_option_changed(option_name: String, new_value: int):
@@ -296,6 +310,8 @@ func sync_option_changed(option_name: String, new_value: int):
 			card_count_spinbox.value = new_value
 		"card_range":
 			card_range_spinbox.value = new_value
+		"barrier_mode":
+			barrier_mode_option.selected = new_value
 
 
 func _on_buffer_changed(new_value: float):
@@ -313,9 +329,16 @@ func _on_card_range_changed(new_value: float):
 	GDSync.call_func(self.sync_option_changed, ["card_range", int(new_value)])
 
 
+func _on_barrier_mode_changed(index: int):
+	"""Broadcast barrier mode change to all clients"""
+	GDSync.call_func(self.sync_option_changed, ["barrier_mode", index])
+
+
 func prepare_for_game_transition() -> void:
 	# Prepare data, show loading indicator, etc.
-	ToastParty.show({"text": "Preparing game...", "bgcolor": Color.BLUE})
+	ToastParty.show(
+		{"text": "Preparing game...", "bgcolor": Color(Color.BLUE, 0.65)}
+	)
 	logger.log_info("Preparing for game transition")
 
 

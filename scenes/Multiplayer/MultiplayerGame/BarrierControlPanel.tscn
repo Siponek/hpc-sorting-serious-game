@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://c2u4616l80ugd"]
+
+[ext_resource type="Script" uid="uid://v244iki8hnc3" path="res://scenes/Multiplayer/MultiplayerGame/BarrierControlPanel.gd" id="1_script"]
+
+[node name="BarrierControlPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(200, 150)
+offset_right = 200.0
+offset_bottom = 150.0
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BarrierStatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Status: Running"
+
+[node name="ThreadStatusContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BarrierButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Reach Barrier"
+
+[node name="DoneButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Release Barrier"

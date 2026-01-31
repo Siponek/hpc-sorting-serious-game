@@ -1,7 +1,11 @@
 class_name ProjectFiles
 
 class Scripts:
+	const ALL_BUFFERS_VIEW = "res://scenes/Multiplayer/MultiplayerGame/AllBuffersView.gd"
 	const BACKGROUND_THEME = "res://scenes/BackGroundScene/background_theme.gd"
+	const BARRIER_MANAGER = "res://scenes/Multiplayer/MultiplayerGame/barrier_manager.gd"
+	const BARRIER_CONTROL_PANEL = "res://scenes/Multiplayer/MultiplayerGame/BarrierControlPanel.gd"
+	const BARRIER_LOCK_OVERLAY = "res://scenes/Multiplayer/MultiplayerGame/BarrierLockOverlay.gd"
 	const CARD = "res://scenes/CardScene/scripts/card.gd"
 	const CARD_BUFFER = "res://scenes/CardScene/scripts/card_buffer.gd"
 	const CARD_MANAGER = "res://scenes/CardScene/scripts/card_manager.gd"
@@ -13,15 +17,16 @@ class Scripts:
 	const GDSYNC_WEB_PATCH = "res://scenes/Multiplayer/GDSyncWebPatch/gdsync_web_patch.gd"
 	const LOCAL_SERVER_SIGNALING = "res://scenes/Multiplayer/GDSyncWebPatch/local_server_signaling.gd"
 	const LOGGER = "res://lib/logger/logger.gd"
+	const MAIN_CARD_PANEL_SCROLL_CONTAINER = "res://scenes/main_card_panel_scroll_container.gd"
 	const MAIN_MENU_OPTIONS = "res://scenes/MainMenuScene/main_menu_options.gd"
 	const MULTIPLAYER_CARD_MANAGER = "res://scenes/Multiplayer/MultiplayerGame/multiplayer_card_manager.gd"
 	const MULTIPLAYER_LOBBY = "res://scenes/Multiplayer/Lobby/multiplayer_lobby.gd"
 	const MULTIPLAYER_OPTIONS = "res://scenes/MainMenuScene/Multiplayer/multiplayer_options.gd"
 	const MULTIPLAYER_TYPES = "res://scenes/Multiplayer/multiplayer_types.gd"
+	const NODE_WIRING = "res://scenes/scripts/stateless/node_wiring.gd"
 	const OPTIONS_DIALOG_SCRIPT = "res://scenes/MainMenuScene/Options/options_dialog_script.gd"
 	const PLAYER_IN_LOBBY = "res://scenes/Multiplayer/Lobby/player_in_lobby.gd"
 	const SCENE_MANAGER = "res://scene_manager.gd"
-	const SCROLL_CONTAINER = "res://scenes/scroll_container.gd"
 	const SETTINGS = "res://settings.gd"
 	const SIGNALING_CLIENT = "res://scenes/Multiplayer/GDSyncWebPatch/signaling_client.gd"
 	const SINGLEPLAYER_OPTIONS = "res://scenes/MainMenuScene/Singleplayer/singleplayer_options.gd"
@@ -29,11 +34,15 @@ class Scripts:
 	const SWAP_BTN = "res://scenes/CardScene/scripts/swap_btn.gd"
 	const THEME_AUTOAPPLIER = "res://scenes/scripts/theme_autoapplier.gd"
 	const THEME_MANAGER = "res://theme_manager.gd"
+	const THREAD_BUFFER_PANEL = "res://scenes/Multiplayer/MultiplayerGame/ThreadBufferPanel.gd"
 	const TIMER_CONTROLLER_SCRIPT = "res://scenes/timer_controller_script.gd"
 	const VAR_TREE_HANDLER = "res://lib/feature_flag_handlers/var_tree_handler.gd"
 
 class Scenes:
+	const ALL_BUFFERS_VIEW = "res://scenes/Multiplayer/MultiplayerGame/AllBuffersView.tscn"
 	const BACKGROUND = "res://scenes/BackGroundScene/background.tscn"
+	const BARRIER_CONTROL_PANEL = "res://scenes/Multiplayer/MultiplayerGame/BarrierControlPanel.tscn"
+	const BARRIER_LOCK_OVERLAY = "res://scenes/Multiplayer/MultiplayerGame/BarrierLockOverlay.tscn"
 	const CARD_MAIN = "res://scenes/CardScene/CardMain.tscn"
 	const CARD_SLOT = "res://scenes/CardScene/CardSlot.tscn"
 	const DROP_INDICATOR = "res://scenes/CardScene/DropIndicator.tscn"
@@ -67,6 +76,7 @@ class Scenes:
 	const SINGLEPLAYER_OPTIONS = "res://scenes/MainMenuScene/Singleplayer/singleplayer_options.tscn"
 	const SINGLEPLAYER_SCENE = "res://scenes/Singleplayer/singleplayer_scene.tscn"
 	const SWAP_BTN = "res://scenes/CardScene/swapBtn.tscn"
+	const THREAD_BUFFER_PANEL = "res://scenes/Multiplayer/MultiplayerGame/ThreadBufferPanel.tscn"
 
 class Resources:
 	const BACKGROUND_STYLEBLOX = "res://res/background_styleblox.tres"

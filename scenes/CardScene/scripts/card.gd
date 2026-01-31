@@ -23,6 +23,8 @@ var current_slot = null
 var container_relative_position: Vector2
 var original_index: int = 0
 var original_style: StyleBoxFlat
+## If >= 0, this card is a visual representation from AllBuffersView, belonging to this thread
+var buffer_view_source_id: int = -1
 
 #Styling
 var managed_base_style: StyleBoxFlat
@@ -155,6 +157,13 @@ func remove_from_slot():
 
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
+	# Buffer view cards can always be dragged (main thread is dragging them)
+	if buffer_view_source_id < 0:
+		# Check if interaction is locked (barrier active, not main thread)
+		var card_manager = get_tree().get_first_node_in_group("card_manager")
+		if card_manager and card_manager.interaction_locked:
+			return null
+
 	if not can_drag:
 		print_debug("Card cannot be dragged")
 		return null

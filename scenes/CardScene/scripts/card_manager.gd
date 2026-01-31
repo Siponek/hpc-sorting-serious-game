@@ -38,25 +38,24 @@ var card_colors: Array[Color] = [
 	Color.CRIMSON,
 	Color.DARK_ORCHID
 ]
+@export var timer_node: TimerController
+@export var card_container: HBoxContainer
+@export var slot_container: HBoxContainer
+@export var scroll_container: ScrollContainer
+@export var button_container: HBoxContainer
+@export var sorted_cards_panel: PanelContainer
+@export var show_sorted_button: Button
+@export var sorted_cards_container: HBoxContainer
+@export var scroll_container_node: ScrollContainer
+@export var var_tree_node: VarTree
+@export var buffer_zone_container: PanelContainer
 
 const card_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_MAIN)
 const swap_button_scene: PackedScene = preload(ProjectFiles.Scenes.SWAP_BTN)
 const card_slot_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_SLOT)
 const finish_game_scene: PackedScene = preload(ProjectFiles.Scenes.FINISH_GAME_SCENE)
 
-@onready
-var show_sorted_button: Button = get_node("./../RightSideButtonsContainer/ShowSortedCardsButton")
-@onready var button_container: HBoxContainer = $SwapButtonPanel/CenterContainer/SwapButtonContainer
-@onready var card_container: HBoxContainer = $CardPanel/ScrollContainer/MarginContainer/CardContainer
-@onready
-var slot_container: HBoxContainer = $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer
-@onready var timer_node: TimerController = get_node("./../TopBar/TimerPanel")
-@onready var sorted_cards_container: HBoxContainer = get_node(
-	"./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer"
-)
-@onready var sorted_cards_panel: PanelContainer = get_node("./../SortedCardsPanel")
-@onready var scroll_container_node: ScrollContainer = $CardPanel/ScrollContainer
-const VAR_TREE_PATH: NodePath = "./../CanvasLayer/VarTree"
+
 var var_tree: VarTree = null
 @onready var logger := CustomLogger.get_logger(self)
 
@@ -93,19 +92,14 @@ func _ready():
 	# This also connects signals from slots
 	slots = create_buffer_slots()
 
-	# 3. Validate critical node references
-	if not _validate_node_references():
-		push_error("CardManager: Critical node references are missing. Aborting further setup.")
-		return # Stop further execution if essential nodes are missing
-
 	# 4. Connect signals
 	_connect_signals()
 
 	# 5. Initial UI states
-	if sorted_cards_panel != null: # sorted_cards_panel is checked in _validate_node_references
+	if sorted_cards_panel != null:
 		sorted_cards_panel.visible = false
 	# Var tree mounting for debugging purposes
-	var_tree = VarTreeHandler.handle_var_tree(self, VAR_TREE_PATH, _setup_var_tree)
+	var_tree = VarTreeHandler.handle_var_tree(var_tree_node, _setup_var_tree)
 
 
 func _setup_var_tree(vt: VarTree) -> void:
@@ -228,70 +222,9 @@ func fill_card_container(_card_instances_array: Array, _card_container: Node = n
 		_card_container.add_child(card_instance)
 
 
-func _validate_node_references() -> bool:
-	var all_valid = true
-	if not scroll_container_node:
-		logger.log_error(
-			"CardManager: scroll_container_node not found. Path: $CardPanel/ScrollContainer"
-		)
-		all_valid = false
-	if not card_container:
-		(
-			logger
-			.log_error(
-				"CardManager: card_container not found. Path: $CardPanel/ScrollContainer/MarginContainer/CardContainer"
-			)
-		)
-		all_valid = false
-	if not slot_container:
-		(
-			logger
-			.log_error(
-				"CardManager: slot_container not found. Path: $BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer"
-			)
-		)
-		all_valid = false
-	if not timer_node:
-		logger.log_error("CardManager: timer_node not found. Path: ./../TopBar/TimerPanel")
-		all_valid = false
-	if not sorted_cards_container:
-		(
-			logger
-			.log_error(
-				"CardManager: sorted_cards_container not found. Path: ./../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer"
-			)
-		)
-		all_valid = false
-	if not sorted_cards_panel:
-		logger.log_error("CardManager: sorted_cards_panel not found. Path: ./../SortedCardsPanel")
-		all_valid = false
-	if not show_sorted_button:
-		(
-			logger
-			.log_error(
-				"CardManager: show_sorted_button not found. Path: ./../RightSideButtonsContainer/ShowSortedCardsButton"
-			)
-		)
-		all_valid = false
-	if not button_container:
-		(
-			logger
-			.log_error(
-				"CardManager: button_container (for swap buttons) not found. Path: $SwapButtonPanel/CenterContainer/SwapButtonContainer"
-			)
-		)
-		all_valid = false
-	# var_tree validation is handled by VarTreeHandler
-	if not finish_game_scene:
-		logger.log_error("CardManager: finish_game_scene PackedScene not loaded properly.")
-		all_valid = false
-
-	return all_valid
-
-
 func _connect_signals():
 	# Connect to ScrollContainer's signal for card drops
-	if scroll_container_node: # Already validated in _validate_node_references
+	if scroll_container_node:
 		if scroll_container_node.has_signal("card_dropped_card_container"):
 			# Ensure _on_card_placed_in_container can accept a Card argument if the signal sends one
 			# Or use a dedicated handler like _on_card_dropped_from_scroll_container(card: Card)
@@ -390,6 +323,7 @@ func adjust_container_spacing():
 	card_spacing = max(10, max_spacing / 2)
 	# Apply spacing to the card container so that cards_array are properly separated
 	card_container.add_theme_constant_override("separation", int(card_spacing * 0.8))
+	# TODO CHECK ALL PATHS, WRITE A WRAPPER FUNCTION IF NEEDED
 	sorted_cards_container.add_theme_constant_override("separation", int(card_spacing * 0.8))
 
 	# TODO Manual spaccing for buttons, doing it via container is impossible beacause of the way it calculates the spacing
