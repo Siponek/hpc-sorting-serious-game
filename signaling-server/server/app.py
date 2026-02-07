@@ -29,13 +29,11 @@ Handler = Callable[[web.Request], Awaitable[web.StreamResponse]]
 # CORS Middleware
 # =============================================================================
 
+
 @web.middleware
-async def cors_middleware(
-    request: web.Request,
-    handler: Handler
-) -> web.StreamResponse:
+async def cors_middleware(request: web.Request, handler: Handler) -> web.StreamResponse:
     """CORS middleware for cross-origin requests."""
-    if request.method == 'OPTIONS':
+    if request.method == "OPTIONS":
         response: web.StreamResponse = web.Response()
     else:
         try:
@@ -43,15 +41,16 @@ async def cors_middleware(
         except web.HTTPException as ex:
             response = web.Response(status=ex.status, text=ex.reason)
 
-    response.headers['Access-Control-Allow-Origin'] = CONFIG.cors_origins
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Accept, Cache-Control'
+    response.headers["Access-Control-Allow-Origin"] = CONFIG.cors_origins
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Accept, Cache-Control"
     return response
 
 
 # =============================================================================
 # Shutdown Handling
 # =============================================================================
+
 
 async def cleanup_all_connections() -> None:
     """Close all WebSocket connections gracefully."""
@@ -62,7 +61,7 @@ async def cleanup_all_connections() -> None:
         if peer.ws and not peer.ws.closed:
             try:
                 await peer.ws.send_json({"t": ResponseType.SERVER_SHUTDOWN})
-                await peer.ws.close(code=1001, message=b'Server shutdown')
+                await peer.ws.close(code=1001, message=b"Server shutdown")
             except Exception:
                 pass
 
@@ -72,8 +71,8 @@ async def cleanup_all_connections() -> None:
         for _peer_id, ws in connections.items():
             if not ws.closed:
                 try:
-                    await ws.send_json({'data_type': SignalingDataType.SERVER_SHUTDOWN})
-                    await ws.close(code=1001, message=b'Server shutdown')
+                    await ws.send_json({"data_type": SignalingDataType.SERVER_SHUTDOWN})
+                    await ws.close(code=1001, message=b"Server shutdown")
                 except Exception:
                     pass
 
@@ -92,6 +91,7 @@ async def on_shutdown(_app: web.Application) -> None:
 # Keyboard Input Handler
 # =============================================================================
 
+
 async def keyboard_listener() -> None:
     """Listen for keyboard commands in the terminal."""
     loop = asyncio.get_event_loop()
@@ -102,15 +102,15 @@ async def keyboard_listener() -> None:
             line = await loop.run_in_executor(None, sys.stdin.readline)
             cmd = line.strip().lower()
 
-            if cmd == 'r':
+            if cmd == "r":
                 print("\n[RESTART] Clearing all connections and state...")
                 await cleanup_all_connections()
                 print("[RESTART] Server state reset. Ready for new connections.\n")
-            elif cmd == 'q':
+            elif cmd == "q":
                 print("\n[QUIT] Shutting down server...")
                 # Raise SystemExit to trigger graceful shutdown
                 raise SystemExit(0)
-            elif cmd == 'h' or cmd == 'help':
+            elif cmd == "h" or cmd == "help":
                 print("\n  Commands:")
                 print("    r     - Reset server state (disconnect all clients)")
                 print("    q     - Quit server")
@@ -130,6 +130,7 @@ async def keyboard_listener() -> None:
 # Application Factory
 # =============================================================================
 
+
 def create_app() -> web.Application:
     """Create and configure the aiohttp application."""
     app = web.Application(middlewares=[cors_middleware])
@@ -140,7 +141,7 @@ def create_app() -> web.Application:
     # Register routes
     register_http_routes(app)
     register_http_lobby_routes(app)  # New HTTP+SSE lobby routes
-    register_websocket_routes(app)   # Keep WebSocket routes for backward compatibility
+    register_websocket_routes(app)  # Keep WebSocket routes for backward compatibility
 
     return app
 
@@ -149,44 +150,46 @@ def create_app() -> web.Application:
 # Utilities
 # =============================================================================
 
+
 def suppress_connection_reset_errors() -> None:
     """Suppress noisy Windows socket errors."""
-    logging.getLogger('asyncio').setLevel(logging.CRITICAL)
+    logging.getLogger("asyncio").setLevel(logging.CRITICAL)
 
 
 def print_banner() -> None:
     """Print server startup banner."""
     print()
-    print('=' * 60)
-    print('  Lobby Server (HTTP + SSE)')
-    print('=' * 60)
+    print("=" * 60)
+    print("  Lobby Server (HTTP + SSE)")
+    print("=" * 60)
     print()
-    print(f'  Base URL:       http://localhost:{PORT}')
+    print(f"  Base URL:       http://localhost:{PORT}")
     print()
-    print('  HTTP API (recommended for web):')
-    print('    POST /api/lobby/connect     - Get peer ID')
-    print('    POST /api/lobby/create      - Create lobby')
-    print('    POST /api/lobby/join        - Join lobby')
-    print('    POST /api/lobby/leave       - Leave lobby')
-    print('    GET  /api/lobby/list        - List lobbies')
-    print('    POST /api/lobby/broadcast   - Send game packets')
-    print('    GET  /api/lobby/events      - SSE event stream')
+    print("  HTTP API (recommended for web):")
+    print("    POST /api/lobby/connect     - Get peer ID")
+    print("    POST /api/lobby/create      - Create lobby")
+    print("    POST /api/lobby/join        - Join lobby")
+    print("    POST /api/lobby/leave       - Leave lobby")
+    print("    GET  /api/lobby/list        - List lobbies")
+    print("    POST /api/lobby/broadcast   - Send game packets")
+    print("    GET  /api/lobby/events      - SSE event stream")
     print()
-    print('  Legacy WebSocket (backward compatible):')
-    print('    WS   /lobby                 - Lobby events')
-    print('    WS   /ws/{code}             - WebRTC signaling')
+    print("  Legacy WebSocket (backward compatible):")
+    print("    WS   /lobby                 - Lobby events")
+    print("    WS   /ws/{code}             - WebRTC signaling")
     print()
-    print('=' * 60)
+    print("=" * 60)
     print()
-    print('  Commands: r = reset state, q = quit, h = help')
+    print("  Commands: r = reset state, q = quit, h = help")
     print()
-    print('[SERVER] Waiting for connections...')
+    print("[SERVER] Waiting for connections...")
     print()
 
 
 # =============================================================================
 # Main Entry Point
 # =============================================================================
+
 
 async def run_server() -> None:
     """Run the server with keyboard input support."""
@@ -214,5 +217,5 @@ def main() -> None:
         print("\n[SERVER] Stopped.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ServerConfig:
     """Immutable server configuration settings."""
+
     host: str = "0.0.0.0"
     default_port: int = 3000
     cors_origins: str = "*"

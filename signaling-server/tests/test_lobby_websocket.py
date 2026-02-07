@@ -46,11 +46,13 @@ class TestLobbyWebSocket(AioHTTPTestCase):
             welcome = await ws.receive_json()
             peer_id = welcome["your_id"]
 
-            await ws.send_json({
-                "t": MessageType.CREATE_LOBBY,
-                "name": "TestLobby",
-                "public": True,
-            })
+            await ws.send_json(
+                {
+                    "t": MessageType.CREATE_LOBBY,
+                    "name": "TestLobby",
+                    "public": True,
+                }
+            )
 
             msg = await ws.receive_json()
             assert msg["t"] == ResponseType.LOBBY_CREATED
@@ -76,11 +78,13 @@ class TestLobbyWebSocket(AioHTTPTestCase):
             await ws.receive_json()  # skip welcome
 
             # Create a lobby
-            await ws.send_json({
-                "t": MessageType.CREATE_LOBBY,
-                "name": "ListTestLobby",
-                "public": True,
-            })
+            await ws.send_json(
+                {
+                    "t": MessageType.CREATE_LOBBY,
+                    "name": "ListTestLobby",
+                    "public": True,
+                }
+            )
             await ws.receive_json()  # skip lobby_created
 
             # List lobbies
@@ -96,10 +100,12 @@ class TestLobbyWebSocket(AioHTTPTestCase):
         async with self.client.ws_connect("/lobby") as ws:
             await ws.receive_json()  # skip welcome
 
-            await ws.send_json({
-                "t": MessageType.JOIN_LOBBY,
-                "code": "XXXX",
-            })
+            await ws.send_json(
+                {
+                    "t": MessageType.JOIN_LOBBY,
+                    "code": "XXXX",
+                }
+            )
             msg = await ws.receive_json()
 
             assert msg["t"] == ResponseType.ERROR
@@ -112,10 +118,12 @@ class TestLobbyWebSocket(AioHTTPTestCase):
             host_welcome = await host_ws.receive_json()
             host_id = host_welcome["your_id"]
 
-            await host_ws.send_json({
-                "t": MessageType.CREATE_LOBBY,
-                "name": "JoinTestLobby",
-            })
+            await host_ws.send_json(
+                {
+                    "t": MessageType.CREATE_LOBBY,
+                    "name": "JoinTestLobby",
+                }
+            )
             created = await host_ws.receive_json()
             lobby_code = created["code"]
 
@@ -124,11 +132,13 @@ class TestLobbyWebSocket(AioHTTPTestCase):
                 client_welcome = await client_ws.receive_json()
                 client_id = client_welcome["your_id"]
 
-                await client_ws.send_json({
-                    "t": MessageType.JOIN_LOBBY,
-                    "code": lobby_code,
-                    "player": {"name": "TestPlayer"},
-                })
+                await client_ws.send_json(
+                    {
+                        "t": MessageType.JOIN_LOBBY,
+                        "code": lobby_code,
+                        "player": {"name": "TestPlayer"},
+                    }
+                )
 
                 # Client receives lobby_joined
                 joined = await client_ws.receive_json()
@@ -149,10 +159,12 @@ class TestLobbyWebSocket(AioHTTPTestCase):
         async with self.client.ws_connect("/lobby") as host_ws:
             await host_ws.receive_json()  # skip welcome
 
-            await host_ws.send_json({
-                "t": MessageType.CREATE_LOBBY,
-                "name": "LeaveTestLobby",
-            })
+            await host_ws.send_json(
+                {
+                    "t": MessageType.CREATE_LOBBY,
+                    "name": "LeaveTestLobby",
+                }
+            )
             created = await host_ws.receive_json()
             lobby_code = created["code"]
 
@@ -160,10 +172,12 @@ class TestLobbyWebSocket(AioHTTPTestCase):
                 await client_ws.receive_json()  # skip welcome
 
                 # Join
-                await client_ws.send_json({
-                    "t": MessageType.JOIN_LOBBY,
-                    "code": lobby_code,
-                })
+                await client_ws.send_json(
+                    {
+                        "t": MessageType.JOIN_LOBBY,
+                        "code": lobby_code,
+                    }
+                )
                 await client_ws.receive_json()  # skip lobby_joined
                 await host_ws.receive_json()  # skip peer_joined on host
 
@@ -192,10 +206,12 @@ class TestLobbyWebSocket(AioHTTPTestCase):
         # First create a lobby with a different peer
         async with self.client.ws_connect("/lobby") as other_ws:
             await other_ws.receive_json()  # skip welcome
-            await other_ws.send_json({
-                "t": MessageType.CREATE_LOBBY,
-                "name": "OtherLobby",
-            })
+            await other_ws.send_json(
+                {
+                    "t": MessageType.CREATE_LOBBY,
+                    "name": "OtherLobby",
+                }
+            )
             other_created = await other_ws.receive_json()
             other_code = other_created["code"]
 
@@ -204,17 +220,21 @@ class TestLobbyWebSocket(AioHTTPTestCase):
                 await ws.receive_json()  # skip welcome
 
                 # Create first lobby
-                await ws.send_json({
-                    "t": MessageType.CREATE_LOBBY,
-                    "name": "FirstLobby",
-                })
+                await ws.send_json(
+                    {
+                        "t": MessageType.CREATE_LOBBY,
+                        "name": "FirstLobby",
+                    }
+                )
                 await ws.receive_json()  # skip lobby_created
 
                 # Try to join another existing lobby
-                await ws.send_json({
-                    "t": MessageType.JOIN_LOBBY,
-                    "code": other_code,
-                })
+                await ws.send_json(
+                    {
+                        "t": MessageType.JOIN_LOBBY,
+                        "code": other_code,
+                    }
+                )
                 msg = await ws.receive_json()
 
                 assert msg["t"] == ResponseType.ERROR
@@ -247,20 +267,24 @@ class TestLobbyWebSocket(AioHTTPTestCase):
         async with self.client.ws_connect("/lobby") as host_ws:
             await host_ws.receive_json()  # skip welcome
 
-            await host_ws.send_json({
-                "t": MessageType.CREATE_LOBBY,
-                "name": "DisconnectTestLobby",
-            })
+            await host_ws.send_json(
+                {
+                    "t": MessageType.CREATE_LOBBY,
+                    "name": "DisconnectTestLobby",
+                }
+            )
             created = await host_ws.receive_json()
             lobby_code = created["code"]
 
             async with self.client.ws_connect("/lobby") as client_ws:
                 await client_ws.receive_json()  # skip welcome
 
-                await client_ws.send_json({
-                    "t": MessageType.JOIN_LOBBY,
-                    "code": lobby_code,
-                })
+                await client_ws.send_json(
+                    {
+                        "t": MessageType.JOIN_LOBBY,
+                        "code": lobby_code,
+                    }
+                )
                 await client_ws.receive_json()  # skip lobby_joined
                 await host_ws.receive_json()  # skip peer_joined
 
