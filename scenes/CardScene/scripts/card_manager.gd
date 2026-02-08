@@ -1,5 +1,4 @@
 extends Control
-
 # @export var card_scene: PackedScene
 @export_range(10, 200) var button_spacing: int = 10
 @export_range(10, 200) var card_spacing: int = 10
@@ -18,6 +17,7 @@ var _var_tree_mounted: bool = false
 # Finish window management
 var finish_window_open: bool = false
 var finish_window_instance: Node = null
+
 # TODO would be cool to add coloring/theme selection to main menu,
 # so players can choose if they want rainbow or now
 
@@ -38,6 +38,7 @@ var card_colors: Array[Color] = [
 	Color.CRIMSON,
 	Color.DARK_ORCHID
 ]
+
 @export var timer_node: TimerController
 @export var card_container: HBoxContainer
 @export var slot_container: HBoxContainer
@@ -57,10 +58,8 @@ const swap_button_scene: PackedScene = preload(ProjectFiles.Scenes.SWAP_BTN)
 const card_slot_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_SLOT)
 const finish_game_scene: PackedScene = preload(ProjectFiles.Scenes.FINISH_GAME_SCENE)
 
-
 var var_tree: VarTree = null
-@onready var logger := CustomLogger.get_logger(self)
-
+@onready var logger := CustomLogger.get_logger(self )
 
 class CardDebugData:
 	var cards_in_slots: int = 0
@@ -109,7 +108,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 		return # Already mounted
 	_var_tree_mounted = true
 	vt.mount_var(
-		self,
+		self ,
 		"Client number",
 		{
 			"font_color": Color.CYAN,
@@ -118,7 +117,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 		}
 	)
 	vt.mount_var(
-		self,
+		self ,
 		"dbg_game_info/curr_dragged_card",
 		{
 			"font_color": Color.SEASHELL,
@@ -130,7 +129,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 		}
 	)
 	#TODO something shitty is happening here indentation level and formatter cannot fix it
-	vt.mount_var(self,
+	vt.mount_var(self ,
 		"dbg_game_info/card_count",
 		{
 			"font_color": Color.SEASHELL,
@@ -139,7 +138,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 		}
 	)
 	vt.mount_var(
-		self,
+		self ,
 		"dbg_game_info/card_slots",
 		{
 			"font_color": Color.SEASHELL,
@@ -158,7 +157,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 	)
 	if Settings.is_multiplayer:
 		vt.mount_var(
-			self,
+			self ,
 			"dbg_game_mp/multiplayer",
 			{
 				"font_color": Color.AQUA,
@@ -166,7 +165,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 			}
 		)
 		vt.mount_var(
-			self,
+			self ,
 			"dbg_game_mp/IAmHost",
 			{
 				"font_color": Color.SEASHELL,
@@ -175,7 +174,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 			}
 		)
 		vt.mount_var(
-			self,
+			self ,
 			"dbg_game_mp/currentLobbyID",
 			{
 				"font_color": Color.SEASHELL,
@@ -184,7 +183,7 @@ func _setup_var_tree(vt: VarTree) -> void:
 			}
 		)
 		vt.mount_var(
-			self,
+			self ,
 			"dbg_game_mp/Players count",
 			{
 				"font_color": Color.SEASHELL,
@@ -226,36 +225,34 @@ func fill_card_container(_card_instances_array: Array, _card_container: Node = n
 
 func _connect_signals():
 	# Connect to ScrollContainer's signal for card drops
-	if scroll_container_node:
-		if scroll_container_node.has_signal("card_dropped_card_container"):
-			# Ensure _on_card_placed_in_container can accept a Card argument if the signal sends one
-			# Or use a dedicated handler like _on_card_dropped_from_scroll_container(card: Card)
-			var error_code = scroll_container_node.connect(
-				"card_dropped_card_container", Callable(self, "_on_card_placed_in_container")
-			)
-			if error_code != OK:
-				printerr(
-					(
-						"CardManager: Failed to connect scroll_container_node.card_dropped_card_container. Error: %s"
-						% error_code
-					)
-				)
-		else:
+	if scroll_container_node.has_signal("card_dropped_card_container"):
+		# Ensure _on_card_placed_in_container can accept a Card argument if the signal sends one
+		# Or use a dedicated handler like _on_card_dropped_from_scroll_container(card: Card)
+		var error_code = scroll_container_node.connect(
+			"card_dropped_card_container", Callable(self , "_on_card_placed_in_container")
+		)
+		if error_code != OK:
 			printerr(
-				"CardManager: scroll_container_node does not have signal 'card_dropped_card_container'."
+				(
+					"CardManager: Failed to connect scroll_container_node.card_dropped_card_container. Error: %s"
+					% error_code
+				)
 			)
+	else:
+		printerr(
+			"CardManager: scroll_container_node does not have signal 'card_dropped_card_container'."
+		)
 
 	# Connect ShowSortedCardsButton
-	if show_sorted_button: # Already validated
-		if not show_sorted_button.is_connected(
-			"pressed", Callable(self, "_on_show_sorted_cards_button_pressed")
-		):
-			show_sorted_button.connect(
-				"pressed", Callable(self, "_on_show_sorted_cards_button_pressed")
-			)
-			_setup_button_glow_animation(show_sorted_button) # Setup glow after connecting
-		else:
-			logger.log_info("show_sorted_button.pressed already connected.")
+	if not show_sorted_button.is_connected(
+		"pressed", Callable(self , "_on_show_sorted_cards_button_pressed")
+	):
+		show_sorted_button.connect(
+			"pressed", Callable(self , "_on_show_sorted_cards_button_pressed")
+		)
+		_setup_button_glow_animation(show_sorted_button) # Setup glow after connecting
+	else:
+		logger.log_info("show_sorted_button.pressed already connected.")
 
 	# Note: Signals from dynamically created slots are connected in create_buffer_slots()
 
@@ -331,7 +328,7 @@ func adjust_container_spacing():
 	# TODO Manual spaccing for buttons, doing it via container is impossible beacause of the way it calculates the spacing
 	# Place the cards_array in container, calculate the positions and place the swap buttons there
 	button_spacing = (card_spacing * 2) + CARD_WIDTH - Constants.BUTTON_WIDTH
-	button_container.add_theme_constant_override("separation", button_spacing)
+	swap_button_container.add_theme_constant_override("separation", button_spacing)
 
 	# For the first button, set an offset so that its center lies directly in the gap between the first two cards_array.
 	# This offset is half the difference between the card width and the button width.
