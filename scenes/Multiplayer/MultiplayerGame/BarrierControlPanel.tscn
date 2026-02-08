@@ -10,38 +10,46 @@ offset_bottom = 150.0
 theme = ExtResource("1_r6tbv")
 script = ExtResource("1_script")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="ScrollContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BarrierStatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="BarrierStatusLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Status: Running"
 
-[node name="ThreadStatusContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ThreadStatusContainer" type="VBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="ButtonContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ButtonContainer" type="HBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BarrierButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonContainer"]
+[node name="BarrierButton" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer/ButtonContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Reach Barrier"
 
-[node name="DoneButton" type="Button" parent="MarginContainer/VBoxContainer/ButtonContainer"]
+[node name="DoneButton" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer/ButtonContainer"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3

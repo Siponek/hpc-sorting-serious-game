@@ -275,6 +275,7 @@ func sync_complete_game_state(
 
 	for value in all_card_values:
 		var card_instance: Card = card_scene.instantiate()
+		card_instance.set_card_scroll_container(scroll_container_node) # Set reference to scroll container for each card
 		card_instance.set_card_value(value)
 		card_instance.set_card_container_ref(card_container)
 		card_instance.name = "Card_Val_" + str(value)
@@ -736,7 +737,6 @@ func barrier_thread_reached(thread_id: int):
 		logger.log_info(
 			"Main thread assigned: ", barrier_manager.main_thread_id
 		)
-		_update_barrier_ui_waiting()
 	else:
 		# Already waiting - mark this thread as at barrier
 		logger.log_info(
@@ -744,16 +744,15 @@ func barrier_thread_reached(thread_id: int):
 		)
 		barrier_manager.mark_thread_at_barrier(thread_id)
 
-		# If this is ME reaching the barrier, disable my button
-		if thread_id == my_client_id and barrier_control_panel:
-			logger.log_info("Disabling my barrier button")
-			barrier_control_panel.set_barrier_state(true, false, false)
+# If this is ME reaching the barrier, disable my button
+	if thread_id == my_client_id and barrier_control_panel:
+		logger.log_info("Disabling my barrier button")
+		barrier_control_panel.set_barrier_state(true, false, false)
 
-	# Update UI to show this thread reached barrier
-	barrier_control_panel.set_thread_at_barrier(thread_id, true)
-
+		# Update the waiting list to remove this player
+		_update_barrier_ui_waiting()
 	# Check if all threads at barrier
-	logger.log_info("Threads at barrier: ", barrier_manager.threads_at_barrier)
+		logger.log_info("Threads at barrier: ", barrier_manager.threads_at_barrier)
 	if barrier_manager.all_threads_at_barrier(all_thread_ids):
 		logger.log_info("All threads at barrier! Initiating processing...")
 		_initiate_barrier_processing()
@@ -802,14 +801,19 @@ func _initiate_barrier_processing():
 func barrier_activate(main_thread_id: int, buffer_snapshots: Array):
 	"""All threads receive this when barrier activates"""
 	logger.log_info(
-		"barrier_activate received - main_thread: ",
-		main_thread_id,
-		", I am: ",
-		my_client_id
+	"barrier_activate received - main_thread: ",
+	main_thread_id,
+	", I am: ",
+	my_client_id
 	)
 	logger.log_info("Buffer snapshots: ", buffer_snapshots)
 	barrier_manager.main_thread_id = main_thread_id
 	barrier_manager.activate_barrier()
+
+	# Update UI to show which thread is the main thread
+	var main_thread_name = _get_player_name(main_thread_id)
+	var is_me = my_client_id == main_thread_id
+	barrier_control_panel.set_main_thread_active(main_thread_name, is_me)
 
 	if my_client_id == main_thread_id:
 		logger.log_info("I am the main thread - entering main thread mode")
@@ -977,20 +981,19 @@ func _update_barrier_ui_waiting():
 
 	# Only disable button if THIS player has reached the barrier
 	var my_reached = barrier_manager.has_thread_reached_barrier(
-		my_client_id
+	my_client_id
 	)
 	barrier_control_panel.set_barrier_state(my_reached, false, false)
 
-	# Add thread status indicators
+	# Collect players who haven't reached the barrier yet
 	var players = ConnectionManager.get_player_list()
+	var waiting_player_names: Array[String] = []
 	for player in players.get_all_players():
-		barrier_control_panel.add_thread_status(
-			player.client_id, player.name
-		)
-		if barrier_manager.has_thread_reached_barrier(player.client_id):
-			barrier_control_panel.set_thread_at_barrier(
-				player.client_id, true
-			)
+		if not barrier_manager.has_thread_reached_barrier(player.client_id):
+			waiting_player_names.append(player.name)
+
+	# Display the grouped waiting list
+	barrier_control_panel.set_waiting_for_players(waiting_player_names)
 
 
 func _on_barrier_state_changed(new_state: BarrierManager.BarrierState):
@@ -1070,6 +1073,7 @@ func _get_or_create_card(card_value: int) -> Card:
 
 	# Card doesn't exist - create new instance
 	card = card_scene.instantiate()
+	card.set_card_scroll_container(scroll_container_node) # Set reference to scroll container for each card
 	card.set_card_value(card_value)
 	card.set_card_container_ref(card_container)
 	card.name = "Card_Val_" + str(card_value)
