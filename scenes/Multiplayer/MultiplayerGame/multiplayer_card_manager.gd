@@ -53,7 +53,7 @@ var my_client_id: int = -1
 var game_state_synced: bool = false
 @onready var buffer_size = Settings.player_buffer_count
 # Track which cards are in OTHER players' buffers
-var cards_in_other_buffers: Dictionary = {}  # card_value: player_id
+var cards_in_other_buffers: Dictionary = {} # card_value: player_id
 
 # Barrier synchronization feature
 var barrier_manager: BarrierManager
@@ -63,13 +63,19 @@ var barrier_manager: BarrierManager
 var interaction_locked: bool = false
 
 
+### Toggle elements elements that should not be visible when overlay is active
+func _toggle_visibility_of_the_rest_for_overlay(_visible: bool):
+	logger.log_info("Toggling visibility of non-overlay elements: ", _visible)
+	right_menu_buttons_container.visible = _visible
+	header_panel.visible = _visible
+	buffer_zone_container.visible = _visible
+
 # TODO The cards order is not syncing properly, checkout before cloude update
 # To see if the syncing mechanism makes sense.
 # Perhaps we need to add signal on moving cards and then update the game state on every move?
 func _ready():
 	is_host = ConnectionManager.am_i_host()
 	my_client_id = ConnectionManager.get_my_client_id()
-
 	logger.log_info(
 		"Starting initialization. Host: ", is_host, " Client ID: ", my_client_id
 	)
@@ -81,13 +87,11 @@ func _ready():
 	barrier_manager = BarrierManager.new()
 	barrier_manager.set_barrier_mode(Settings.barrier_mode)
 	barrier_manager.barrier_state_changed.connect(_on_barrier_state_changed)
-
 	# Connect barrier control panel signals
-	if barrier_control_panel:
-		barrier_control_panel.barrier_requested.connect(_on_barrier_requested)
-		barrier_control_panel.release_requested.connect(
-			_on_release_barrier_requested
-		)
+	barrier_control_panel.barrier_requested.connect(_on_barrier_requested)
+	barrier_control_panel.release_requested.connect(
+		_on_release_barrier_requested
+	)
 
 	setup_multiplayer_sync()
 
@@ -124,8 +128,7 @@ func _initialize_client_structure():
 
 	_connect_signals()
 
-	if sorted_cards_panel:
-		sorted_cards_panel.visible = false
+	sorted_cards_panel.visible = false
 
 	logger.log_info("Client structure ready, waiting for game state")
 
@@ -364,7 +367,7 @@ func sync_card_moved(
 	# Make sure card is visible and draggable
 	card.visible = true
 	card.set_can_drag(true)
-	card.remove_from_slot()  # Reset any slot styling
+	card.remove_from_slot() # Reset any slot styling
 
 	_update_all_card_indices()
 
@@ -575,7 +578,7 @@ func _on_card_placed_in_slot(card, slot):
 	if should_start_timer and timer_node.timer_started:
 		(
 			logger
-			. log_info(
+			.log_info(
 				"First move detected (slot), broadcasting timer start to all clients"
 			)
 		)
@@ -747,8 +750,7 @@ func barrier_thread_reached(thread_id: int):
 			barrier_control_panel.set_barrier_state(true, false, false)
 
 	# Update UI to show this thread reached barrier
-	if barrier_control_panel:
-		barrier_control_panel.set_thread_at_barrier(thread_id, true)
+	barrier_control_panel.set_thread_at_barrier(thread_id, true)
 
 	# Check if all threads at barrier
 	logger.log_info("Threads at barrier: ", barrier_manager.threads_at_barrier)
@@ -822,28 +824,23 @@ func _enter_main_thread_mode(buffer_snapshots: Array):
 	logger.log_info("Entering main thread mode")
 	interaction_locked = false
 
-	if all_buffers_view:
-		all_buffers_view.clear_buffers()
-		for snap_dict in buffer_snapshots:
-			var thread_name = _get_player_name(snap_dict.owner_id)
-			logger.log_info(
-				"Adding buffer for thread ",
-				snap_dict.owner_id,
-				" (",
-				thread_name,
-				"): ",
-				snap_dict.card_values
-			)
-			all_buffers_view.add_thread_buffer(
-				snap_dict.owner_id, thread_name, snap_dict.card_values
-			)
-		buffer_zone_container.visible = false
-		all_buffers_view.show_view()
-	else:
-		logger.log_warning("all_buffers_view is null!")
-
-	if barrier_control_panel:
-		barrier_control_panel.set_barrier_state(false, true, true)
+	all_buffers_view.clear_buffers()
+	for snap_dict in buffer_snapshots:
+		var thread_name = _get_player_name(snap_dict.owner_id)
+		logger.log_info(
+			"Adding buffer for thread ",
+			snap_dict.owner_id,
+			" (",
+			thread_name,
+			"): ",
+			snap_dict.card_values
+		)
+		all_buffers_view.add_thread_buffer(
+			snap_dict.owner_id, thread_name, snap_dict.card_values
+		)
+	_toggle_visibility_of_the_rest_for_overlay(false)
+	all_buffers_view.show_view()
+	barrier_control_panel.set_barrier_state(false, true, true)
 
 
 func _enter_blocked_mode():
@@ -852,16 +849,11 @@ func _enter_blocked_mode():
 	interaction_locked = true
 
 	var main_thread_name = _get_player_name(barrier_manager.main_thread_id)
-	if barrier_lock_overlay:
-		logger.log_info(
-			"Showing lock overlay for main thread: ", main_thread_name
-		)
-		barrier_lock_overlay.show_overlay(main_thread_name)
-	else:
-		logger.log_warning("barrier_lock_overlay is null!")
-
-	if barrier_control_panel:
-		barrier_control_panel.set_barrier_state(false, false, true)
+	logger.log_info(
+		"Showing lock overlay for main thread: ", main_thread_name
+	)
+	barrier_lock_overlay.show_overlay(main_thread_name)
+	barrier_control_panel.set_barrier_state(false, false, true)
 
 
 func _on_buffer_view_card_dropped(
@@ -971,53 +963,45 @@ func _exit_barrier_mode():
 	"""Clean up barrier UI and return to running state"""
 	logger.log_info("Exiting barrier mode - interaction_locked = false")
 	interaction_locked = false
+	barrier_lock_overlay.visible = false
 
-	if barrier_lock_overlay:
-		barrier_lock_overlay.hide_overlay()
+	all_buffers_view.hide_view()
+	_toggle_visibility_of_the_rest_for_overlay(true)
 
-	if all_buffers_view:
-		all_buffers_view.hide_view()
-		buffer_zone_container.visible = true
-
-	if barrier_control_panel:
-		barrier_control_panel.reset_ui()
+	barrier_control_panel.reset_ui()
 
 
 func _update_barrier_ui_waiting():
 	"""Update UI when first thread reaches barrier"""
-	if barrier_control_panel:
-		barrier_control_panel.update_status("Waiting at barrier...")
+	barrier_control_panel.update_status("Waiting at barrier...")
 
-		# Only disable button if THIS player has reached the barrier
-		var my_reached = barrier_manager.has_thread_reached_barrier(
-			my_client_id
+	# Only disable button if THIS player has reached the barrier
+	var my_reached = barrier_manager.has_thread_reached_barrier(
+		my_client_id
+	)
+	barrier_control_panel.set_barrier_state(my_reached, false, false)
+
+	# Add thread status indicators
+	var players = ConnectionManager.get_player_list()
+	for player in players.get_all_players():
+		barrier_control_panel.add_thread_status(
+			player.client_id, player.name
 		)
-		barrier_control_panel.set_barrier_state(my_reached, false, false)
-
-		# Add thread status indicators
-		var players = ConnectionManager.get_player_list()
-		for player in players.get_all_players():
-			barrier_control_panel.add_thread_status(
-				player.client_id, player.name
+		if barrier_manager.has_thread_reached_barrier(player.client_id):
+			barrier_control_panel.set_thread_at_barrier(
+				player.client_id, true
 			)
-			if barrier_manager.has_thread_reached_barrier(player.client_id):
-				barrier_control_panel.set_thread_at_barrier(
-					player.client_id, true
-				)
 
 
 func _on_barrier_state_changed(new_state: BarrierManager.BarrierState):
 	"""Handle barrier state changes"""
 	match new_state:
 		BarrierManager.BarrierState.RUNNING:
-			if barrier_control_panel:
-				barrier_control_panel.update_status("Running")
+			barrier_control_panel.update_status("Running")
 		BarrierManager.BarrierState.WAITING_AT_BARRIER:
-			if barrier_control_panel:
-				barrier_control_panel.update_status("Waiting at barrier...")
+			barrier_control_panel.update_status("Waiting at barrier...")
 		BarrierManager.BarrierState.BARRIER_ACTIVE:
-			if barrier_control_panel:
-				barrier_control_panel.update_status("Barrier active")
+			barrier_control_panel.update_status("Barrier active")
 
 
 func _get_my_buffer_snapshot() -> Dictionary:

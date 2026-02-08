@@ -117,7 +117,7 @@ theme = ExtResource("1_ly61b")
 theme_type_variation = &"ActionSidePanelButton"
 text = "Restart game"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." node_paths=PackedStringArray("barrier_control_panel", "barrier_lock_overlay", "all_buffers_view", "timer_node", "card_container", "slot_container", "scroll_container", "button_container", "sorted_cards_panel", "show_sorted_button", "sorted_cards_container", "scroll_container_node", "var_tree_node", "buffer_zone_container")]
+[node name="VBoxContainer" type="VBoxContainer" parent="." node_paths=PackedStringArray("barrier_control_panel", "barrier_lock_overlay", "all_buffers_view", "timer_node", "card_container", "slot_container", "scroll_container", "swap_button_container", "sorted_cards_panel", "show_sorted_button", "sorted_cards_container", "scroll_container_node", "var_tree_node", "buffer_zone_container", "right_menu_buttons_container", "header_panel")]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -138,13 +138,15 @@ timer_node = NodePath("../TopBar/TimerPanel")
 card_container = NodePath("CardPanel/ScrollContainer/MarginContainer/CardContainer")
 slot_container = NodePath("BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer")
 scroll_container = NodePath("CardPanel/ScrollContainer")
-button_container = NodePath("SwapButtonPanel/CenterContainer/SwapButtonContainer")
+swap_button_container = NodePath("SwapButtonPanel/CenterContainer/SwapButtonContainer")
 sorted_cards_panel = NodePath("SortedCardsPanel")
 show_sorted_button = NodePath("../RightSideButtonsContainer/ShowSortedCardsButton")
 sorted_cards_container = NodePath("SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer")
 scroll_container_node = NodePath("CardPanel/ScrollContainer")
 var_tree_node = NodePath("../CanvasLayer/VarTree")
 buffer_zone_container = NodePath("BufferZonePanel")
+right_menu_buttons_container = NodePath("../RightSideButtonsContainer")
+header_panel = NodePath("../TopBar/HeaderPanel")
 
 [node name="SortedCardsPanel" type="PanelContainer" parent="VBoxContainer"]
 z_index = 100

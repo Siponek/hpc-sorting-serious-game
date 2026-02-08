@@ -9,7 +9,3 @@ func show_overlay(main_thread_name: String):
 		"Main thread (" + main_thread_name + ") is processing..."
 	)
 	visible = true
-
-
-func hide_overlay():
-	visible = false

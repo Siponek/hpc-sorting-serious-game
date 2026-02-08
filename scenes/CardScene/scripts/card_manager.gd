@@ -42,13 +42,15 @@ var card_colors: Array[Color] = [
 @export var card_container: HBoxContainer
 @export var slot_container: HBoxContainer
 @export var scroll_container: ScrollContainer
-@export var button_container: HBoxContainer
+@export var swap_button_container: HBoxContainer
 @export var sorted_cards_panel: PanelContainer
 @export var show_sorted_button: Button
 @export var sorted_cards_container: HBoxContainer
 @export var scroll_container_node: ScrollContainer
 @export var var_tree_node: VarTree
 @export var buffer_zone_container: PanelContainer
+@export var right_menu_buttons_container: VBoxContainer
+@export var header_panel: PanelContainer
 
 const card_scene: PackedScene = preload(ProjectFiles.Scenes.CARD_MAIN)
 const swap_button_scene: PackedScene = preload(ProjectFiles.Scenes.SWAP_BTN)
