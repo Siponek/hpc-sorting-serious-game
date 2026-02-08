@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://d3kykh26ao1gu"]
+[gd_scene load_steps=10 format=3 uid="uid://d3kykh26ao1gu"]
 
 [ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="1_et7ul"]
 [ext_resource type="Script" uid="uid://do0qtlv3uyb5b" path="res://scenes/timer_controller_script.gd" id="2_v126x"]
@@ -6,6 +6,7 @@
 [ext_resource type="Theme" uid="uid://vuoefmjxurjo" path="res://res/dark_theme.tres" id="4_c4j03"]
 [ext_resource type="Script" uid="uid://dbplfwfqymqd3" path="res://scenes/main_card_panel_scroll_container.gd" id="5_8sm1x"]
 [ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="6_62g6h"]
+[ext_resource type="PackedScene" uid="uid://jra4x5p31i4w" path="res://scenes/CardScene/BufferZonePanel.tscn" id="6_v126x"]
 [ext_resource type="Script" uid="uid://bpvwcjxfptkki" path="res://addons/var_tree/var_tree.gd" id="7_7qs7x"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cagap"]
@@ -139,7 +140,7 @@ custom_minimum_size = Vector2(0, -4.605)
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." node_paths=PackedStringArray("timer_node", "card_container", "slot_container", "scroll_container", "button_container", "sorted_cards_panel", "show_sorted_button", "sorted_cards_container", "scroll_container_node", "var_tree_node")]
+[node name="VBoxContainer" type="VBoxContainer" parent="." node_paths=PackedStringArray("timer_node", "card_container", "slot_container", "swap_button_container", "sorted_cards_panel", "show_sorted_button", "sorted_cards_container", "scroll_container_node", "var_tree_node", "buffer_zone_container", "right_menu_buttons_container", "header_panel")]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -154,15 +155,17 @@ theme_override_constants/separation = 0
 alignment = 1
 script = ExtResource("3_11tx2")
 timer_node = NodePath("../TopBar/TimerPanel")
-card_container = NodePath("CardPanel/ScrollContainer/MarginContainer/CardContainer")
-slot_container = NodePath("BufferZonePanel/MarginContainer/VBoxContainer/SlotContainer")
-scroll_container = NodePath("CardPanel/ScrollContainer")
-button_container = NodePath("SwapButtonPanel/CenterContainer/SwapButtonContainer")
+card_container = NodePath("CardPanel/CardScrollContainer/MarginContainer/CardContainer")
+slot_container = NodePath("BufferZonePanel/VBoxContainer/ScrollContainer/MarginContainer/VBoxContainer/SlotContainer")
+swap_button_container = NodePath("SwapButtonPanel/CenterContainer/SwapButtonContainer")
 sorted_cards_panel = NodePath("../SortedCardsPanel")
 show_sorted_button = NodePath("../RightSideButtonsContainer/ShowSortedCardsButton")
 sorted_cards_container = NodePath("../SortedCardsPanel/ScrollContainer/MarginContainer/HBoxContainer")
-scroll_container_node = NodePath("CardPanel/ScrollContainer")
+scroll_container_node = NodePath("CardPanel/CardScrollContainer")
 var_tree_node = NodePath("../CanvasLayer/VarTree")
+buffer_zone_container = NodePath("BufferZonePanel")
+right_menu_buttons_container = NodePath("../RightSideButtonsContainer")
+header_panel = NodePath("../TopBar/HeaderPanel")
 
 [node name="SwapButtonPanel" type="PanelContainer" parent="VBoxContainer"]
 visible = false
@@ -186,53 +189,29 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = ExtResource("1_et7ul")
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/CardPanel"]
+[node name="CardScrollContainer" type="ScrollContainer" parent="VBoxContainer/CardPanel" node_paths=PackedStringArray("card_container")]
 clip_contents = false
 layout_mode = 2
 draw_focus_border = true
 script = ExtResource("5_8sm1x")
+card_container = NodePath("MarginContainer/CardContainer")
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/CardPanel/ScrollContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/CardPanel/CardScrollContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 15
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 15
 theme_override_constants/margin_bottom = 10
 
-[node name="CardContainer" type="HBoxContainer" parent="VBoxContainer/CardPanel/ScrollContainer/MarginContainer"]
+[node name="CardContainer" type="HBoxContainer" parent="VBoxContainer/CardPanel/CardScrollContainer/MarginContainer"]
 z_index = 10
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 50
 
-[node name="BufferZonePanel" type="PanelContainer" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 180)
+[node name="BufferZonePanel" parent="VBoxContainer" instance=ExtResource("6_v126x")]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme = ExtResource("1_et7ul")
-
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/BufferZonePanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 10
-
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/BufferZonePanel/MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Label" type="Label" parent="VBoxContainer/BufferZonePanel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Buffer Zone"
-horizontal_alignment = 1
-
-[node name="SlotContainer" type="HBoxContainer" parent="VBoxContainer/BufferZonePanel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-alignment = 1
 
 [node name="Background" parent="." instance=ExtResource("6_62g6h")]
 custom_minimum_size = Vector2(26.695, 0)
@@ -249,3 +228,5 @@ script = ExtResource("7_7qs7x")
 metadata/_custom_type_script = "uid://bpvwcjxfptkki"
 
 [connection signal="pressed" from="RightSideButtonsContainer/RestartGameButton" to="VBoxContainer" method="_on_restart_game_button_pressed"]
+
+[editable path="VBoxContainer/BufferZonePanel"]

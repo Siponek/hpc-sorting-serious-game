@@ -5,7 +5,7 @@ extends ScrollContainer
 # and we want to be able to drag and drop cards between the slots. The dynamic container cannot be used for that
 # Because we need clear indication where we can drag the cards to.
 @onready var logger = CustomLogger.get_logger(self )
-var CARD_CONTAINER_PATH: String
+@export var card_container: HBoxContainer
 
 const DROP_PLACEHOLDER_SCENE: PackedScene = preload(
 	ProjectFiles.Scenes.DROP_INDICATOR
@@ -22,29 +22,14 @@ signal card_dropped_card_container(
 signal buffer_view_card_dropped(
 	card_value: int, source_thread_id: int, target_index: int
 )
-var card_container: HBoxContainer
-
 
 func _ready():
 	#TODO make this somehow detached so multiplayer doesnt have to pick this way, or al least single source of truth
-	if Settings.is_multiplayer:
-		CARD_CONTAINER_PATH = "MultiPlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
-	else:
-		CARD_CONTAINER_PATH = "SinglePlayerScene/VBoxContainer/CardPanel/ScrollContainer/MarginContainer/CardContainer"
 	if DROP_PLACEHOLDER_SCENE:
 		current_drop_placeholder = DROP_PLACEHOLDER_SCENE.instantiate()
 		# Keep it out of the tree initially, or add and hide:
 		# add_child(current_drop_placeholder) # Optional: add to scroll container itself, not card_container
 		current_drop_placeholder.visible = false
-	card_container = get_tree().get_root().get_node(CARD_CONTAINER_PATH)
-	if card_container == null:
-		push_error(
-			(
-				"ScrollContainer: Card container not found at path: "
-				+ CARD_CONTAINER_PATH
-			)
-		)
-		return
 
 
 ### Checking if card can be dropped

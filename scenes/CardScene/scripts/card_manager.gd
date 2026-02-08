@@ -42,7 +42,6 @@ var card_colors: Array[Color] = [
 @export var timer_node: TimerController
 @export var card_container: HBoxContainer
 @export var slot_container: HBoxContainer
-@export var scroll_container: ScrollContainer
 @export var swap_button_container: HBoxContainer
 @export var sorted_cards_panel: PanelContainer
 @export var show_sorted_button: Button
@@ -341,8 +340,12 @@ func generate_completed_card_array(
 ) -> Array[Card]:
 	# Step 1: Create card instances
 	var cards: Array[Card] = []
+	var card_scene_instance: Card = null
 	for _i in card_values.size():
-		cards.append(card_scene.instantiate())
+		card_scene_instance = card_scene.instantiate()
+		card_scene_instance.set_card_scroll_container(scroll_container_node) # Set reference to scroll container for each card
+		cards.append(card_scene_instance)
+
 
 	# Step 2: Apply values and names
 	for i in cards.size():
@@ -387,8 +390,9 @@ func create_buffer_slots(buffer_size: int = Settings.player_buffer_count) -> Arr
 
 	# Create new _slots based on actual_size
 	for i in range(actual_size):
-		var slot = card_slot_scene.instantiate()
+		var slot: CardBuffer = card_slot_scene.instantiate()
 		slot.slot_text = "Slot " + str(i + 1)
+		slot.set_card_container(card_container)
 		slot_container.add_child(slot)
 		_slots.append(slot)
 

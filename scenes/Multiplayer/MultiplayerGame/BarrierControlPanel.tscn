@@ -1,11 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://c2u4616l80ugd"]
+[gd_scene load_steps=3 format=3 uid="uid://c2u4616l80ugd"]
 
+[ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="1_r6tbv"]
 [ext_resource type="Script" uid="uid://v244iki8hnc3" path="res://scenes/Multiplayer/MultiplayerGame/BarrierControlPanel.gd" id="1_script"]
 
 [node name="BarrierControlPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(200, 150)
 offset_right = 200.0
 offset_bottom = 150.0
+theme = ExtResource("1_r6tbv")
 script = ExtResource("1_script")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
