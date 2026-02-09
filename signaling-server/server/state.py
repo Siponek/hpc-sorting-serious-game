@@ -53,7 +53,7 @@ class State:
         """Generate a random room/lobby code."""
         chars = CONFIG.room_code_chars
         length = CONFIG.room_code_length
-        return ''.join(random.choice(chars) for _ in range(length))
+        return "".join(random.choice(chars) for _ in range(length))
 
     def generate_unique_code(self) -> str:
         """Generate a unique code not already in use."""
@@ -66,7 +66,9 @@ class State:
     # Lobby Management
     # =========================================================================
 
-    def create_lobby(self, name: str, host_peer: Peer, public: bool = True, player_limit: int = 0) -> Lobby:
+    def create_lobby(
+        self, name: str, host_peer: Peer, public: bool = True, player_limit: int = 0
+    ) -> Lobby:
         """Create a new lobby."""
         code = self.generate_unique_code()
         lobby = Lobby.create(code, name, host_peer, public, player_limit)
@@ -128,10 +130,7 @@ class State:
 
     def get_public_lobbies(self) -> list[Lobby]:
         """Get all public, open lobbies."""
-        return [
-            lobby for lobby in self.lobbies.values()
-            if lobby.public and lobby.open
-        ]
+        return [lobby for lobby in self.lobbies.values() if lobby.public and lobby.open]
 
     # =========================================================================
     # Peer Management
@@ -153,8 +152,14 @@ class State:
     # Room Management (WebRTC Signaling)
     # =========================================================================
 
-    def create_room(self, channel: str = "default", lobby_name: str = "",
-                    public: bool = True, player_limit: int = 0, is_debug: bool = False) -> Room:
+    def create_room(
+        self,
+        channel: str = "default",
+        lobby_name: str = "",
+        public: bool = True,
+        player_limit: int = 0,
+        is_debug: bool = False,
+    ) -> Room:
         """Create a new WebRTC signaling room."""
         code = "TEST" if is_debug else self.generate_unique_code()
 

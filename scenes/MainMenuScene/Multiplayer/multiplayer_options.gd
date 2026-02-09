@@ -119,26 +119,37 @@ func _on_join_game_button_pressed() -> void:
 
 	if not selected_lobby_id_from_list.is_empty():
 		lobby_id_to_attempt_join = selected_lobby_id_from_list
-		ToastParty.show(
-			{
-				"text": "Joining selected lobby: " + lobby_id_to_attempt_join,
-				"bgcolor": Color.PALE_GREEN
-			}
+		(
+			ToastParty
+			. show(
+				{
+					"text":
+					"Joining selected lobby: " + lobby_id_to_attempt_join,
+					"bgcolor": Color(Color.PALE_GREEN, 0.65),
+				}
+			)
 		)
 	elif not lobby_join_id_input.text.is_empty():
 		lobby_id_to_attempt_join = lobby_join_id_input.text
-		ToastParty.show(
-			{
-				"text": "Joining lobby by code: " + lobby_id_to_attempt_join,
-				"bgcolor": Color.PALE_TURQUOISE
-			}
+		(
+			ToastParty
+			. show(
+				{
+					"text":
+					"Joining lobby by code: " + lobby_id_to_attempt_join,
+					"bgcolor": Color(Color.PALE_TURQUOISE, 0.65),
+				}
+			)
 		)
 	else:
-		ToastParty.show(
-			{
-				"text": "Please select a lobby or enter a code to join.",
-				"bgcolor": Color.ORANGE_RED
-			}
+		(
+			ToastParty
+			. show(
+				{
+					"text": "Please select a lobby or enter a code to join.",
+					"bgcolor": Color(Color.ORANGE_RED, 0.65),
+				}
+			)
 		)
 		return
 
@@ -162,7 +173,10 @@ func _on_connection_manager_joined_lobby(lobby_id: String):
 
 func _on_refresh_lobbies_button_pressed() -> void:
 	ToastParty.show(
-		{"text": "Refreshing lobby list...", "bgcolor": Color.LIGHT_BLUE}
+		{
+			"text": "Refreshing lobby list...",
+			"bgcolor": Color(Color.LIGHT_BLUE, 0.50)
+		}
 	)
 	ConnectionManager.find_lobbies()
 	lobby_list_ui.clear()  # Clear old list while waiting for new one
@@ -174,7 +188,7 @@ func _on_connection_manager_lobbies_updated(lobbies: Array):
 	ToastParty.show(
 		{
 			"text": "Lobby list updated with %d lobbies." % lobbies.size(),
-			"bgcolor": Color.LIGHT_GREEN
+			"bgcolor": Color(Color.LIGHT_GREEN, 0.50)
 		}
 	)
 	lobby_list_ui.clear()
@@ -226,7 +240,11 @@ func _on_connection_manager_failed_to_join_lobby(
 	_lobby_name: String, error_message: String
 ):
 	ToastParty.show(
-		{"text": error_message, "bgcolor": Color.RED, "color": Color.WHITE}
+		{
+			"text": error_message,
+			"bgcolor": Color(Color.RED, 0.65),
+			"color": Color.WHITE
+		}
 	)
 	logger.log_error(
 		"Failed to join lobby via ConnectionManager: ", error_message

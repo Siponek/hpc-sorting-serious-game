@@ -1,25 +1,160 @@
 name: Deploy to GitHub Pages
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Optional note for this deployment (e.g. 'release v1.2', 'test deploy')"
+        required: false
+        default: ""
+      allow_non_main:
+        description: "Allow deploying from non-main branches"
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
+      - name: Print deployment info
+        run: |
+          echo "============================================"
+          echo "  GitHub Pages Deployment (GitHub Actions)"
+          echo "============================================"
+          echo "Repository : $GITHUB_REPOSITORY"
+          echo "Branch     : $GITHUB_REF_NAME"
+          echo "Commit     : $GITHUB_SHA"
+          echo "Actor      : $GITHUB_ACTOR"
+          echo "Reason     : '${{ inputs.reason }}'"
+          echo "============================================"
+          echo ""
+
+      - name: Branch policy check (optional)
+        run: |
+          if [ "${{ inputs.allow_non_main }}" != "true" ] && [ "$GITHUB_REF_NAME" != "main" ]; then
+            echo "::error::This workflow is configured to deploy only from 'main'."
+            echo ""
+            echo "HOW TO PROCEED"
+            echo "--------------------------------------------"
+            echo "1) Switch to the 'main' branch"
+            echo "2) Merge your changes into 'main'"
+            echo "3) Re-run this workflow"
+            echo ""
+            echo "OR: re-run this workflow and set 'allow_non_main' to true."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
 
-      - name: Rename web-export.html to index.html
+      - name: Validate repository is configured for GitHub Actions Pages
         run: |
-          cp -r exports/web-export build
-          cd build
-          mv web-export.html index.html
+          echo "Checking if Pages is likely configured for GitHub Actions..."
+          echo ""
+          echo "NOTE:"
+          echo "- In your repo settings: Settings → Pages → Source should be 'GitHub Actions'."
+          echo "- If deployments fail with environment/branch restrictions:"
+          echo "  Settings → Environments → github-pages → Deployment branches"
+          echo ""
+
+      - name: Validate web export exists (with helpful guidance)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "============================================"
+          echo "  Validating web export"
+          echo "============================================"
+
+          if [ ! -d "exports/web-export" ]; then
+            echo "::error::Directory 'exports/web-export' not found."
+            echo ""
+            echo "HOW TO FIX"
+            echo "--------------------------------------------"
+            echo "1) Open the Godot project locally"
+            echo "2) Go to Project → Export..."
+            echo "3) Select/create the 'Web' export preset"
+            echo "4) Export into: exports/web-export/"
+            echo "5) Commit and push the exported files"
+            echo ""
+            echo "Expected structure:"
+            echo "  exports/web-export/"
+            echo "    web-export.html   (or adjust this workflow if named differently)"
+            echo "    *.wasm / *.pck / *.js / etc."
+            echo "============================================"
+            exit 1
+          fi
+
+          if [ ! -f "exports/web-export/web-export.html" ]; then
+            echo "::error::File 'exports/web-export/web-export.html' not found."
+            echo ""
+            echo "HOW TO FIX"
+            echo "--------------------------------------------"
+            echo "A) Re-export from Godot into exports/web-export/"
+            echo "B) Ensure the main HTML is named: web-export.html"
+            echo ""
+            echo "If your export uses a different name:"
+            echo " - Either rename it to web-export.html"
+            echo " - Or edit this workflow to match your filename"
+            echo ""
+            echo "Files currently in exports/web-export:"
+            ls -la exports/web-export || true
+            echo "============================================"
+            exit 1
+          fi
+
+          echo "✓ Web export validated successfully"
+          echo "============================================"
+
+      - name: Prepare build directory
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "============================================"
+          echo "  Preparing build directory"
+          echo "============================================"
+
+          rm -rf build
+          cp -R exports/web-export build
+
+          # GitHub Pages expects an index.html at the root of the artifact
+          if [ -f "build/web-export.html" ]; then
+            mv build/web-export.html build/index.html
+            echo "✓ Renamed web-export.html -> index.html"
+          else
+            echo "::error::Expected build/web-export.html after copy, but it was not found."
+            echo "This usually means the export directory contents changed unexpectedly."
+            echo ""
+            echo "Debug listing:"
+            ls -la build || true
+            exit 1
+          fi
+
+          echo ""
+          echo "Build output:"
+          ls -la build
+          echo "============================================"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -29,3 +164,15 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Post-deploy message
+        run: |
+          echo "============================================"
+          echo "  Deployment complete"
+          echo "============================================"
+          echo "Pages URL: ${{ steps.deployment.outputs.page_url }}"
+          echo ""
+          echo "If you got permission/environment errors:"
+          echo " - Settings → Environments → github-pages"
+          echo " - Check required reviewers / deployment branches restrictions"
+          echo "============================================"

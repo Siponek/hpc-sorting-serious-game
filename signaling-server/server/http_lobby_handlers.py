@@ -35,6 +35,7 @@ from .state import state
 # Helper Functions
 # =============================================================================
 
+
 def json_response(data: dict[str, Any], status: int = 200) -> web.Response:
     """Create a JSON response with proper content type."""
     return web.json_response(data, status=status)
@@ -42,16 +43,20 @@ def json_response(data: dict[str, Any], status: int = 200) -> web.Response:
 
 def error_response(code: str, message: str, status: int = 400) -> web.Response:
     """Create an error JSON response."""
-    return json_response({
-        "success": False,
-        "error": code,
-        "message": message,
-    }, status=status)
+    return json_response(
+        {
+            "success": False,
+            "error": code,
+            "message": message,
+        },
+        status=status,
+    )
 
 
 # =============================================================================
 # Connection Management
 # =============================================================================
+
 
 async def handle_connect(request: web.Request) -> web.Response:
     """
@@ -83,9 +88,7 @@ async def handle_connect(request: web.Request) -> web.Response:
         # Check for collision with existing peer
         if peer_id in state.lobby_peers:
             return error_response(
-                ErrorCode.PEER_ID_IN_USE,
-                f"Peer ID {peer_id} is already in use",
-                status=409
+                ErrorCode.PEER_ID_IN_USE, f"Peer ID {peer_id} is already in use", status=409
             )
     else:
         peer_id = state.get_next_peer_id()
@@ -95,12 +98,16 @@ async def handle_connect(request: web.Request) -> web.Response:
     peer = Peer(peer_id=peer_id, sse_queue=sse_queue)
     state.add_lobby_peer(peer)
 
-    print(f"[HTTP] Peer {peer_id} connected (client_provided={client_id is not None}, total: {len(state.lobby_peers)})")
+    print(
+        f"[HTTP] Peer {peer_id} connected (client_provided={client_id is not None}, total: {len(state.lobby_peers)})"
+    )
 
-    return json_response({
-        "success": True,
-        "peer_id": peer_id,
-    })
+    return json_response(
+        {
+            "success": True,
+            "peer_id": peer_id,
+        }
+    )
 
 
 async def handle_disconnect(request: web.Request) -> web.Response:
@@ -135,10 +142,13 @@ async def handle_disconnect(request: web.Request) -> web.Response:
             if was_host:
                 await close_lobby(lobby, LobbyCloseReason.HOST_DISCONNECTED)
             else:
-                await broadcast_to_lobby(lobby, {
-                    "t": ResponseType.PEER_LEFT,
-                    "id": peer_id,
-                })
+                await broadcast_to_lobby(
+                    lobby,
+                    {
+                        "t": ResponseType.PEER_LEFT,
+                        "id": peer_id,
+                    },
+                )
 
     state.remove_lobby_peer(peer_id)
     print(f"[HTTP] Peer {peer_id} disconnected (remaining: {len(state.lobby_peers)})")
@@ -149,6 +159,7 @@ async def handle_disconnect(request: web.Request) -> web.Response:
 # =============================================================================
 # Lobby Operations
 # =============================================================================
+
 
 async def handle_create_lobby(request: web.Request) -> web.Response:
     """
@@ -183,7 +194,9 @@ async def handle_create_lobby(request: web.Request) -> web.Response:
     peer = state.get_lobby_peer(peer_id)
 
     if not peer:
-        return error_response(ErrorCode.LOBBY_NOT_FOUND, "Peer not found. Call /api/lobby/connect first.", 404)
+        return error_response(
+            ErrorCode.LOBBY_NOT_FOUND, "Peer not found. Call /api/lobby/connect first.", 404
+        )
 
     if peer.lobby_code:
         return error_response(ErrorCode.ALREADY_IN_LOBBY, "Already in a lobby")
@@ -199,14 +212,16 @@ async def handle_create_lobby(request: web.Request) -> web.Response:
 
     print(f"[HTTP] Lobby created: {lobby.code} '{name}' by peer {peer_id}")
 
-    return json_response({
-        "success": True,
-        "t": ResponseType.LOBBY_CREATED,
-        "code": lobby.code,
-        "name": name,
-        "host_id": peer_id,
-        "your_id": peer_id,
-    })
+    return json_response(
+        {
+            "success": True,
+            "t": ResponseType.LOBBY_CREATED,
+            "code": lobby.code,
+            "name": name,
+            "host_id": peer_id,
+            "your_id": peer_id,
+        }
+    )
 
 
 async def handle_join_lobby(request: web.Request) -> web.Response:
@@ -241,7 +256,9 @@ async def handle_join_lobby(request: web.Request) -> web.Response:
     peer = state.get_lobby_peer(peer_id)
 
     if not peer:
-        return error_response(ErrorCode.LOBBY_NOT_FOUND, "Peer not found. Call /api/lobby/connect first.", 404)
+        return error_response(
+            ErrorCode.LOBBY_NOT_FOUND, "Peer not found. Call /api/lobby/connect first.", 404
+        )
 
     code_or_name: str = body.get("code", "")
     player_data: dict[str, Any] = body.get("player", {"name": f"Player {peer_id}"})
@@ -254,15 +271,17 @@ async def handle_join_lobby(request: web.Request) -> web.Response:
     # This is allowed - just return success with current state
     if peer.lobby_code == lobby.code:
         print(f"[HTTP] Peer {peer_id} re-joining their own lobby {lobby.code} (host join)")
-        return json_response({
-            "success": True,
-            "t": ResponseType.LOBBY_JOINED,
-            "code": lobby.code,
-            "name": lobby.name,
-            "host_id": lobby.host_id,
-            "your_id": peer_id,
-            "players": lobby.get_players_list(),
-        })
+        return json_response(
+            {
+                "success": True,
+                "t": ResponseType.LOBBY_JOINED,
+                "code": lobby.code,
+                "name": lobby.name,
+                "host_id": lobby.host_id,
+                "your_id": peer_id,
+                "players": lobby.get_players_list(),
+            }
+        )
 
     # Check if peer is in a DIFFERENT lobby
     if peer.lobby_code:
@@ -282,24 +301,32 @@ async def handle_join_lobby(request: web.Request) -> web.Response:
     if room:
         room.player_count = len(lobby.peers)
 
-    print(f"[HTTP] Peer {peer_id} joined {lobby.code} '{lobby.name}' (now {len(lobby.peers)} players)")
+    print(
+        f"[HTTP] Peer {peer_id} joined {lobby.code} '{lobby.name}' (now {len(lobby.peers)} players)"
+    )
 
     # Notify other peers (host and others) about new player
-    await broadcast_to_lobby(lobby, {
-        "t": ResponseType.PEER_JOINED,
-        "id": peer_id,
-        "player": peer.player_data,
-    }, exclude_peer_id=peer_id)
+    await broadcast_to_lobby(
+        lobby,
+        {
+            "t": ResponseType.PEER_JOINED,
+            "id": peer_id,
+            "player": peer.player_data,
+        },
+        exclude_peer_id=peer_id,
+    )
 
-    return json_response({
-        "success": True,
-        "t": ResponseType.LOBBY_JOINED,
-        "code": lobby.code,
-        "name": lobby.name,
-        "host_id": lobby.host_id,
-        "your_id": peer_id,
-        "players": lobby.get_players_list(),
-    })
+    return json_response(
+        {
+            "success": True,
+            "t": ResponseType.LOBBY_JOINED,
+            "code": lobby.code,
+            "name": lobby.name,
+            "host_id": lobby.host_id,
+            "your_id": peer_id,
+            "players": lobby.get_players_list(),
+        }
+    )
 
 
 async def handle_leave_lobby(request: web.Request) -> web.Response:
@@ -347,20 +374,25 @@ async def handle_leave_lobby(request: web.Request) -> web.Response:
     if was_host:
         await close_lobby(lobby, LobbyCloseReason.HOST_LEFT)
     else:
-        await broadcast_to_lobby(lobby, {
-            "t": ResponseType.PEER_LEFT,
-            "id": peer_id,
-        })
+        await broadcast_to_lobby(
+            lobby,
+            {
+                "t": ResponseType.PEER_LEFT,
+                "id": peer_id,
+            },
+        )
 
         room = state.get_room(lobby_code)
         if room:
             room.player_count = len(lobby.peers)
 
-    return json_response({
-        "success": True,
-        "t": ResponseType.LOBBY_LEFT,
-        "code": lobby_code,
-    })
+    return json_response(
+        {
+            "success": True,
+            "t": ResponseType.LOBBY_LEFT,
+            "code": lobby_code,
+        }
+    )
 
 
 async def handle_list_lobbies(request: web.Request) -> web.Response:
@@ -380,15 +412,18 @@ async def handle_list_lobbies(request: web.Request) -> web.Response:
     lobbies = state.get_public_lobbies()
     items = [lobby.to_list_item() for lobby in lobbies]
 
-    return json_response({
-        "success": True,
-        "lobbies": items,
-    })
+    return json_response(
+        {
+            "success": True,
+            "lobbies": items,
+        }
+    )
 
 
 # =============================================================================
 # Game Packet Broadcasting
 # =============================================================================
+
 
 async def handle_broadcast(request: web.Request) -> web.Response:
     """
@@ -454,15 +489,18 @@ async def handle_broadcast(request: web.Request) -> web.Response:
             if success:
                 delivered_to.append(target_peer)
 
-    return json_response({
-        "success": True,
-        "delivered_to": delivered_to,
-    })
+    return json_response(
+        {
+            "success": True,
+            "delivered_to": delivered_to,
+        }
+    )
 
 
 # =============================================================================
 # SSE Event Stream
 # =============================================================================
+
 
 async def handle_events(request: web.Request) -> web.StreamResponse:
     """
@@ -508,7 +546,7 @@ async def handle_events(request: web.Request) -> web.StreamResponse:
             "Access-Control-Allow-Origin": CONFIG.cors_origins,
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type, Accept, Cache-Control",
-        }
+        },
     )
     await response.prepare(request)
 
@@ -525,10 +563,7 @@ async def handle_events(request: web.Request) -> web.StreamResponse:
         while True:
             try:
                 # Wait for message with timeout for heartbeat
-                message = await asyncio.wait_for(
-                    peer.sse_queue.get(),
-                    timeout=heartbeat_interval
-                )
+                message = await asyncio.wait_for(peer.sse_queue.get(), timeout=heartbeat_interval)
 
                 # Determine event type from message
                 event_type = message.get("t", "message")
@@ -539,7 +574,9 @@ async def handle_events(request: web.Request) -> web.StreamResponse:
             except asyncio.TimeoutError:
                 # Send heartbeat
                 heartbeat_data = json.dumps({"ts": asyncio.get_event_loop().time()})
-                await response.write(f"event: {SSEEventType.HEARTBEAT}\ndata: {heartbeat_data}\n\n".encode())
+                await response.write(
+                    f"event: {SSEEventType.HEARTBEAT}\ndata: {heartbeat_data}\n\n".encode()
+                )
 
     except (ConnectionResetError, ConnectionAbortedError):
         print(f"[SSE] Peer {peer_id} connection lost")
@@ -559,10 +596,13 @@ async def handle_events(request: web.Request) -> web.StreamResponse:
                 if was_host:
                     await close_lobby(lobby, LobbyCloseReason.HOST_DISCONNECTED)
                 else:
-                    await broadcast_to_lobby(lobby, {
-                        "t": ResponseType.PEER_LEFT,
-                        "id": peer_id,
-                    })
+                    await broadcast_to_lobby(
+                        lobby,
+                        {
+                            "t": ResponseType.PEER_LEFT,
+                            "id": peer_id,
+                        },
+                    )
 
         state.remove_lobby_peer(peer_id)
 
@@ -572,6 +612,7 @@ async def handle_events(request: web.Request) -> web.StreamResponse:
 # =============================================================================
 # Route Registration
 # =============================================================================
+
 
 def register_http_lobby_routes(app: web.Application) -> None:
     """Register all HTTP lobby routes."""

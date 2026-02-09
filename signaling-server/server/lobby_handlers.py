@@ -29,6 +29,7 @@ HandlerFunc = Callable[[Peer, dict[str, Any]], Awaitable[dict[str, Any]]]
 # Utility Functions
 # =============================================================================
 
+
 async def send_to_peer(peer: Peer, message: dict[str, Any]) -> bool:
     """Send a JSON message to a peer via WebSocket or SSE queue."""
     msg_type = message.get("t", "unknown")
@@ -47,46 +48,50 @@ async def send_to_peer(peer: Peer, message: dict[str, Any]) -> bool:
     if peer.sse_queue:
         try:
             await peer.sse_queue.put(message)
-            print(f"[LOBBY] Queued {msg_type} for peer {peer.peer_id} via SSE (queue_size={peer.sse_queue.qsize()})")
+            print(
+                f"[LOBBY] Queued {msg_type} for peer {peer.peer_id} via SSE (queue_size={peer.sse_queue.qsize()})"
+            )
             return True
         except Exception as e:
             print(f"[LOBBY] Error queueing SSE for peer {peer.peer_id}: {e}")
             return False
 
-    print(f"[LOBBY] No transport for peer {peer.peer_id} (ws={peer.ws is not None}, sse={peer.sse_queue is not None})")
+    print(
+        f"[LOBBY] No transport for peer {peer.peer_id} (ws={peer.ws is not None}, sse={peer.sse_queue is not None})"
+    )
     return False
 
 
 async def broadcast_to_lobby(
-    lobby: Lobby,
-    message: dict[str, Any],
-    exclude_peer_id: int | None = None
+    lobby: Lobby, message: dict[str, Any], exclude_peer_id: int | None = None
 ) -> None:
     """Broadcast a message to all peers in a lobby, optionally excluding one."""
     msg_type = message.get("t", "unknown")
     peer_ids = list(lobby.peers.keys())
-    print(f"[LOBBY] Broadcasting {msg_type} to lobby {lobby.code} (peers={peer_ids}, exclude={exclude_peer_id})")
+    print(
+        f"[LOBBY] Broadcasting {msg_type} to lobby {lobby.code} (peers={peer_ids}, exclude={exclude_peer_id})"
+    )
 
     for peer_id, peer in lobby.peers.items():
         if peer_id != exclude_peer_id:
             await send_to_peer(peer, message)
 
 
-async def close_lobby(
-    lobby: Lobby,
-    reason: LobbyCloseReason = LobbyCloseReason.CLOSED
-) -> None:
+async def close_lobby(lobby: Lobby, reason: LobbyCloseReason = LobbyCloseReason.CLOSED) -> None:
     """Close a lobby and notify all peers."""
     code = lobby.code
     print(f"[LOBBY] Closing {code} '{lobby.name}' (reason: {reason})")
 
     # Notify all remaining peers
     for peer in list(lobby.peers.values()):
-        await send_to_peer(peer, {
-            "t": ResponseType.LOBBY_CLOSED,
-            "code": code,
-            "reason": str(reason),
-        })
+        await send_to_peer(
+            peer,
+            {
+                "t": ResponseType.LOBBY_CLOSED,
+                "code": code,
+                "reason": str(reason),
+            },
+        )
         peer.lobby_code = None
 
     # Remove from state
@@ -96,6 +101,7 @@ async def close_lobby(
 # =============================================================================
 # Protocol Handlers
 # =============================================================================
+
 
 async def handle_create_lobby(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
     """Handle create_lobby command."""
@@ -179,14 +185,20 @@ async def handle_join_lobby(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
     if room:
         room.player_count = len(lobby.peers)
 
-    print(f"[LOBBY] Peer {peer.peer_id} joined {lobby.code} '{lobby.name}' (now {len(lobby.peers)} players)")
+    print(
+        f"[LOBBY] Peer {peer.peer_id} joined {lobby.code} '{lobby.name}' (now {len(lobby.peers)} players)"
+    )
 
     # Notify other peers in lobby (especially host)
-    await broadcast_to_lobby(lobby, {
-        "t": ResponseType.PEER_JOINED,
-        "id": peer.peer_id,
-        "player": peer.player_data,
-    }, exclude_peer_id=peer.peer_id)
+    await broadcast_to_lobby(
+        lobby,
+        {
+            "t": ResponseType.PEER_JOINED,
+            "id": peer.peer_id,
+            "player": peer.player_data,
+        },
+        exclude_peer_id=peer.peer_id,
+    )
 
     # Send lobby_joined to the joining peer
     return {
@@ -228,10 +240,13 @@ async def handle_leave_lobby(peer: Peer, data: dict[str, Any]) -> dict[str, Any]
         await close_lobby(lobby, LobbyCloseReason.HOST_LEFT)
     else:
         # Regular peer left - notify others
-        await broadcast_to_lobby(lobby, {
-            "t": ResponseType.PEER_LEFT,
-            "id": peer.peer_id,
-        })
+        await broadcast_to_lobby(
+            lobby,
+            {
+                "t": ResponseType.PEER_LEFT,
+                "id": peer.peer_id,
+            },
+        )
 
         # Update room player count
         room = state.get_room(lobby_code)
@@ -250,6 +265,7 @@ async def handle_ping(peer: Peer, data: dict[str, Any]) -> dict[str, Any]:
 # Disconnect Handler
 # =============================================================================
 
+
 async def handle_peer_disconnect(peer: Peer) -> None:
     """Handle when a peer's WebSocket disconnects."""
     if peer.lobby_code:
@@ -258,17 +274,22 @@ async def handle_peer_disconnect(peer: Peer) -> None:
             was_host = lobby.is_host(peer.peer_id)
             lobby.remove_peer(peer.peer_id)
 
-            print(f"[LOBBY] Peer {peer.peer_id} disconnected from {lobby.code} (was_host={was_host})")
+            print(
+                f"[LOBBY] Peer {peer.peer_id} disconnected from {lobby.code} (was_host={was_host})"
+            )
 
             if was_host:
                 # Host disconnected - close lobby
                 await close_lobby(lobby, LobbyCloseReason.HOST_DISCONNECTED)
             else:
                 # Regular peer disconnected - notify others
-                await broadcast_to_lobby(lobby, {
-                    "t": ResponseType.PEER_LEFT,
-                    "id": peer.peer_id,
-                })
+                await broadcast_to_lobby(
+                    lobby,
+                    {
+                        "t": ResponseType.PEER_LEFT,
+                        "id": peer.peer_id,
+                    },
+                )
 
                 # Update room player count
                 room = state.get_room(lobby.code)

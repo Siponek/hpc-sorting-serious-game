@@ -44,9 +44,7 @@ class TestSessionHostEndpoint(AioHTTPTestCase):
     async def test_create_room_success(self) -> None:
         """Should create a room and return success."""
         resp = await self.client.request(
-            "POST",
-            "/session/host",
-            json={"lobby_name": "TestLobby", "public": True}
+            "POST", "/session/host", json={"lobby_name": "TestLobby", "public": True}
         )
         assert resp.status == 200
 
@@ -68,11 +66,7 @@ class TestSessionHostEndpoint(AioHTTPTestCase):
 
     async def test_create_debug_room(self) -> None:
         """Should create a debug room with TEST code."""
-        resp = await self.client.request(
-            "POST",
-            "/session/host",
-            json={"is_debug": True}
-        )
+        resp = await self.client.request("POST", "/session/host", json={"is_debug": True})
         assert resp.status == 200
 
         data = await resp.json()
@@ -99,9 +93,7 @@ class TestSessionJoinEndpoint(AioHTTPTestCase):
         """Should return ws_url for existing room."""
         # First create a room
         create_resp = await self.client.request(
-            "POST",
-            "/session/host",
-            json={"lobby_name": "JoinTest"}
+            "POST", "/session/host", json={"lobby_name": "JoinTest"}
         )
         create_data = await create_resp.json()
         room_code = create_data["code"]
@@ -119,9 +111,7 @@ class TestSessionJoinEndpoint(AioHTTPTestCase):
         """Should be able to join by lobby name."""
         # Create a room with a name
         create_resp = await self.client.request(
-            "POST",
-            "/session/host",
-            json={"lobby_name": "MyTestLobby"}
+            "POST", "/session/host", json={"lobby_name": "MyTestLobby"}
         )
         create_data = await create_resp.json()
         room_code = create_data["code"]
@@ -184,9 +174,7 @@ class TestLobbiesEndpoint(AioHTTPTestCase):
         """Should list public lobbies from rooms."""
         # Create a public room
         await self.client.request(
-            "POST",
-            "/session/host",
-            json={"lobby_name": "PublicLobby", "public": True}
+            "POST", "/session/host", json={"lobby_name": "PublicLobby", "public": True}
         )
 
         resp = await self.client.request("GET", "/lobbies")
@@ -233,9 +221,7 @@ class TestPlayerCountEndpoint(AioHTTPTestCase):
 
         # Update player count
         resp = await self.client.request(
-            "POST",
-            f"/session/players/{room_code}",
-            json={"player_count": 5}
+            "POST", f"/session/players/{room_code}", json={"player_count": 5}
         )
         assert resp.status == 200
 
@@ -254,18 +240,14 @@ class TestUpdateEndpoint(AioHTTPTestCase):
         """Should update room metadata."""
         # Create a room
         create_resp = await self.client.request(
-            "POST",
-            "/session/host",
-            json={"lobby_name": "OldName"}
+            "POST", "/session/host", json={"lobby_name": "OldName"}
         )
         create_data = await create_resp.json()
         room_code = create_data["code"]
 
         # Update it
         resp = await self.client.request(
-            "POST",
-            f"/session/update/{room_code}",
-            json={"lobby_name": "NewName", "public": False}
+            "POST", f"/session/update/{room_code}", json={"lobby_name": "NewName", "public": False}
         )
         assert resp.status == 200
 

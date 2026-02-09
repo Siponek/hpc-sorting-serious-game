@@ -1,14 +1,10 @@
 # This justfile works with windows
 
-set windows-powershell := true
+set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
 # Import formatter recipes
 
 import 'justfiles/formatter.justfile'
-
-# Import thesis compilation recipes
-
-import 'justfiles/thesis.justfile'
 
 # Import web export recipes
 
@@ -17,6 +13,8 @@ import 'justfiles/web-export.justfile'
 # Import multiplayer recipes
 
 import 'justfiles/multiplayer.justfile'
+
+import? "git-submodules/HPC-thesis/justfile"
 
 default:
     @just --list
@@ -52,3 +50,8 @@ change-gd-sync-fork:
     git submodule sync
     just update-submodules
     git add .gitmodules git-submodules/GD-Sync
+
+
+[group('python-project')]
+sync:
+    uv sync

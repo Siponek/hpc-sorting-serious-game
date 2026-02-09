@@ -17,6 +17,7 @@ from aiohttp import web
 @dataclass
 class Peer:
     """Represents a connected peer/player in the lobby system."""
+
     peer_id: int
     ws: web.WebSocketResponse | None = None  # WebSocket (if using WS)
     sse_queue: asyncio.Queue[dict[str, Any]] | None = None  # SSE queue (if using HTTP)
@@ -29,15 +30,13 @@ class Peer:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
-            "id": self.peer_id,
-            "player": self.player_data
-        }
+        return {"id": self.peer_id, "player": self.player_data}
 
 
 @dataclass
 class Lobby:
     """Represents a game lobby."""
+
     code: str
     name: str
     host_id: int
@@ -48,7 +47,9 @@ class Lobby:
     peers: dict[int, Peer] = field(default_factory=lambda: {})
 
     @classmethod
-    def create(cls, code: str, name: str, host_peer: Peer, public: bool = True, player_limit: int = 0) -> Lobby:
+    def create(
+        cls, code: str, name: str, host_peer: Peer, public: bool = True, player_limit: int = 0
+    ) -> Lobby:
         """Factory method to create a lobby with a host peer."""
         lobby = cls(
             code=code,
@@ -122,6 +123,7 @@ class Lobby:
 @dataclass
 class Room:
     """Represents a WebRTC signaling room (for backward compatibility)."""
+
     code: str
     channel: str
     next_peer_id: int = 1

@@ -12,12 +12,7 @@ static func should_enable_var_tree() -> bool:
 ## @param var_tree_path: NodePath to the VarTree node
 ## @param setup_callback: Optional callable that receives the VarTree node for custom setup
 ## @return: The VarTree node if setup was performed, null otherwise
-static func handle_var_tree(node: Node, var_tree_path: NodePath, setup_callback: Callable = Callable()) -> VarTree:
-	var var_tree_node: VarTree = node.get_node_or_null(var_tree_path)
-
-	if not var_tree_node:
-		return null
-
+static func handle_var_tree(var_tree_node: VarTree, setup_callback: Callable = Callable()) -> VarTree:
 	if should_enable_var_tree():
 		if setup_callback.is_valid():
 			setup_callback.call(var_tree_node)

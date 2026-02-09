@@ -1,21 +1,24 @@
 # Web Export & Deployment Recipes
+# Path to Godot executable
+
+GODOT := "C:/Users/szink/Desktop/Godot Engine/4.5.1/Godot_v4.5.1-stable_win64_console.exe"
 
 # Export game for web using Godot
 [group('web-export')]
 export-web:
-    @Write-Host "Exporting game for web..." -ForegroundColor Cyan
-    godot --headless --export-release "Web" exports/web-export/index.html
-    @Write-Host "✓ Web export complete!" -ForegroundColor Green
-    @Write-Host "Output: exports/web-export/" -ForegroundColor Yellow
+    @echo "{{ CYAN }}Exporting game for web... {{ NORMAL }}"
+    & "{{ GODOT }}" --headless --export-release "Web" exports/web-export/index.html
+    @echo "{{ GREEN }}✓ Web export complete! {{ NORMAL }}"
+    @echo "{{ YELLOW }}Output: exports/web-export/{{ NORMAL }}"
 
 # Start local web server to test the game (requires Python)
 [group('web-export')]
 test-web-local:
-    @Write-Host "Starting local web server on http://localhost:8000" -ForegroundColor Cyan
-    @Write-Host "Press Ctrl+C to stop the server" -ForegroundColor Yellow
-    @Set-Location exports/web-export; python -m http.server 8000
+    @echo "{{ CYAN }}Starting local web server on http://localhost:8000{{ NORMAL }}"
+    @echo "{{ YELLOW }}Press Ctrl+C to stop the server{{ NORMAL }}" 
+    @Set-Location exports/web-export; python -m http.server 8000 
 
 # Open exports folder in file explorer
 [group('web-export')]
 open-exports:
-    @explorer exports\web-export
+    @explorer exports/web-export

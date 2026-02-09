@@ -86,7 +86,7 @@ func _ready() -> void:
 	logger.log_info("LocalServerSignaling initialized (HTTP mode).")
 	my_current_client = Client.new()
 	my_current_client.valid = true
-	my_current_client.client_id = 1  # Will be updated when connected
+	my_current_client.client_id = 1 # Will be updated when connected
 
 
 func _connect_signaling_signals() -> void:
@@ -577,7 +577,7 @@ func _process_host() -> void:
 			var packet_base64 = Marshalls.raw_to_base64(pkt)
 			(
 				logger
-				. log_debug(
+				.log_debug(
 					(
 						"HOST sending RELIABLE to %d: bytes=%d, base64_len=%d, requests=%d"
 						% [
@@ -855,7 +855,7 @@ func _process_incoming_packet_as_host(
 				_process_client_request_locally(request, from)
 			else:
 				# Request is for other client(s) - just forward it
-				_broadcast_request(request, from, true)  # Always reliable over HTTP
+				_broadcast_request(request, from, true) # Always reliable over HTTP
 
 
 ## Process a CLIENT_REQUEST locally on the host (when the request targets the host)
@@ -1245,7 +1245,7 @@ func set_signaling_server(url: String) -> void:
 
 
 func perform_local_scan() -> void:
-	pass  # Not needed - signaling server handles discovery
+	pass # Not needed - signaling server handles discovery
 
 
 func get_lobby_dictionary(with_data: bool = false) -> Dictionary:
