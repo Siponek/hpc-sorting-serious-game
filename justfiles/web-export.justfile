@@ -16,7 +16,7 @@ export-web:
 test-web-local:
     @echo "{{ CYAN }}Starting local web server on http://localhost:8000{{ NORMAL }}"
     @echo "{{ YELLOW }}Press Ctrl+C to stop the server{{ NORMAL }}" 
-    @Set-Location exports/web-export; python -m http.server 8000 
+    @Set-Location exports/web-export; uv run python ../main.py
 
 # Open exports folder in file explorer
 [group('web-export')]
