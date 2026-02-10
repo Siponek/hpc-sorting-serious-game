@@ -15,13 +15,17 @@ var occupied_by: Card = null # Explicitly type if possible
 signal card_placed_in_slot(card: Card, slot: CardBuffer)
 signal card_removed(card: Card, slot: CardBuffer)
 
+
 func set_card_container(_node: HBoxContainer):
 	assert(_node != null)
 	card_container = _node
 
+ 
 func _ready() -> void:
 	if card_container == null:
-		push_error("CardBuffer: card_container was not set. This is a setup error.")
+		push_error(
+			"CardBuffer: card_container was not set. This is a setup error."
+		)
 		get_tree().quit() # or: set_process(false); set_physics_process(false); return
 		return
 	# panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER # This might be okay depending on desired panel behavior
@@ -114,10 +118,17 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 		else:
 			# Case: Incoming card is from the main container (source_slot == null).
 			# Send old_card back to the main container using its original position.
-			logger.log_debug(
-				(
-					"Returning card %d from %s to container at incoming index %d"
-					% [old_card.value, slot_text, incoming_card.original_index]
+			(
+				logger
+				.log_debug(
+					(
+						"Returning card %d from %s to container at incoming index %d"
+						% [
+							old_card.value,
+							slot_text,
+							incoming_card.original_index
+						]
+					)
 				)
 			)
 			old_card.original_index = incoming_card.original_index # Update original index to the new position
@@ -132,7 +143,9 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 		incoming_card.get_parent().remove_child(incoming_card)
 
 	# Add incoming_card to this slot
-	logger.log_debug("Placing card %d into %s" % [incoming_card.value, slot_text])
+	logger.log_debug(
+		"Placing card %d into %s" % [incoming_card.value, slot_text]
+	)
 	self.add_child(incoming_card) # Add to this slot's visual tree (assuming cards are direct children)
 	self.set_occupied_by(incoming_card) # Set this slot's logical state
 	incoming_card.place_in_slot(self ) # Update style and set current_slot

@@ -3,18 +3,15 @@ extends PanelContainer
 signal barrier_requested
 signal release_requested
 
-@onready
-var status_label: Label = $%BarrierStatusLabel
-@onready
-var thread_status_container: VBoxContainer = $%ThreadStatusContainer
-@onready
-var barrier_button: Button = $%BarrierButton
-@onready
-var done_button: Button = $%DoneButton
+@onready var status_label: Label = $%BarrierStatusLabel
+@onready var thread_status_container: VBoxContainer = $%ThreadStatusContainer
+@onready var barrier_button: Button = $%BarrierButton
+@onready var done_button: Button = $%DoneButton
+@onready var current_player_name: Label = $%BarrierControlLabelCurrentPlayerName
 
 var thread_status_labels: Dictionary = {} # player_id: Label
 
-
+ 
 func _ready():
 	barrier_button.pressed.connect(_on_barrier_button_pressed)
 	done_button.pressed.connect(_on_done_button_pressed)
@@ -32,6 +29,10 @@ func update_status(text: String):
 	status_label.text = "Status: " + text
 
 
+func set_current_player_name(_name: String):
+	current_player_name.text = _name
+
+
 # TODO need to make the labels one under another, and add a header for the waiting list
 func add_thread_status(player_id: int, player_name: String):
 	var label = Label.new()
@@ -39,11 +40,6 @@ func add_thread_status(player_id: int, player_name: String):
 	thread_status_container.add_child(label)
 	thread_status_labels[player_id] = label
 
-# func set_waiting_threads(player_names: Array[String]):
-# var label_text = "Waiting for: " + ", ".join(player_names)
-# var label = Label.new()
-# label.text = label_text
-# thread_status_container.add_child(label)
 
 func set_waiting_for_players(waiting_player_names: Array[String]):
 	"""Display a grouped list of players we're waiting for"""
@@ -55,7 +51,7 @@ func set_waiting_for_players(waiting_player_names: Array[String]):
 	# Add header label
 	var header_label = Label.new()
 	header_label.text = "Waiting for:"
-	header_label.add_theme_color_override("font_color", Color.YELLOW)
+	header_label.add_theme_color_override("font_color", Color.DARK_KHAKI)
 	thread_status_container.add_child(header_label)
 
 	# Add each waiting player as a bullet point
@@ -63,6 +59,7 @@ func set_waiting_for_players(waiting_player_names: Array[String]):
 		var player_label = Label.new()
 		player_label.text = "  - " + player_name
 		thread_status_container.add_child(player_label)
+
 
 func set_main_thread_active(main_thread_name: String, is_me: bool):
 	"""Update label to show main thread is active"""

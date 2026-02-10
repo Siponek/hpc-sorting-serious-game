@@ -46,6 +46,7 @@ class Scenes:
 	const CARD_MAIN = "res://scenes/CardScene/CardMain.tscn"
 	const CARD_SLOT = "res://scenes/CardScene/CardSlot.tscn"
 	const DROP_INDICATOR = "res://scenes/CardScene/DropIndicator.tscn"
+	const EXPORT_017_DDC_5522_BFC_9_BEAD_4121_FC_8E_25B_298_BUFFER_ZONE_PANEL = "res://.godot/exported/133200997/export-017ddc5522bfc9bead4121fc8e25b298-BufferZonePanel.scn"
 	const EXPORT_0_DCFF_9_BBD_3112E_440A_6C_16844800F_2_CF_TOAST_LABEL = "res://.godot/exported/133200997/export-0dcff9bbd3112e440a6c16844800f2cf-toast_label.scn"
 	const EXPORT_11_CB_3D_0_DA_2470A_82C_44B_8E_5267F_51C_10_CARD_MAIN = "res://.godot/exported/133200997/export-11cb3d0da2470a82c44b8e5267f51c10-CardMain.scn"
 	const EXPORT_145F_9_DB_6D_5F_9570F_387680_FF_6D_041953_CARD_SLOT = "res://.godot/exported/133200997/export-145f9db6d5f9570f387680ff6d041953-CardSlot.scn"

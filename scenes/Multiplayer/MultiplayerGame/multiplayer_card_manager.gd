@@ -70,6 +70,7 @@ func _toggle_visibility_of_the_rest_for_overlay(_visible: bool):
 	header_panel.visible = _visible
 	buffer_zone_container.visible = _visible
 
+
 # TODO The cards order is not syncing properly, checkout before cloude update
 # To see if the syncing mechanism makes sense.
 # Perhaps we need to add signal on moving cards and then update the game state on every move?
@@ -745,14 +746,15 @@ func barrier_thread_reached(thread_id: int):
 		barrier_manager.mark_thread_at_barrier(thread_id)
 
 # If this is ME reaching the barrier, disable my button
-	if thread_id == my_client_id and barrier_control_panel:
+	if thread_id == my_client_id:
 		logger.log_info("Disabling my barrier button")
 		barrier_control_panel.set_barrier_state(true, false, false)
 
-		# Update the waiting list to remove this player
-		_update_barrier_ui_waiting()
+	# Update the waiting list for all players whenever any thread reaches the barrier
+	_update_barrier_ui_waiting()
 	# Check if all threads at barrier
-		logger.log_info("Threads at barrier: ", barrier_manager.threads_at_barrier)
+	logger.log_info("Threads at barrier: ", barrier_manager.threads_at_barrier)
+
 	if barrier_manager.all_threads_at_barrier(all_thread_ids):
 		logger.log_info("All threads at barrier! Initiating processing...")
 		_initiate_barrier_processing()
@@ -801,10 +803,10 @@ func _initiate_barrier_processing():
 func barrier_activate(main_thread_id: int, buffer_snapshots: Array):
 	"""All threads receive this when barrier activates"""
 	logger.log_info(
-	"barrier_activate received - main_thread: ",
-	main_thread_id,
-	", I am: ",
-	my_client_id
+		"barrier_activate received - main_thread: ",
+		main_thread_id,
+		", I am: ",
+		my_client_id
 	)
 	logger.log_info("Buffer snapshots: ", buffer_snapshots)
 	barrier_manager.main_thread_id = main_thread_id
@@ -853,9 +855,7 @@ func _enter_blocked_mode():
 	interaction_locked = true
 
 	var main_thread_name = _get_player_name(barrier_manager.main_thread_id)
-	logger.log_info(
-		"Showing lock overlay for main thread: ", main_thread_name
-	)
+	logger.log_info("Showing lock overlay for main thread: ", main_thread_name)
 	barrier_lock_overlay.show_overlay(main_thread_name)
 	barrier_control_panel.set_barrier_state(false, false, true)
 
@@ -980,9 +980,7 @@ func _update_barrier_ui_waiting():
 	barrier_control_panel.update_status("Waiting at barrier...")
 
 	# Only disable button if THIS player has reached the barrier
-	var my_reached = barrier_manager.has_thread_reached_barrier(
-	my_client_id
-	)
+	var my_reached = barrier_manager.has_thread_reached_barrier(my_client_id)
 	barrier_control_panel.set_barrier_state(my_reached, false, false)
 
 	# Collect players who haven't reached the barrier yet

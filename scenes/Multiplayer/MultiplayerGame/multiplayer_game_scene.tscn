@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dhd4dqiwmbbgd" path="res://scenes/Multiplayer/MultiplayerGame/multiplayer_card_manager.gd" id="3_s36k4"]
 [ext_resource type="Theme" uid="uid://vuoefmjxurjo" path="res://res/dark_theme.tres" id="3_wbd3l"]
 [ext_resource type="PackedScene" uid="uid://j3ar4nbltgjb" path="res://scenes/BackGroundScene/background.tscn" id="5_o75xc"]
-[ext_resource type="Script" uid="uid://dbplfwfqymqd3" path="res://scenes/main_card_panel_scroll_container.gd" id="5_qdvox"]
+[ext_resource type="Script" uid="uid://ny70tekwbw0l" path="res://scenes/main_card_panel_scroll_container.gd" id="5_qdvox"]
 [ext_resource type="PackedScene" uid="uid://jra4x5p31i4w" path="res://scenes/CardScene/BufferZonePanel.tscn" id="6_i6ygo"]
 [ext_resource type="Script" uid="uid://bpvwcjxfptkki" path="res://addons/var_tree/var_tree.gd" id="6_we6vf"]
 [ext_resource type="Script" uid="uid://dqh4pwnrr81dp" path="res://addons/GD-Sync/Scripts/Types/NodeInstantiator.gd" id="8_wbd3l"]
@@ -135,6 +135,8 @@ script = ExtResource("3_s36k4")
 barrier_control_panel = NodePath("../BarrierControlPanel")
 barrier_lock_overlay = NodePath("../BarrierLockOverlay")
 all_buffers_view = NodePath("AllBuffersView")
+button_spacing = null
+card_spacing = null
 timer_node = NodePath("../TopBar/TimerPanel")
 card_container = NodePath("CardPanel/ScrollContainer/MarginContainer/CardContainer")
 slot_container = NodePath("BufferZonePanel/VBoxContainer/ScrollContainer/MarginContainer/VBoxContainer/SlotContainer")
@@ -248,10 +250,10 @@ excluded_properties = PackedStringArray()
 [node name="BarrierControlPanel" parent="." instance=ExtResource("10_barrier")]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.25108603
-anchor_top = -0.009244992
-anchor_right = 0.25108603
-anchor_bottom = -0.009244992
+anchor_left = -0.008688097
+anchor_top = -0.01540832
+anchor_right = -0.008688097
+anchor_bottom = -0.01540832
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 220.0
@@ -263,3 +265,4 @@ metadata/_edit_use_anchors_ = true
 [connection signal="pressed" from="RightSideButtonsContainer/RestartGameButton" to="VBoxContainer" method="_on_restart_game_button_pressed"]
 
 [editable path="VBoxContainer/BufferZonePanel"]
+[editable path="BarrierControlPanel"]

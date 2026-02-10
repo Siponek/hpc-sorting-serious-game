@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://c2u4616l80ugd"]
 
 [ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="1_r6tbv"]
-[ext_resource type="Script" uid="uid://v244iki8hnc3" path="res://scenes/Multiplayer/MultiplayerGame/BarrierControlPanel.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://yv0jticrfbmk" path="res://scenes/Multiplayer/MultiplayerGame/BarrierControlPanel.gd" id="1_script"]
 
 [node name="BarrierControlPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(200, 150)
@@ -14,41 +14,50 @@ script = ExtResource("1_script")
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="ScrollContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+
+[node name="BarrierControlLabelCurrentPlayerName" type="Label" parent="ScrollContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, -3.995)
+layout_mode = 2
+text = "%%%NAME_PLACEHOLDER%%%"
+
+[node name="MarginContainer" type="MarginContainer" parent="ScrollContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BarrierStatusLabel" type="Label" parent="ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="BarrierStatusLabel" type="Label" parent="ScrollContainer/VBoxContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Status: Running"
 
-[node name="ThreadStatusContainer" type="VBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="ThreadStatusContainer" type="VBoxContainer" parent="ScrollContainer/VBoxContainer/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="HSeparator" type="HSeparator" parent="ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/VBoxContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="ButtonContainer" type="HBoxContainer" parent="ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="ButtonContainer" type="HBoxContainer" parent="ScrollContainer/VBoxContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BarrierButton" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer/ButtonContainer"]
+[node name="BarrierButton" type="Button" parent="ScrollContainer/VBoxContainer/MarginContainer/VBoxContainer/ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Reach Barrier"
 
-[node name="DoneButton" type="Button" parent="ScrollContainer/MarginContainer/VBoxContainer/ButtonContainer"]
+[node name="DoneButton" type="Button" parent="ScrollContainer/VBoxContainer/MarginContainer/VBoxContainer/ButtonContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

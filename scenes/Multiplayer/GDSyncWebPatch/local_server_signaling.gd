@@ -40,7 +40,7 @@ var my_current_client: Client = null
 # Signaling client (HTTP + SSE based)
 var _signaling: SignalingClient = null
 
-@onready var logger = CustomLogger.get_logger(self)
+@onready var logger = CustomLogger.get_logger(self )
 
 
 # Client class (mirrors original)
@@ -59,7 +59,7 @@ class Client:
 
 	func construct_lobby_targets(clients: Dictionary) -> void:
 		lobby_targets = clients.values()
-		lobby_targets.erase(self)
+		lobby_targets.erase(self )
 
 	func collect_player_data() -> Dictionary:
 		var data: Dictionary = player_data.duplicate()
@@ -972,7 +972,7 @@ func _put_request(request: Array, client: Client, reliable: bool) -> void:
 
 
 func _send_message(
-	message: int, client: Client, value = null, value2 = null, value3 = null
+	message: int, client: Client, value=null, value2=null, value3=null
 ) -> void:
 	if client == null:
 		return

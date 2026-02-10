@@ -10,7 +10,7 @@ signal window_closed
 @onready var reset_button: Button = $FinishGameWindow/VBoxContainer/ResetGameButton
 @onready var exit_button: Button = $FinishGameWindow/VBoxContainer/ExitToMainMenuButton
 @onready var confetti_particles: GPUParticles2D = $ConfettiParticles
-@onready var logger := CustomLogger.get_logger(self)
+@onready var logger := CustomLogger.get_logger(self )
 
 var finishing_player_id: int = -1
 
@@ -69,9 +69,11 @@ func _update_title_for_player(player_id: int) -> void:
 		title_label.text = "Congratulations!\nWhat a success!"
 		return
 
-	title_label.text = "Game Finished!
-	Player " + str(player_id) + "\n" + "clicked finish game!\nCongratulations!"
-
+	title_label.text = "Game Finished!" + "\n" \
+	+"Player " + str(player_id) + "\n" \
+	+"clicked finish game!" + "\n" \
+	+"Congratulations!"
+ 
 func _on_reset_button_pressed() -> void:
 	"""Reset the game"""
 	logger.log_info("Reset button pressed")

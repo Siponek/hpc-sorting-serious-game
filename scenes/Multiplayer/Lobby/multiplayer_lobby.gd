@@ -75,7 +75,7 @@ func _ready():
 					(
 						"You are the host of this lobby! (ID: "
 						+ str(ConnectionManager.get_my_client_id())
-						+")"
+						+ ")"
 					),
 					"bgcolor": Color(Color.GREEN, 0.65), # ...
 				}
@@ -94,9 +94,9 @@ func _ready():
 					(
 						"Joined lobby: "
 						+ current_lobby_id
-						+" (My ID: "
+						+ " (My ID: "
 						+ str(ConnectionManager.get_my_client_id())
-						+")"
+						+ ")"
 					),
 					"bgcolor": Color(Color.DARK_GREEN, 0.65), # ...
 				}
