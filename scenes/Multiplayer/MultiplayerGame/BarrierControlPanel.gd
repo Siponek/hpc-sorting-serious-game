@@ -3,20 +3,15 @@ extends PanelContainer
 signal barrier_requested
 signal release_requested
 
-@onready
-var status_label: Label = $%BarrierStatusLabel
-@onready
-var thread_status_container: VBoxContainer = $%ThreadStatusContainer
-@onready
-var barrier_button: Button = $%BarrierButton
-@onready
-var done_button: Button = $%DoneButton
-@onready
-var current_player_name: Label = $%BarrierControlLabelCurrentPlayerName
+@onready var status_label: Label = $%BarrierStatusLabel
+@onready var thread_status_container: VBoxContainer = $%ThreadStatusContainer
+@onready var barrier_button: Button = $%BarrierButton
+@onready var done_button: Button = $%DoneButton
+@onready var current_player_name: Label = $%BarrierControlLabelCurrentPlayerName
 
 var thread_status_labels: Dictionary = {} # player_id: Label
 
-
+ 
 func _ready():
 	barrier_button.pressed.connect(_on_barrier_button_pressed)
 	done_button.pressed.connect(_on_done_button_pressed)
@@ -33,6 +28,7 @@ func _on_done_button_pressed():
 func update_status(text: String):
 	status_label.text = "Status: " + text
 
+
 func set_current_player_name(_name: String):
 	current_player_name.text = _name
 
@@ -43,6 +39,7 @@ func add_thread_status(player_id: int, player_name: String):
 	label.text = "Thread " + player_name + ": Running"
 	thread_status_container.add_child(label)
 	thread_status_labels[player_id] = label
+
 
 func set_waiting_for_players(waiting_player_names: Array[String]):
 	"""Display a grouped list of players we're waiting for"""
@@ -62,6 +59,7 @@ func set_waiting_for_players(waiting_player_names: Array[String]):
 		var player_label = Label.new()
 		player_label.text = "  - " + player_name
 		thread_status_container.add_child(player_label)
+
 
 func set_main_thread_active(main_thread_name: String, is_me: bool):
 	"""Update label to show main thread is active"""

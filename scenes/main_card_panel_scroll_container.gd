@@ -23,6 +23,7 @@ signal buffer_view_card_dropped(
 	card_value: int, source_thread_id: int, target_index: int
 )
 
+
 func _ready():
 	#TODO make this somehow detached so multiplayer doesnt have to pick this way, or al least single source of truth
 	if DROP_PLACEHOLDER_SCENE:
@@ -42,7 +43,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		return
 
 	var incoming_card_data: Card = data # This is the data from _get_drag_data, which is the card itself
-
+ 
 	# Handle buffer view cards specially (from AllBuffersView during barrier mode)
 	if incoming_card_data.buffer_view_source_id >= 0:
 		_handle_buffer_view_card_drop(at_position, incoming_card_data)

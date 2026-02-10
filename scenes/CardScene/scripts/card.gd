@@ -40,16 +40,23 @@ signal card_dropped(card, drop_position)
 @onready var panel_node: Panel = $Panel
 @onready var logger = CustomLogger.get_logger(self )
 
+
 func set_card_scroll_container(container: ScrollContainer):
 	card_scroll_container = container
+
 
 #region Ready
 func _ready():
 	if card_scroll_container == null and interactive: # because there are two cards int he main menu that are not interactive, but still need the scroll container reference to avoid errors
-		logger.log_error(
+		(
+			logger
+			.log_error(
+				"Card: card_scroll_container reference is not set. This is a setup error."
+			)
+		)
+		push_error(
 			"Card: card_scroll_container reference is not set. This is a setup error."
 		)
-		push_error("Card: card_scroll_container reference is not set. This is a setup error.")
 		#Need to get full stack
 		print("Stack trace:\n%s" % [get_stack()])
 	if not interactive:
@@ -75,7 +82,9 @@ func _update_value_label():
 	if has_node("Value"):
 		$Value.text = str(value)
 
+
 # end region Ready
+
 
 func _apply_color_style():
 	if not is_node_ready():
