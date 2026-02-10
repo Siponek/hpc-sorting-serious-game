@@ -30,6 +30,10 @@ You need to have the following software installed to run the game on windows
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
     ```
 
+---
+
+### Every chocolatey install command must be run in powershell with admin privileges
+
 - Python 3.12.11 (for webserver and signaling server)
   - Install python using chocolatey
 
