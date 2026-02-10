@@ -1,7 +1,6 @@
 # hpc-sorting-serious-game
 
-HPC serious game showcasing how collaborative effort between processes and threads can speedup sorting. The game should support Android as a platform first.
-12
+HPC serious game showcasing how collaborative effort between processes and threads can speedup sorting.
 
 ## Test at
 
@@ -16,7 +15,10 @@ HPC serious game showcasing how collaborative effort between processes and threa
 
 ### Play though browser
 
-- [Just open the link above in your](<https://siponek.github.io/hpc-sorting-serious-game/>) chrome browser and start playing
+- [Just open the link above in your](<https://siponek.github.io/hpc-sorting-serious-game/>) chrome browser and start playing. Without any installation needed, this can serve as a __client__ for multiplayer mode as well.
+
+> [!WARNING]
+> Without a signaling server (setup using __just__, instructions below) connecting to multiplayer mode will not be possible, but you can still play singleplayer mode.
 
 ### Windows prerequisites
 
@@ -30,15 +32,14 @@ You need to have the following software installed to run the game on windows
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
     ```
 
----
+> [!IMPORTANT]
+> Every chocolatey install command must be run in powershell with admin privileges since it needs to write to system folders. You can open powershell with admin privileges by searching for "powershell" in start menu, right clicking on it and selecting "Run as administrator"
 
-### Every chocolatey install command must be run in powershell with admin privileges
-
-- Python 3.12.11 (for webserver and signaling server)
+- Python >= 3.12 (for webserver and signaling server)
   - Install python using chocolatey
 
     ```powershell
-    choco install python --version=3.12.11
+    choco install python312
     ```
 
   Then you can close the terminal and open it again to have chocolatey in your path
@@ -98,7 +99,8 @@ You need to have the following software installed to run the game on windows
 
   You can open the game now [http://localhost:8000](http://localhost:8000)
 
-### Make sure to run the game on separate tabs in chrome, since tabs might freeze in the background for other players
+> [!IMPORTANT]
+> Make sure to run the game on separate tabs in chrome, since tabs might freeze in the background for other players
 
 ## FAQ
 
