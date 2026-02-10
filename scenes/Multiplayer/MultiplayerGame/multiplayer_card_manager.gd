@@ -745,14 +745,15 @@ func barrier_thread_reached(thread_id: int):
 		barrier_manager.mark_thread_at_barrier(thread_id)
 
 # If this is ME reaching the barrier, disable my button
-	if thread_id == my_client_id and barrier_control_panel:
+	if thread_id == my_client_id:
 		logger.log_info("Disabling my barrier button")
 		barrier_control_panel.set_barrier_state(true, false, false)
 
-		# Update the waiting list to remove this player
-		_update_barrier_ui_waiting()
+	# Update the waiting list for all players whenever any thread reaches the barrier
+	_update_barrier_ui_waiting()
 	# Check if all threads at barrier
-		logger.log_info("Threads at barrier: ", barrier_manager.threads_at_barrier)
+	logger.log_info("Threads at barrier: ", barrier_manager.threads_at_barrier)
+
 	if barrier_manager.all_threads_at_barrier(all_thread_ids):
 		logger.log_info("All threads at barrier! Initiating processing...")
 		_initiate_barrier_processing()
