@@ -6,18 +6,14 @@ const multiplayer_lobby_scene: PackedScene = preload(
 var lobby_id_to_join: String = "wololo"
 var selected_lobby_id_from_list: String = ""  # To store ID from ItemList
 @onready var logger = CustomLogger.get_logger(self)
-@onready
-var lobby_start_name_input: LineEdit = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/NameServerLineEdit  # Get lobby name from UI
-@onready
-var lobby_join_id_input: LineEdit = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer/CodeFieldLineEdit
-@onready
-var lobby_list_ui: ItemList = $MarginContainer/HBoxContainer/LobbyListVBoxContainer/MarginContainer/LobbyList
-@onready
-var host_game_button: Button = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/HostGameButton
-@onready
-var refresh_lobbies_button: Button = $MarginContainer/HBoxContainer/LobbyListVBoxContainer/RefreshLobbiesButton
-@onready
-var join_game_button: Button = $MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer/JoinGameButton
+@onready var lobby_start_name_input: LineEdit = $%NameServerLineEdit  # Get lobby name from UI
+@onready var lobby_join_id_input: LineEdit = $%CodeFieldLineEdit
+@onready var lobby_list_ui: ItemList = $%LobbyList
+@onready var host_game_button: Button = $HostGameButton
+@onready var refresh_lobbies_button: Button = $%RefreshLobbiesButton
+@onready var join_game_button: Button = $%JoinGameButton
+@onready var submit_ip_button: Button = $%SubmitIPButton
+@onready var ip_field_input: LineEdit = $%IPFieldLineEdit
 
 
 func _on_about_to_popup() -> void:
@@ -49,9 +45,11 @@ func _ready() -> void:
 	lobby_join_id_input.text_changed.connect(
 		func(text: String) -> void:
 			join_game_button.disabled = (
-				text.is_empty() and selected_lobby_id_from_list.is_empty()
+				text.is_empty()
+				and selected_lobby_id_from_list.is_empty()
 			)
 	)
+	submit_ip_button.pressed.connect(_on_submit_ip_button_pressed)
 	# Get the latest lobbies
 	lobby_list_ui.clear()  # Clear old list
 	ConnectionManager.get_discovered_lobbies()
@@ -82,7 +80,8 @@ func _on_host_game_button_pressed() -> void:
 
 func _on_connection_manager_lobby_created(lobby_id: String):
 	logger.log_info(
-		"Lobby created successfully via ConnectionManager! ID: ", lobby_id
+		"Lobby created successfully via ConnectionManager! ID: ",
+		lobby_id
 	)
 	var lobby_scene_instance = multiplayer_lobby_scene.instantiate()
 	# It's important that the lobby_scene itself knows how to get its ID
@@ -90,7 +89,10 @@ func _on_connection_manager_lobby_created(lobby_id: String):
 	# For now, we assume the lobby scene will fetch details from ConnectionManager.
 	# lobby_scene_instance.set_lobby_id(lobby_id) # The lobby scene can get this from ConnectionManager.get_current_lobby_id()
 
-	if get_parent() and get_parent().has_method("_open_instantiated_dialog"):
+	if (
+		get_parent()
+		and get_parent().has_method("_open_instantiated_dialog")
+	):
 		get_parent().dialog_open = false  # Manage this flag carefully
 		get_parent()._open_instantiated_dialog(lobby_scene_instance)
 		# lobby_scene_instance.show() # _open_instantiated_dialog should handle showing
@@ -124,7 +126,10 @@ func _on_join_game_button_pressed() -> void:
 			. show(
 				{
 					"text":
-					"Joining selected lobby: " + lobby_id_to_attempt_join,
+					(
+						"Joining selected lobby: "
+						+ lobby_id_to_attempt_join
+					),
 					"bgcolor": Color(Color.PALE_GREEN, 0.65),
 				}
 			)
@@ -136,7 +141,10 @@ func _on_join_game_button_pressed() -> void:
 			. show(
 				{
 					"text":
-					"Joining lobby by code: " + lobby_id_to_attempt_join,
+					(
+						"Joining lobby by code: "
+						+ lobby_id_to_attempt_join
+					),
 					"bgcolor": Color(Color.PALE_TURQUOISE, 0.65),
 				}
 			)
@@ -146,7 +154,8 @@ func _on_join_game_button_pressed() -> void:
 			ToastParty
 			. show(
 				{
-					"text": "Please select a lobby or enter a code to join.",
+					"text":
+					"Please select a lobby or enter a code to join.",
 					"bgcolor": Color(Color.ORANGE_RED, 0.65),
 				}
 			)
@@ -158,10 +167,14 @@ func _on_join_game_button_pressed() -> void:
 
 func _on_connection_manager_joined_lobby(lobby_id: String):
 	logger.log_info(
-		"JOINED lobby successfully via ConnectionManager! ID: ", lobby_id
+		"JOINED lobby successfully via ConnectionManager! ID: ",
+		lobby_id
 	)
 	var lobby_scene_instance = multiplayer_lobby_scene.instantiate()
-	if get_parent() and get_parent().has_method("_open_instantiated_dialog"):
+	if (
+		get_parent()
+		and get_parent().has_method("_open_instantiated_dialog")
+	):
 		get_parent().dialog_open = false
 		get_parent()._open_instantiated_dialog(lobby_scene_instance)
 	else:
@@ -187,7 +200,8 @@ func _on_refresh_lobbies_button_pressed() -> void:
 func _on_connection_manager_lobbies_updated(lobbies: Array):
 	ToastParty.show(
 		{
-			"text": "Lobby list updated with %d lobbies." % lobbies.size(),
+			"text":
+			"Lobby list updated with %d lobbies." % lobbies.size(),
 			"bgcolor": Color(Color.LIGHT_GREEN, 0.50)
 		}
 	)
@@ -217,7 +231,9 @@ func _on_connection_manager_lobbies_updated(lobbies: Array):
 				max_players if max_players > 0 else "-"
 			]
 		)
-		var item_idx = lobby_list_ui.add_item(display_text, null, true)
+		var item_idx = lobby_list_ui.add_item(
+			display_text, null, true
+		)
 		lobby_list_ui.set_item_metadata(item_idx, lobby_name)  # Store the actual ID
 
 
@@ -228,12 +244,16 @@ func _on_lobby_list_item_selected(index: int):
 		logger.log_info("Selected item is disabled, cannot join.")
 		return
 
-	selected_lobby_id_from_list = lobby_list_ui.get_item_metadata(index)
+	selected_lobby_id_from_list = lobby_list_ui.get_item_metadata(
+		index
+	)
 	lobby_join_id_input.text = ""  # Clear code field if a list item is selected
 	logger.log_info(
 		"Selected lobby ID from list: ", selected_lobby_id_from_list
 	)
-	join_game_button.disabled = selected_lobby_id_from_list.is_empty()
+	join_game_button.disabled = (
+		selected_lobby_id_from_list.is_empty()
+	)
 
 
 func _on_connection_manager_failed_to_join_lobby(
@@ -247,15 +267,95 @@ func _on_connection_manager_failed_to_join_lobby(
 		}
 	)
 	logger.log_error(
-		"Failed to join lobby via ConnectionManager: ", error_message
+		"Failed to join lobby via ConnectionManager: ",
+		error_message
 	)
+
+func _on_submit_ip_button_pressed() -> void:
+	var ip_address = ip_field_input.text.strip_edges()
+	
+	# Validate input
+	if ip_address.is_empty():
+		ToastParty.show({
+			"text": "Please enter a server IP address",
+			"bgcolor": Color(Color.ORANGE_RED, 0.65)
+		})
+		return
+	
+	# Add port if missing (default: 3000)
+	var server_url = ip_address
+	if not ":" in server_url:
+		server_url += ":3000"
+	
+	# Validate IP format
+	if not _is_valid_server_url(server_url):
+		ToastParty.show({
+			"text": "Invalid format. Use: 192.168.1.100:3000",
+			"bgcolor": Color(Color.ORANGE_RED, 0.65)
+		})
+		return
+	
+	# Build full URL with http://
+	var full_url = "http://" + server_url
+	var gdsync = get_node_or_null("/root/GDSync")
+	# Access GDSync's LocalServer and set URL
+	if gdsync and gdsync._local_server and gdsync._local_server.has_method("set_signaling_server"):
+		gdsync._local_server.set_signaling_server(full_url)
+		ToastParty.show({
+			"text": "✓ Server set to: " + server_url,
+			"bgcolor": Color(Color.LIGHT_GREEN, 0.65)
+		})
+		logger.log_info("Signaling server URL configured: " + full_url)
+	else:
+		logger.log_error("LocalServer not found or missing set_signaling_server method")
+		ToastParty.show({
+			"text": "Error: Could not configure server",
+			"bgcolor": Color(Color.RED, 0.65)
+		})
+
+func _is_valid_server_url(url: String) -> bool:
+	# Format: IP:PORT (e.g., 192.168.1.100:3000)
+	var parts = url.split(":")
+	if parts.size() != 2:
+		return false
+	
+	var ip = parts[0]
+	var port = parts[1]
+	
+	# Validate IP (xxx.xxx.xxx.xxx or localhost)
+	if ip == "localhost":
+		return _is_valid_port(port)
+	
+	var ip_parts = ip.split(".")
+	if ip_parts.size() != 4:
+		return false
+	
+	for octet in ip_parts:
+		if not octet.is_valid_int():
+			return false
+		var num = octet.to_int()
+		if num < 0 or num > 255:
+			return false
+	
+	return _is_valid_port(port)
+
+func _is_valid_port(port: String) -> bool:
+	if not port.is_valid_int():
+		return false
+	var port_num = port.to_int()
+	return port_num > 0 and port_num <= 65535
 
 
 func lobby_creation_failed(lobby_name: String, error: String):
 	ToastParty.show(
 		{
 			"text":
-			"Failed to create lobby: " + lobby_name + ". Error: " + error,
+			(
+				"Failed to create lobby: "
+				+ lobby_name
+				+ ". Error: "
+				+ error
+			),
 			"bgcolor": Color.DARK_RED,
 			"color": Color.WHITE
 		}
