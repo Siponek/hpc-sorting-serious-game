@@ -188,7 +188,6 @@ func update_player_list_ui(players_map: MultiplayerTypes.PlayersMap):
 		var client_ui_instance: PlayerInLobby = (
 			player_lobby_spawner.instantiate_node()
 		)
-		# await get_tree().process_frame
 		if not client_ui_instance:
 			push_error(
 				(
@@ -202,7 +201,6 @@ func update_player_list_ui(players_map: MultiplayerTypes.PlayersMap):
 		GDSync.set_gdsync_owner(client_ui_instance, client_id)
 		client_ui_instance.setup_player_display(player)
 		client_ui_instance.determine_and_set_color(actual_host_id, client_id)
-		# await get_tree().process_frame
 
 		GDSync.call_func(
 			client_ui_instance.setup_player_display_from_dict,

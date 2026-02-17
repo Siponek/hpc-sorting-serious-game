@@ -1,3 +1,4 @@
+class_name BarrierControlPanel
 extends PanelContainer
 
 signal barrier_requested

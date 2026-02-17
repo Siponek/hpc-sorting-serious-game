@@ -101,10 +101,11 @@ class Images:
 	const ICON_2_SORT = "res://icon/icon-2-sort.png"
 	const ICON_512X_512 = "res://icon/pwa/icon-512x512.png"
 	const ICON = "res://icon/icon.png"
+	const INDEX_APPLE_TOUCH_ICON = "res://exports/web-export/index.apple-touch-icon.png"
+	const INDEX_ICON = "res://exports/web-export/index.icon.png"
+	const INDEX = "res://exports/web-export/index.png"
+	const SUBMIT_IP_BUTTON_MULTIPLAYER_OPTIONS = "res://docs/img/submit-ip-button-multiplayer-options.png"
 	const THEME_COLORS = "res://res/theme-colors.jpg"
-	const WEB_EXPORT_APPLE_TOUCH_ICON = "res://exports/web-export/web-export.apple-touch-icon.png"
-	const WEB_EXPORT_ICON = "res://exports/web-export/web-export.icon.png"
-	const WEB_EXPORT = "res://exports/web-export/web-export.png"
 
 class Fonts:
 	const FONT_AWESOME_6_BRANDS_REGULAR_400 = "res://res/fontawesome-free-6.7.2-desktop/otfs/Font Awesome 6 Brands-Regular-400.otf"
