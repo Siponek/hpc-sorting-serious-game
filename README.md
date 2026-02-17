@@ -25,11 +25,12 @@ HPC serious game showcasing how collaborative effort between processes and threa
 
 ### Linux prerequisites
 
-It is possible to run the project on linux, but the __justfiles__ have been made with powershell in mind. Also mkCert that is used for creating certificates for HTTPS might now be avilable. For linux power users you need:
+It is possible to run the project on linux, but the __justfiles__ have been made with __powershell__ in mind. Also mkcert that is used for creating certificates for HTTPS might now be avilable. For linux power users you need:
 
 - just
 - python 3.12 or higher
 - uv (for project management, an alternative to pipenv or poetry)
+- [mkcert](https://github.com/FiloSottile/mkcert) or any alternative for creating self-signed certificates for HTTPS
 
 > [!IMPORTANT]
 > Chocolatey is a package manager used for windows. For linux you can use any package manager you want such as __apt__
@@ -70,6 +71,12 @@ You need to have the following software installed to run the game on windows
     choco install just
     ```
 
+    For multiplayer mode to work, the host needs to have a local HTTPS server running, which requires creating and trusting a self-signed certificate.
+
+    ```pwsh
+    choco install mkcert
+    ```
+
 ### Run locally
 
 - Clone the repository
@@ -91,13 +98,11 @@ You need to have the following software installed to run the game on windows
   ```
 
 - Start game locally
-  - For __singleplayer__ just start the webserver
+  - For __singleplayer__ only you can now start the webserver
 
     ```pwsh
     just test-web-local
       ```
-
-    OR just drag exports\web-export\index.html to your chrome browser
 
 ## LAN Multiplayer Quick Start (same Wi-Fi)
 
@@ -105,6 +110,8 @@ This is the recommended flow when one host PC runs the game + signaling server, 
 
 ### Host setup (Windows)
 
+> [!IMPORTANT]
+> For LAN multiplayer, the host needs to run a local HTTPS server, which requires creating and trusting a self-signed certificate. The `just setup-lan-https` command will create the certificate using __mkcert__ and add it to the trusted store, so you only need to run it once. The generated certificate will be stored in `exports/certs` folder.
 Run once (creates local HTTPS certs in `exports/certs`):
 
 ```pwsh
@@ -124,7 +131,7 @@ just get-ip-with-port
 ```
 
 > [!IMPORTANT]
-> This address is the one you need as a client to connect to the host, so make sure to use the correct one if you have multiple network interfaces (e.g. Ethernet + Wi-Fi). It should be something like `192.168.x.x`. This will be pasted into MultiplayerOptions window when clicking __Submit IP__
+> This address is the one you need as a client to connect to the host, so make sure to use the correct one if you have multiple network interfaces (e.g. Ethernet + Wi-Fi). It should be something like `192.168.x.x`. This will be pasted into MultiplayerOptions window when clicking __Submit IP__ in multiplayer lobby.
 
 Then start both servers in separate terminals:
 
@@ -159,10 +166,11 @@ just test-web-local
 
 - Do not use `http://<HOST_IP>:8000` when running `just test-web-local`; it serves __HTTPS__.
 - If `just test-web-local` says port `8000` is already in use, stop the process it prints and run again.
-- Signaling server root endpoint is informational:
-  - `http://<HOST_IP>:3000/`
+- Signaling server root endpoints:
+  - Informational:
+    ```http://<HOST_IP>:3000/```
   - Health/info endpoint:
-  - `http://<HOST_IP>:3000/api/server/info`
+  ```http://<HOST_IP>:3000/api/server/info```
 
 ### Troubleshooting
 
