@@ -15,13 +15,24 @@ HPC serious game showcasing how collaborative effort between processes and threa
 
 ### Play though browser
 
-- [Just open the link above in your](<https://siponek.github.io/hpc-sorting-serious-game/>) chrome browser and start playing. Without any installation needed, this can serve as a __client__ for multiplayer mode as well.
+- [Just open the link above in your](<https://siponek.github.io/hpc-sorting-serious-game/>) chrome browser and start playing. Without any installation needed, this __CANNOT__ serve as a __client__ for multiplayer mode due to limitations for Github Pages and HTTPS.
 
 > [!WARNING]
 > Without a signaling server (setup using __just__, instructions below) connecting to multiplayer mode will not be possible, but you can still play singleplayer mode.
 >
 > GitHub Pages (`https`) + local LAN signaling (`http://192.168.x.x:3000`) is blocked by browser security in most cases.
 > For LAN multiplayer, use the local HTTPS hosting flow below.
+
+### Linux prerequisites
+
+It is possible to run the project on linux, but the __justfiles__ have been made with powershell in mind. Also mkCert that is used for creating certificates for HTTPS might now be avilable. For linux power users you need:
+
+- just
+- python 3.12 or higher
+- uv (for project management, an alternative to pipenv or poetry)
+
+> [!IMPORTANT]
+> Chocolatey is a package manager used for windows. For linux you can use any package manager you want such as __apt__
 
 ### Windows prerequisites
 
@@ -41,7 +52,7 @@ You need to have the following software installed to run the game on windows
 - Python >= 3.12 (for webserver and signaling server)
   - Install python using chocolatey
 
-    ```powershell
+    ```pwsh
     choco install python312
     ```
 
@@ -49,13 +60,13 @@ You need to have the following software installed to run the game on windows
 
   - Install uv for your global python (for project management, an alternative to pipenv or poetry)
   
-    ```powershell
+    ```pwsh
     pip install uv
     ```
 
   - Install just (for project automation, an alternative to __make__)
 
-    ```powershell
+    ```pwsh
     choco install just
     ```
 
@@ -106,11 +117,14 @@ Get your LAN IP (copied to clipboard):
 just get-ip
 ```
 
-If you also want host:port copied (for signaling):
+If you also want host:port copied (for signaling server):
 
 ```pwsh
 just get-ip-with-port
 ```
+
+> [!IMPORTANT]
+> This address is the one you need as a client to connect to the host, so make sure to use the correct one if you have multiple network interfaces (e.g. Ethernet + Wi-Fi). It should be something like `192.168.x.x`. This will be pasted into MultiplayerOptions window when clicking __Submit IP__
 
 Then start both servers in separate terminals:
 
@@ -128,12 +142,12 @@ just test-web-local
 2. Open game page from host:
    - `https://<HOST_IP>:8000`
    - Example: `https://192.168.1.14:8000`
-3. In Multiplayer Options 
+3. In Multiplayer Options
     - As a __host__ enter the name for room and click __Start Game__
     - As a __client__:
-        - submit signaling server IP:
+      - submit signaling server IP:
       - `<HOST_IP>:3000`
-            <img src="docs/img/submit-ip-button-multiplayer-options.png" alt="Submit IP button" style="max-width: 420px; width: 100%; height: auto;" />
+        <img src="docs/img/submit-ip-button-multiplayer-options.png" alt="Submit IP button" style="max-width: 420px; width: 100%; height: auto;" />
 
       - Click __Submit IP__
 
