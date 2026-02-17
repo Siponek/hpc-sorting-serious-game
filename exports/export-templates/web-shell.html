@@ -99,8 +99,8 @@
             }
         </style>
         <link id="-gd-engine-icon" rel="icon" type="image/png"
-              href="web-export.icon.png" />
-        <link rel="apple-touch-icon" href="web-export.apple-touch-icon.png" />
+              href="index.icon.png" />
+        <link rel="apple-touch-icon" href="index.apple-touch-icon.png" />
 
     </head>
 
@@ -116,12 +116,12 @@
         <div id="status">
             <img id="status-splash"
                  class="show-image--true fullsize--true use-filter--true"
-                 src="web-export.png" alt="">
+                 src="index.png" alt="">
             <progress id="status-progress"></progress>
             <div id="status-notice"></div>
         </div>
 
-        <script src="web-export.js"></script>
+        <script src="index.js"></script>
         <script>
             // Buffer error lines to avoid stack trace spam per line
             const errorBuffer = { lines: [], timeout: null };
@@ -138,7 +138,7 @@
                 errorBuffer.timeout = setTimeout(flushErrors, 10);
             }
 
-            const GODOT_CONFIG = { "args": [], "canvasResizePolicy": 2, "emscriptenPoolSize": 8, "ensureCrossOriginIsolationHeaders": false, "executable": "web-export", "experimentalVK": false, "fileSizes": { "web-export.pck": 92499888, "web-export.wasm": 1588912 }, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "onPrintError": bufferedPrintError };
+            const GODOT_CONFIG = { "args": [], "canvasResizePolicy": 2, "emscriptenPoolSize": 8, "ensureCrossOriginIsolationHeaders": false, "executable": "index", "experimentalVK": false, "fileSizes": { "index.pck": 92499888, "index.wasm": 1588912 }, "focusCanvas": true, "gdextensionLibs": [], "godotPoolSize": 4, "onPrintError": bufferedPrintError };
             const GODOT_THREADS_ENABLED = false;
             const engine = new Engine(GODOT_CONFIG);
 
