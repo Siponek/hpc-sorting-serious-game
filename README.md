@@ -188,7 +188,7 @@ curl -vk https://<HOST_IP>:8000/
   - public HTTPS signaling server.
 
 > [!IMPORTANT]
-> Make sure to run the game on separate tabs in chrome, since tabs might freeze in the background for other players
+> Make sure to run the game on separate windows in chrome, since tabs might freeze in the background for other players
 
 ## FAQ
 
