@@ -57,7 +57,7 @@ var cards_in_other_buffers: Dictionary = {} # card_value: player_id
 
 # Barrier synchronization feature
 var barrier_manager: BarrierManager
-@export var barrier_control_panel: PanelContainer
+@export var barrier_control_panel: BarrierControlPanel
 @export var barrier_lock_overlay: CanvasLayer
 @export var all_buffers_view: PanelContainer
 var interaction_locked: bool = false
@@ -77,6 +77,9 @@ func _toggle_visibility_of_the_rest_for_overlay(_visible: bool):
 func _ready():
 	is_host = ConnectionManager.am_i_host()
 	my_client_id = ConnectionManager.get_my_client_id()
+	var me := ConnectionManager.get_player_list().get_player(my_client_id)
+
+
 	logger.log_info(
 		"Starting initialization. Host: ", is_host, " Client ID: ", my_client_id
 	)
@@ -109,6 +112,8 @@ func _ready():
 	if VarTreeHandler.should_enable_var_tree():
 		VarTreeHandler.handle_var_tree(var_tree_node, _setup_var_tree)
 
+	if me:
+		barrier_control_panel.set_current_player_name(me.name)
 
 ### Client: Set up structure without generating cards
 func _initialize_client_structure():
