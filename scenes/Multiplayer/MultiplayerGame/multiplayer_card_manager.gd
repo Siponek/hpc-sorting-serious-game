@@ -114,7 +114,7 @@ func _ready():
 func _initialize_client_structure():
 	logger.log_info("Client initializing structure")
 
-	card_colors.map(func(color: Color): return color.lightened(0.1))
+	Settings.card_colors.map(func(color: Color): return color.lightened(0.1))
 
 	if num_cards < 1:
 		num_cards = 1
@@ -282,7 +282,7 @@ func sync_complete_game_state(
 		card_instance.name = "Card_Val_" + str(value)
 
 		var new_card_style = StyleBoxFlat.new()
-		new_card_style.bg_color = card_colors[value % card_colors.size()]
+		new_card_style.bg_color = Settings.card_colors[value % Settings.card_colors.size()]
 		card_instance.set_base_style(new_card_style)
 
 		card_lookup[value] = card_instance
@@ -1077,7 +1077,7 @@ func _get_or_create_card(card_value: int) -> Card:
 	card.name = "Card_Val_" + str(card_value)
 
 	var new_card_style = StyleBoxFlat.new()
-	new_card_style.bg_color = card_colors[card_value % card_colors.size()]
+	new_card_style.bg_color = Settings.card_colors[card_value % Settings.card_colors.size()]
 	card.set_base_style(new_card_style)
 
 	cards_array.append(card)

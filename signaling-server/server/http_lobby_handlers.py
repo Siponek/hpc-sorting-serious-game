@@ -24,12 +24,11 @@ from typing import Any
 
 from aiohttp import web
 
-from .config import CONFIG
+from .config import CONFIG, LOCAL_IP, PORT
 from .enums import ErrorCode, LobbyCloseReason, ResponseType, SSEEventType
 from .lobby_handlers import broadcast_to_lobby, close_lobby, send_to_peer
-from .models import Lobby, Peer
+from .models import Peer
 from .state import state
-
 
 # =============================================================================
 # Helper Functions
@@ -571,7 +570,7 @@ async def handle_events(request: web.Request) -> web.StreamResponse:
 
                 await response.write(f"event: {event_type}\ndata: {data}\n\n".encode())
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Send heartbeat
                 heartbeat_data = json.dumps({"ts": asyncio.get_event_loop().time()})
                 await response.write(
@@ -609,6 +608,20 @@ async def handle_events(request: web.Request) -> web.StreamResponse:
     return response
 
 
+# In your app.py routes
+async def handle_server_info(request: web.Request) -> web.Response:
+    """Return server info for client validation."""
+    return json_response(
+        {
+            "status": "ok",
+            "version": "1.0",
+            "ip": LOCAL_IP,
+            "port": PORT,
+            "url": f"http://{LOCAL_IP}:{PORT}",
+        }
+    )
+
+
 # =============================================================================
 # Route Registration
 # =============================================================================
@@ -632,6 +645,10 @@ def register_http_lobby_routes(app: web.Application) -> None:
     # SSE event stream
     app.router.add_get("/api/lobby/events", handle_events)
 
+    # TODO move this to a separate route group if we add more server info endpoints in the future
+    # Client verification
+    app.router.add_get("/api/server/info", handle_server_info)
+
     # OPTIONS handlers for CORS
     async def options_handler(_request: web.Request) -> web.Response:
         return web.Response()
@@ -645,5 +662,6 @@ def register_http_lobby_routes(app: web.Application) -> None:
         "/api/lobby/list",
         "/api/lobby/broadcast",
         "/api/lobby/events",
+        "/api/server/info",
     ]:
         app.router.add_route("OPTIONS", path, options_handler)

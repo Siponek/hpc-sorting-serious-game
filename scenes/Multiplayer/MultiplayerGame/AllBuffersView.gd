@@ -1,19 +1,24 @@
 extends PanelContainer
 
 const ThreadBufferPanel = preload(
-	"res://scenes/Multiplayer/MultiplayerGame/ThreadBufferPanel.tscn"
+	ProjectFiles.Scenes.THREAD_BUFFER_PANEL
 )
 
 @onready
 var buffers_container: VBoxContainer = $MarginContainer/VBoxContainer/ScrollContainer/BuffersContainer
+@export var card_scroll_container: ScrollContainer
 
 var buffer_panels: Dictionary = {}  # player_id: ThreadBufferPanel
 
 
-func add_thread_buffer(player_id: int, player_name: String, card_values: Array):
-	var panel = ThreadBufferPanel.instantiate()
+func add_thread_buffer(
+	player_id: int, player_name: String, card_values: Array
+):
+	var panel := ThreadBufferPanel.instantiate()
 	buffers_container.add_child(panel)
-	panel.setup(player_id, player_name, card_values)
+	panel.setup(
+		player_id, player_name, card_values, card_scroll_container
+	)
 	buffer_panels[player_id] = panel
 
 

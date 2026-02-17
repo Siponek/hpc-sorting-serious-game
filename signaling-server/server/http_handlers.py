@@ -12,7 +12,7 @@ from typing import Any
 
 from aiohttp import web
 
-from .config import PORT
+from .config import LOCAL_IP, PORT
 from .enums import ErrorCode, LobbyCloseReason
 from .lobby_handlers import close_lobby
 from .state import state
@@ -237,6 +237,18 @@ async def handle_lobbies(request: web.Request) -> web.Response:
     return web.json_response({"lobbies": lobby_list})
 
 
+async def handle_root(_request: web.Request) -> web.Response:
+    """GET / - Friendly root info for browser users."""
+    return web.json_response(
+        {
+            "status": "ok",
+            "message": "Signaling server is running. This is not the game page.",
+            "try_api": "/api/server/info",
+            "game_page_example": f"http://{LOCAL_IP}:8000",
+        }
+    )
+
+
 # =============================================================================
 # Route Registration
 # =============================================================================
@@ -244,6 +256,9 @@ async def handle_lobbies(request: web.Request) -> web.Response:
 
 def register_http_routes(app: web.Application) -> None:
     """Register all HTTP routes."""
+    # Root info
+    app.router.add_get("/", handle_root)
+
     # Session endpoints
     app.router.add_post("/session/host", handle_host)
     app.router.add_post("/session/update/{code}", handle_update)
@@ -266,3 +281,4 @@ def register_http_routes(app: web.Application) -> None:
     app.router.add_route("OPTIONS", "/session/close/{code}", options_handler)
     app.router.add_route("OPTIONS", "/session/join/{code}", options_handler)
     app.router.add_route("OPTIONS", "/lobbies", options_handler)
+    app.router.add_route("OPTIONS", "/", options_handler)

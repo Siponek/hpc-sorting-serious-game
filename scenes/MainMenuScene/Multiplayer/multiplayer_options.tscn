@@ -1,14 +1,15 @@
 [gd_scene load_steps=5 format=3 uid="uid://uftx8e2j6d5f"]
 
 [ext_resource type="Script" uid="uid://bv1sn1hqygubb" path="res://scenes/MainMenuScene/Multiplayer/multiplayer_options.gd" id="1_2yuo4"]
-[ext_resource type="Theme" uid="uid://ciaxuhxqbvvvv" path="res://res/menu_theme.tres" id="1_q3dwk"]
+[ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="1_q3dwk"]
 [ext_resource type="Texture2D" uid="uid://bg2ibr4giol6t" path="res://res/fontawesome-free-6.7.2-desktop/svgs/solid/arrows-rotate.svg" id="3_hnmqr"]
 [ext_resource type="Texture2D" uid="uid://fk3lixpagdu" path="res://res/fontawesome-free-6.7.2-desktop/svgs/solid/star-of-david.svg" id="5_87rvy"]
 
 [node name="MultiplayerOptions" type="Window"]
+oversampling_override = 1.0
 title = "Multiplayer Options"
 initial_position = 1
-size = Vector2i(500, 420)
+size = Vector2i(500, 430)
 min_size = Vector2i(500, 420)
 theme = ExtResource("1_q3dwk")
 theme_type_variation = &"ActionSidePanelButton"
@@ -37,38 +38,73 @@ theme_override_constants/margin_bottom = 12
 layout_mode = 2
 
 [node name="ActionOptionsVBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(230, 0)
 layout_mode = 2
 
 [node name="NameServerLabel" type="Label" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Name for room:"
 
 [node name="NameServerLineEdit" type="LineEdit" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 
 [node name="HostGameButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 text = "Start Game"
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
-layout_mode = 2
-theme_override_constants/margin_top = 40
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer"]
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
 layout_mode = 2
 
-[node name="CodeFieldLabel" type="Label" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer"]
+[node name="CodeFieldLabel" type="Label" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Enter code for room:"
 
-[node name="CodeFieldLineEdit" type="LineEdit" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer"]
+[node name="CodeFieldLineEdit" type="LineEdit" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 
-[node name="JoinGameButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer"]
+[node name="JoinGameButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 text = "Join room
+"
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="HBoxContainer" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+layout_mode = 2
+
+[node name="Enter host IP" type="Label" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Enter Host IP:"
+
+[node name="InfoButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+tooltip_text = "Run 'just get-ip-with-port' in terminal to find your IP"
+button_mask = 0
+text = "?"
+
+[node name="IPFieldLineEdit" type="LineEdit" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme = ExtResource("1_q3dwk")
+text = "192.168.1.14:3000"
+placeholder_text = "Enter host IP"
+
+[node name="SubmitIPButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Submit IP
 "
 
 [node name="VSeparator" type="VSeparator" parent="MarginContainer/HBoxContainer"]
@@ -80,6 +116,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="RefreshLobbiesButton" type="Button" parent="MarginContainer/HBoxContainer/LobbyListVBoxContainer"]
+unique_name_in_owner = true
 clip_contents = true
 layout_mode = 2
 theme = ExtResource("1_q3dwk")
@@ -100,6 +137,7 @@ theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
 [node name="LobbyList" type="ItemList" parent="MarginContainer/HBoxContainer/LobbyListVBoxContainer/MarginContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 allow_rmb_select = true
 auto_width = true
@@ -111,6 +149,6 @@ item_0/icon = ExtResource("5_87rvy")
 
 [connection signal="about_to_popup" from="." to="." method="_on_about_to_popup"]
 [connection signal="pressed" from="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/HostGameButton" to="." method="_on_host_game_button_pressed"]
-[connection signal="pressed" from="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/MarginContainer/VBoxContainer/JoinGameButton" to="." method="_on_join_game_button_pressed"]
+[connection signal="pressed" from="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/JoinGameButton" to="." method="_on_join_game_button_pressed"]
 [connection signal="pressed" from="MarginContainer/HBoxContainer/LobbyListVBoxContainer/RefreshLobbiesButton" to="." method="_on_refresh_lobbies_button_pressed"]
 [connection signal="item_selected" from="MarginContainer/HBoxContainer/LobbyListVBoxContainer/MarginContainer/LobbyList" to="." method="_on_lobby_list_item_selected"]

@@ -14,7 +14,7 @@ from typing import Any
 
 from aiohttp import web
 
-from .config import CONFIG, PORT
+from .config import CONFIG, LOCAL_IP, PORT
 from .enums import ResponseType, SignalingDataType
 from .http_handlers import register_http_routes
 from .http_lobby_handlers import register_http_lobby_routes
@@ -163,7 +163,8 @@ def print_banner() -> None:
     print("  Lobby Server (HTTP + SSE)")
     print("=" * 60)
     print()
-    print(f"  Base URL:       http://localhost:{PORT}")
+    print(f"  Local IP:       {LOCAL_IP}:{PORT}")
+    print(f"  Full URL:       http://{LOCAL_IP}:{PORT}")
     print()
     print("  HTTP API (recommended for web):")
     print("    POST /api/lobby/connect     - Get peer ID")
@@ -173,6 +174,7 @@ def print_banner() -> None:
     print("    GET  /api/lobby/list        - List lobbies")
     print("    POST /api/lobby/broadcast   - Send game packets")
     print("    GET  /api/lobby/events      - SSE event stream")
+    print("    GET  /api/server/info       - Server info")
     print()
     print("  Legacy WebSocket (backward compatible):")
     print("    WS   /lobby                 - Lobby events")

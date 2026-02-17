@@ -21,23 +21,7 @@ var finish_window_instance: Node = null
 # TODO would be cool to add coloring/theme selection to main menu,
 # so players can choose if they want rainbow or now
 
-var card_colors: Array[Color] = [
-	Color.STEEL_BLUE,
-	Color.SEA_GREEN,
-	Color.GOLDENROD,
-	Color.SLATE_BLUE,
-	Color.INDIAN_RED,
-	Color.DARK_KHAKI,
-	Color.FIREBRICK,
-	Color.DARK_CYAN,
-	Color.DARK_MAGENTA,
-	Color.OLIVE_DRAB,
-	Color.PURPLE,
-	Color.TEAL,
-	Color.CHOCOLATE,
-	Color.CRIMSON,
-	Color.DARK_ORCHID
-]
+
 
 @export var timer_node: TimerController
 @export var card_container: HBoxContainer
@@ -69,7 +53,7 @@ var card_debug_info = CardDebugData.new()
 
 
 func _ready():
-	card_colors.map(func(color: Color): return color.lightened(0.1))
+	Settings.card_colors.map(func(color: Color): return color.lightened(0.1))
 	# 1. Initial calculations and data generation
 	if num_cards < 1:
 		num_cards = 1 # Ensure at least 1 card
@@ -355,7 +339,7 @@ func generate_completed_card_array(
 	# Step 3: Apply colors
 	cards.map(
 		func(card):
-			card.card_color = card_colors[card.value % card_colors.size()]
+			card.card_color = Settings.card_colors[card.value % Settings.card_colors.size()]
 			return card
 	)
 

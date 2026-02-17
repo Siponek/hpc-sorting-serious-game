@@ -54,11 +54,11 @@ func _ready():
 				"Card: card_scroll_container reference is not set. This is a setup error."
 			)
 		)
+		#Need to get full stack
+		print("Stack trace:\n%s" % [get_stack()])
 		push_error(
 			"Card: card_scroll_container reference is not set. This is a setup error."
 		)
-		#Need to get full stack
-		print("Stack trace:\n%s" % [get_stack()])
 	if not interactive:
 		self.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Update visuals to match exported values
@@ -143,9 +143,14 @@ func set_can_drag(_value: bool):
 # This function can be called from another script
 func reset_position(_card_container_node: Node):
 	var container = (
-		_card_container_node if _card_container_node else card_container_ref
+		_card_container_node
+		if _card_container_node
+		else card_container_ref
 	)
-	assert(container != null, "Card container not found in the scene tree.")
+	assert(
+		container != null,
+		"Card container not found in the scene tree."
+	)
 	if get_parent() != container: # Avoid re-adding if already there
 		if get_parent():
 			get_parent().remove_child(self )
@@ -178,7 +183,9 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 	# Buffer view cards can always be dragged (main thread is dragging them)
 	if buffer_view_source_id < 0:
 		# Check if interaction is locked (barrier active, not main thread)
-		var card_manager = get_tree().get_first_node_in_group("card_manager")
+		var card_manager = get_tree().get_first_node_in_group(
+			"card_manager"
+		)
 		if card_manager and card_manager.interaction_locked:
 			return null
 
@@ -186,13 +193,17 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 		print_debug("Card cannot be dragged")
 		return null
 	DragState.currently_dragged_card = self
-	DragState.card_dragged_from_main_container = (current_slot == null)
+	DragState.card_dragged_from_main_container = (
+		current_slot == null
+	)
 	set_drag_preview(create_drag_preview())
 	# Save current container position data:
 	if current_slot == null: # Dragged from main container
 		original_index = get_index()
 		# Notify scroll_container to hide this card and store it
-		card_scroll_container._prepare_card_drag_from_container(self )
+		card_scroll_container._prepare_card_drag_from_container(
+			self
+		)
 	return self
 
 
@@ -243,7 +254,10 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	else:
 		# This should not typically happen if _can_drop_data returned false for cards not in slots.
 		print_debug(
-			"Card %s _drop_data called, but card is not in a slot." % self.name
+			(
+				"Card %s _drop_data called, but card is not in a slot."
+				% self.name
+			)
 		)
 
 
@@ -266,8 +280,8 @@ func _generate_hover_style():
 	if managed_base_style:
 		managed_hover_style = managed_base_style.duplicate()
 		# Example hover effect: brighten and add a border
-		managed_hover_style.bg_color = managed_base_style.bg_color.lightened(
-			0.2
+		managed_hover_style.bg_color = (
+			managed_base_style.bg_color.lightened(0.2)
 		)
 		managed_hover_style.border_width_left = 2
 		managed_hover_style.border_width_top = 2
@@ -283,7 +297,9 @@ func _generate_hover_style():
 
 func _generate_swap_highlight_style():
 	if managed_base_style:
-		managed_swap_highlight_style = managed_base_style.duplicate()
+		managed_swap_highlight_style = (
+			managed_base_style.duplicate()
+		)
 		managed_swap_highlight_style.border_width_left = 5
 		managed_swap_highlight_style.border_width_top = 5
 		managed_swap_highlight_style.border_width_right = 5
@@ -296,8 +312,12 @@ func _generate_swap_highlight_style():
 		managed_swap_highlight_style.border_width_top = 3
 		managed_swap_highlight_style.border_width_right = 3
 		managed_swap_highlight_style.border_width_bottom = 3
-		managed_swap_highlight_style.border_color = Color.GREEN_YELLOW
-		managed_swap_highlight_style.bg_color = Color(0.8, 0.9, 0.8, 0.1) # Optional subtle bg tint
+		managed_swap_highlight_style.border_color = (
+			Color.GREEN_YELLOW
+		)
+		managed_swap_highlight_style.bg_color = Color(
+			0.8, 0.9, 0.8, 0.1
+		) # Optional subtle bg tint
 
 
 func _apply_current_style():
@@ -309,9 +329,13 @@ func _apply_current_style():
 			"panel", managed_swap_highlight_style
 		)
 	elif is_mouse_hovering and managed_hover_style:
-		panel_node.add_theme_stylebox_override("panel", managed_hover_style)
+		panel_node.add_theme_stylebox_override(
+			"panel", managed_hover_style
+		)
 	elif managed_base_style:
-		panel_node.add_theme_stylebox_override("panel", managed_base_style)
+		panel_node.add_theme_stylebox_override(
+			"panel", managed_base_style
+		)
 	else:
 		panel_node.remove_theme_stylebox_override("panel")
 

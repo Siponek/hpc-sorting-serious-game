@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://thread_buffer_panel"]
+[gd_scene load_steps=2 format=3 uid="uid://bjrcey32pfk8y"]
 
-[ext_resource type="Script" path="res://scenes/Multiplayer/MultiplayerGame/ThreadBufferPanel.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://iq26w64axtem" path="res://scenes/Multiplayer/MultiplayerGame/ThreadBufferPanel.gd" id="1_script"]
 
 [node name="ThreadBufferPanel" type="PanelContainer"]
 custom_minimum_size = Vector2(0, 120)

@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://cha7dlsh43ntq"]
 
 [ext_resource type="StyleBox" uid="uid://bpuxi2616bv7h" path="res://res/background_styleblox.tres" id="1_lmiy1"]
-[ext_resource type="Script" uid="uid://brhkwrscqti05" path="res://scenes/Multiplayer/MultiplayerGame/AllBuffersView.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bjtomt34f05hd" path="res://scenes/Multiplayer/MultiplayerGame/AllBuffersView.gd" id="1_script"]
 [ext_resource type="Theme" uid="uid://clsapovyyp365" path="res://res/menu_theme.tres" id="3_w6r5f"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w6r5f"]

@@ -1241,7 +1241,26 @@ func _erase_player_data_request(from: Client, request: Array) -> void:
 
 
 func set_signaling_server(url: String) -> void:
-	signaling_server_url = url
+	var normalized_url := url.strip_edges().rstrip("/")
+	if normalized_url.is_empty():
+		logger.log_warning("Ignoring empty signaling server URL")
+		return
+
+	if normalized_url == signaling_server_url:
+		return
+
+	# Avoid switching signaling backend while actively inside a lobby.
+	if current_room_code != "":
+		logger.log_warning("Cannot change signaling server while in a lobby")
+		return
+
+	signaling_server_url = normalized_url
+	logger.log_info("Signaling server URL set to: " + signaling_server_url)
+
+	# If already connected, disconnect so the next operation reconnects to the new URL.
+	if _signaling and _signaling.is_connected_to_server():
+		logger.log_info("Disconnecting from current signaling server to apply new URL")
+		_signaling.disconnect_from_server()
 
 
 func perform_local_scan() -> void:
