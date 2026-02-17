@@ -1,6 +1,8 @@
 extends PanelContainer
 
-const CardScene: PackedScene = preload(ProjectFiles.Scenes.CARD_MAIN)
+const CardScene: PackedScene = preload(
+	ProjectFiles.Scenes.CARD_MAIN
+)
 
 @onready var thread_label: Label = $VBoxContainer/ThreadLabel
 @onready
@@ -8,30 +10,18 @@ var card_container: HBoxContainer = $VBoxContainer/ScrollContainer/CardContainer
 
 var owner_thread_id: int = -1
 var card_instances: Dictionary = {}  # card_value: Card
-
-# Card colors for visual consistency
-var card_colors: Array[Color] = [
-	Color("#FF6B6B"),
-	Color("#4ECDC4"),
-	Color("#45B7D1"),
-	Color("#96CEB4"),
-	Color("#FFEAA7"),
-	Color("#DDA0DD"),
-	Color("#98D8C8"),
-	Color("#F7DC6F"),
-	Color("#BB8FCE"),
-	Color("#85C1E9"),
-	Color("#F8B500"),
-	Color("#00CED1"),
-	Color("#FF7F50"),
-	Color("#9ACD32"),
-	Color("#FF69B4"),
-	Color("#20B2AA")
-]
+var scroll_container_ref: ScrollContainer = null
+@onready var logger = CustomLogger.get_logger(self)
 
 
-func setup(player_id: int, player_name: String, card_values: Array):
+func setup(
+	player_id: int,
+	player_name: String,
+	card_values: Array,
+	scroll_container: ScrollContainer = null
+):
 	owner_thread_id = player_id
+	scroll_container_ref = scroll_container
 	thread_label.text = player_name + "'s Buffer"
 
 	for value in card_values:
@@ -40,6 +30,15 @@ func setup(player_id: int, player_name: String, card_values: Array):
 
 func add_card(card_value: int):
 	var card: Card = CardScene.instantiate()
+	if scroll_container_ref != null:
+		card.set_card_scroll_container(scroll_container_ref)
+	else:
+		(
+			logger
+			. log_warning(
+				"ThreadBufferPanel: No scroll container reference provided for card, dragging may not work properly."
+			)
+		)
 	card.set_card_value(card_value)
 	card.buffer_view_source_id = owner_thread_id
 	card.set_can_drag(true)
@@ -49,7 +48,9 @@ func add_card(card_value: int):
 
 	# Set color
 	var style = StyleBoxFlat.new()
-	style.bg_color = card_colors[card_value % card_colors.size()]
+	style.bg_color = Settings.card_colors[
+		card_value % Settings.card_colors.size()
+	]
 	card.set_base_style(style)
 
 	card_container.add_child(card)

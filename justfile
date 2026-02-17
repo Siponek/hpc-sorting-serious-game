@@ -14,6 +14,10 @@ import 'justfiles/web-export.justfile'
 
 import 'justfiles/multiplayer.justfile'
 
+# Import network utilities
+
+import 'justfiles/network.justfile'
+
 import? "git-submodules/HPC-thesis/justfile"
 
 default:

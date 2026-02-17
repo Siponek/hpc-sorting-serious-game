@@ -5,10 +5,12 @@ Server Configuration
 """
 
 import os
+import socket
 import sys
 from dataclasses import dataclass
 
 
+# Global immutable config instance
 @dataclass(frozen=True)
 class ServerConfig:
     """Immutable server configuration settings."""
@@ -21,8 +23,18 @@ class ServerConfig:
     default_channel: str = "gdsync-hpc-sorting"
 
 
-# Global immutable config instance
-CONFIG = ServerConfig()
+def get_local_ip() -> str:
+    """Get the local network IP address (not localhost or 0.0.0.0)."""
+    try:
+        # Connect to a non-routable address to find local IP
+        # This doesn't actually send packets
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
 
 
 def _get_port() -> int:
@@ -45,5 +57,7 @@ def _get_port() -> int:
     return CONFIG.default_port
 
 
+CONFIG = ServerConfig()
+LOCAL_IP = get_local_ip()
 # Port can be overridden from command line or environment
 PORT = _get_port()

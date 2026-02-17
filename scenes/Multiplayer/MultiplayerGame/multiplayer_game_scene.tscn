@@ -135,8 +135,6 @@ script = ExtResource("3_s36k4")
 barrier_control_panel = NodePath("../BarrierControlPanel")
 barrier_lock_overlay = NodePath("../BarrierLockOverlay")
 all_buffers_view = NodePath("AllBuffersView")
-button_spacing = null
-card_spacing = null
 timer_node = NodePath("../TopBar/TimerPanel")
 card_container = NodePath("CardPanel/ScrollContainer/MarginContainer/CardContainer")
 slot_container = NodePath("BufferZonePanel/VBoxContainer/ScrollContainer/MarginContainer/VBoxContainer/SlotContainer")
@@ -220,9 +218,10 @@ theme_override_constants/separation = 50
 [node name="BufferZonePanel" parent="VBoxContainer" instance=ExtResource("6_i6ygo")]
 layout_mode = 2
 
-[node name="AllBuffersView" parent="VBoxContainer" instance=ExtResource("12_barrier")]
+[node name="AllBuffersView" parent="VBoxContainer" node_paths=PackedStringArray("card_scroll_container") instance=ExtResource("12_barrier")]
 visible = false
 layout_mode = 2
+card_scroll_container = NodePath("../CardPanel/ScrollContainer")
 
 [node name="Background" parent="." instance=ExtResource("5_o75xc")]
 layout_mode = 1
@@ -265,4 +264,5 @@ metadata/_edit_use_anchors_ = true
 [connection signal="pressed" from="RightSideButtonsContainer/RestartGameButton" to="VBoxContainer" method="_on_restart_game_button_pressed"]
 
 [editable path="VBoxContainer/BufferZonePanel"]
+[editable path="VBoxContainer/AllBuffersView"]
 [editable path="BarrierControlPanel"]
