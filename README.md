@@ -242,6 +242,7 @@ Try the following steps to troubleshoot the issue:
     ```pwsh
     Stop-Process -Id 10940 -Force
     ```
+    Restart the __signaling server__
 
 ### Export to windows need to use [rcedit](https://github.com/electron/rcedit/releases) and [for icon](https://docs.godotengine.org/en/stable/tutorials/export/changing_application_icon_for_windows.html)
 
