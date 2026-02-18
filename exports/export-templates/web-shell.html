@@ -50,7 +50,7 @@
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                visibility: hidden;
+                visibility: visible;
             }
 
             #status-splash {
@@ -73,10 +73,7 @@
                 image-rendering: pixelated;
             }
 
-            #status-spinner,
             #status-progress,
-            #status-message,
-            #status-hint,
             #status-notice {
                 display: none;
             }
@@ -157,7 +154,7 @@
                  src="index.png" alt="">
             <div id="status-spinner"></div>
             <progress id="status-progress"></progress>
-            <div id="status-message"></div>
+            <div id="status-message">Initializing page...</div>
             <div id="status-hint">Large download on first load. Keep this tab open.</div>
             <div id="status-notice"></div>
         </div>
