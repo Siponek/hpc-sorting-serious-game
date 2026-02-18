@@ -4,15 +4,27 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 
-class HTTPServer(SimpleHTTPRequestHandler):
+class ExportRequestHandler(SimpleHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+    cross_origin_isolation = False
+    asset_cache_seconds = 3600
+
     def end_headers(self):
         self.send_my_headers()
         super().end_headers()
 
     def send_my_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
-        self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+        self.send_header("Accept-Ranges", "bytes")
+        if self.cross_origin_isolation:
+            self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
+            self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+
+        request_path = self.path.split("?", 1)[0]
+        if request_path.endswith((".wasm", ".pck", ".js", ".css", ".png", ".jpg", ".webp")):
+            self.send_header("Cache-Control", f"public, max-age={self.asset_cache_seconds}")
+        else:
+            self.send_header("Cache-Control", "no-cache")
 
 
 if __name__ == "__main__":
@@ -34,9 +46,23 @@ if __name__ == "__main__":
         default="",
         help="Path to TLS private key PEM file",
     )
+    parser.add_argument(
+        "--cross-origin-isolation",
+        action="store_true",
+        help="Send COEP/COOP headers (only required for threaded SharedArrayBuffer builds)",
+    )
+    parser.add_argument(
+        "--asset-cache-seconds",
+        type=int,
+        default=3600,
+        help="Cache lifetime for large static assets like .pck/.wasm",
+    )
     args = parser.parse_args()
 
-    with ThreadingHTTPServer((args.bind, args.port), HTTPServer) as httpd:
+    ExportRequestHandler.cross_origin_isolation = args.cross_origin_isolation
+    ExportRequestHandler.asset_cache_seconds = max(0, args.asset_cache_seconds)
+
+    with ThreadingHTTPServer((args.bind, args.port), ExportRequestHandler) as httpd:
         scheme = "http"
         if args.https:
             script_dir = Path(__file__).resolve().parent

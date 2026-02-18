@@ -73,15 +73,53 @@
                 image-rendering: pixelated;
             }
 
+            #status-spinner,
             #status-progress,
+            #status-message,
+            #status-hint,
             #status-notice {
                 display: none;
+            }
+
+            #status-spinner {
+                width: 48px;
+                height: 48px;
+                border: 5px solid #d9c8aa;
+                border-top-color: #6a4e28;
+                border-radius: 50%;
+                animation: status-spin 0.9s linear infinite;
+                margin-bottom: 1rem;
+            }
+
+            @keyframes status-spin {
+                from {
+                    transform: rotate(0deg);
+                }
+                to {
+                    transform: rotate(360deg);
+                }
             }
 
             #status-progress {
                 bottom: 10%;
                 width: 50%;
                 margin: 0 auto;
+            }
+
+            #status-message {
+                bottom: 5%;
+                color: #263238;
+                font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+                font-size: 0.95rem;
+                text-align: center;
+            }
+
+            #status-hint {
+                bottom: 2.5%;
+                color: #5b4a33;
+                font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+                font-size: 0.85rem;
+                text-align: center;
             }
 
             #status-notice {
@@ -117,7 +155,10 @@
             <img id="status-splash"
                  class="show-image--true fullsize--true use-filter--true"
                  src="index.png" alt="">
+            <div id="status-spinner"></div>
             <progress id="status-progress"></progress>
+            <div id="status-message"></div>
+            <div id="status-hint">Large download on first load. Keep this tab open.</div>
             <div id="status-notice"></div>
         </div>
 
@@ -144,11 +185,26 @@
 
             (function () {
                 const statusOverlay = document.getElementById('status');
+                const statusSpinner = document.getElementById('status-spinner');
                 const statusProgress = document.getElementById('status-progress');
+                const statusMessage = document.getElementById('status-message');
+                const statusHint = document.getElementById('status-hint');
                 const statusNotice = document.getElementById('status-notice');
+                const pckBytes = (GODOT_CONFIG.fileSizes && GODOT_CONFIG.fileSizes['index.pck']) || 0;
+                const STALL_TIMEOUT_MS = 12000;
 
                 let initializing = true;
                 let statusMode = '';
+                let lastProgressAt = Date.now();
+                let fallbackShown = false;
+
+                function formatMiB(bytes) {
+                    return (bytes / (1024 * 1024)).toFixed(1);
+                }
+
+                function setStatusMessage(text) {
+                    statusMessage.textContent = text;
+                }
 
                 function setStatusMode(mode) {
                     if (statusMode === mode || !initializing) {
@@ -160,7 +216,10 @@
                         return;
                     }
                     statusOverlay.style.visibility = 'visible';
+                    statusSpinner.style.display = mode === 'progress' ? 'block' : 'none';
                     statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+                    statusMessage.style.display = mode === 'progress' ? 'block' : 'none';
+                    statusHint.style.display = mode === 'progress' ? 'block' : 'none';
                     statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
                     statusMode = mode;
                 }
@@ -187,6 +246,18 @@
                     }
                     setStatusMode('notice');
                     initializing = false;
+                }
+
+                function maybeShowFallbackNotice() {
+                    if (statusMode !== 'progress' || fallbackShown) {
+                        return;
+                    }
+                    if ((Date.now() - lastProgressAt) < STALL_TIMEOUT_MS) {
+                        return;
+                    }
+                    fallbackShown = true;
+                    const currentText = statusMessage.textContent || 'Loading...';
+                    setStatusMessage(`${currentText} This is taking longer than expected. Network may be slow; please keep this page open.`);
                 }
 
                 const missing = Engine.getMissingFeatures({
@@ -226,14 +297,25 @@
                     }
                 } else {
                     setStatusMode('progress');
+                    setInterval(maybeShowFallbackNotice, 1000);
+                    if (pckBytes > 0) {
+                        setStatusMessage(`Downloading game data (${formatMiB(pckBytes)} MiB)...`);
+                    } else {
+                        setStatusMessage('Downloading game data...');
+                    }
                     engine.startGame({
                         'onProgress': function (current, total) {
+                            lastProgressAt = Date.now();
+                            fallbackShown = false;
                             if (current > 0 && total > 0) {
                                 statusProgress.value = current;
                                 statusProgress.max = total;
+                                const percent = Math.floor((current / total) * 100);
+                                setStatusMessage(`Loading... ${percent}% (${formatMiB(current)} / ${formatMiB(total)} MiB)`);
                             } else {
                                 statusProgress.removeAttribute('value');
                                 statusProgress.removeAttribute('max');
+                                setStatusMessage('Loading...');
                             }
                         },
                     }).then(() => {
@@ -245,3 +327,4 @@
     </body>
 
 </html>
+
