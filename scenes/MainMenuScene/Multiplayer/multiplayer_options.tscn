@@ -84,12 +84,14 @@ layout_mode = 2
 [node name="Enter host IP" type="Label" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Enter Host IP:"
+text = "Enter singlaing Host IP:"
 
 [node name="InfoButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer/VBoxContainer"]
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-tooltip_text = "Run 'just get-ip-with-port' in terminal to find your IP"
+tooltip_text = "Run 'just get-ip-with-port' in terminal to find your IP.
+You can test the ip with http://your_ip:3000 in the webrowser
+to see if you have a connection"
 button_mask = 0
 text = "?"
 
@@ -99,6 +101,9 @@ layout_mode = 2
 theme = ExtResource("1_q3dwk")
 text = "192.168.1.14:3000"
 placeholder_text = "Enter host IP"
+keep_editing_on_text_submit = true
+expand_to_text_length = true
+clear_button_enabled = true
 
 [node name="SubmitIPButton" type="Button" parent="MarginContainer/HBoxContainer/ActionOptionsVBoxContainer"]
 unique_name_in_owner = true
