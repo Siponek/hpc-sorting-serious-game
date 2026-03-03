@@ -5,6 +5,7 @@ const multiplayer_lobby_scene: PackedScene = preload(
 )
 var lobby_id_to_join: String = "wololo"
 var selected_lobby_id_from_list: String = "" # To store ID from ItemList
+var _web_prompt_open: bool = false # Guard against re-entrant prompt loop on web
 @onready var logger = CustomLogger.get_logger(self )
 @onready var lobby_start_name_input: LineEdit = $%NameServerLineEdit # Get lobby name from UI
 @onready var lobby_join_id_input: LineEdit = $%CodeFieldLineEdit
@@ -50,6 +51,39 @@ func _ready() -> void:
 			)
 	)
 	submit_ip_button.pressed.connect(_on_submit_ip_button_pressed)
+	# On mobile web, LineEdit is a canvas element so the browser never raises
+	# its virtual keyboard. Use window.prompt() on touch devices only —
+	# desktop web users can type into LineEdit normally.
+	if OS.has_feature("web") and DisplayServer.is_touchscreen_available():
+		for field: LineEdit in [
+			lobby_start_name_input, lobby_join_id_input, ip_field_input
+		]:
+			field.focus_entered.connect(
+				func() -> void:
+					if _web_prompt_open:
+						return
+					_web_prompt_open=true
+					# Force the entire GUI to drop focus BEFORE the prompt opens,
+					# so the browser cannot bounce focus back to this field.
+					get_viewport().gui_release_focus()
+					var safe_text: String = field.text.replace("'", "\\'")
+					var label: String = field.placeholder_text if field.placeholder_text else "Enter value"
+					var result=JavaScriptBridge.eval(
+						"window.prompt('%s', '%s')" % [label, safe_text]
+					)
+					# After prompt closes the browser re-focuses the canvas, which
+					# re-fires focus_entered. Keep the guard up for a few frames
+					# until the re-focus bounce settles, then lower it.
+					get_viewport().gui_release_focus()
+					await get_tree().process_frame
+					await get_tree().process_frame
+					_web_prompt_open=false
+					if result != null:
+						#ensure that thre result has a port if it's the IP field and doesn't already contain one
+						result=str(result).strip_edges() + ":3000" if field == ip_field_input and not ":" in result else str(result).strip_edges()
+						field.text=result
+						field.text_changed.emit(result)
+			)
 	# Get the latest lobbies
 	lobby_list_ui.clear() # Clear old list
 	ConnectionManager.get_discovered_lobbies()
