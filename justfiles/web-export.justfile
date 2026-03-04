@@ -57,6 +57,8 @@ install-mkcert:
     Write-Host "[OK] mkcert local CA installed on this host." -ForegroundColor Green
 
 # Generate LAN certificate files used by test-web-local
+
+# Optionally pass a single HOST_IP to pin to one interface; omit to include ALL detected LAN IPs.
 [group('web-export')]
 generate-lan-cert HOST_IP="":
     #!powershell
@@ -65,23 +67,34 @@ generate-lan-cert HOST_IP="":
         exit 1
     }
 
-    $ip = "{{ HOST_IP }}"
-    if ([string]::IsNullOrWhiteSpace($ip)) {
-        $ip = Get-NetIPAddress -AddressFamily IPv4 |
-            Where-Object {
-                $_.IPAddress -ne '127.0.0.1' -and
-                ($_.PrefixOrigin -eq 'Dhcp' -or $_.PrefixOrigin -eq 'Manual')
-            } |
-            Select-Object -First 1 -ExpandProperty IPAddress
+    $forcedIp = "{{ HOST_IP }}"
+    if (-not [string]::IsNullOrWhiteSpace($forcedIp)) {
+        $ips = @($forcedIp)
+    } else {
+        # Include every IPv4 address that is not loopback (127.*) or APIPA (169.254.*).
+        # This intentionally covers all adapter types: Ethernet, Wi-Fi, WSL, Hyper-V, VPN, etc.
+        $ips = @(
+            Get-NetIPAddress -AddressFamily IPv4 |
+                Where-Object {
+                    $_.IPAddress -notlike '127.*' -and
+                    $_.IPAddress -notlike '169.254.*'
+                } |
+                Select-Object -ExpandProperty IPAddress
+        )
     }
 
-    if ([string]::IsNullOrWhiteSpace($ip)) {
-        Write-Host "[ERROR] Could not detect LAN IP. Pass it manually: just generate-lan-cert 192.168.1.14" -ForegroundColor Red
+    if ($ips.Count -eq 0) {
+        Write-Host "[ERROR] Could not detect any LAN IP. Pass one manually: just generate-lan-cert 192.168.1.14" -ForegroundColor Red
         exit 1
     }
+    foreach ($ip in $ips) {
+        Write-Host "[INFO] Detected LAN IP: $ip" -ForegroundColor Cyan
+    }
+
+    Write-Host "[INFO] Generating cert for interfaces: $($ips -join ', ')" -ForegroundColor Cyan
 
     New-Item -ItemType Directory -Force -Path exports/certs | Out-Null
-    mkcert -cert-file exports/certs/lan-cert.pem -key-file exports/certs/lan-key.pem localhost 127.0.0.1 $ip
+    mkcert -cert-file exports/certs/lan-cert.pem -key-file exports/certs/lan-key.pem localhost 127.0.0.1 @ips
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] mkcert failed. Certificates were not generated." -ForegroundColor Red
         exit 1
@@ -92,34 +105,34 @@ generate-lan-cert HOST_IP="":
         exit 1
     }
 
-    Write-Host "[OK] LAN cert generated for IP: $ip" -ForegroundColor Green
+    Write-Host "[OK] LAN cert generated for: $($ips -join ', ')" -ForegroundColor Green
     Write-Host "[OK] Cert: exports/certs/lan-cert.pem" -ForegroundColor Green
     Write-Host "[OK] Key:  exports/certs/lan-key.pem" -ForegroundColor Green
-    Write-Host "" 
-    Write-Host "Open on clients: https://${ip}:8000" -ForegroundColor Cyan
+    Write-Host ""
+    foreach ($ip in $ips) {
+        Write-Host "Open on clients: https://${ip}:8000" -ForegroundColor Cyan
+    }
 
 # One-command host setup for LAN HTTPS serving
+
+# Optionally pass HOST_IP to pin to a single interface; omit to cover all detected LAN IPs.
 [group('web-export')]
 setup-lan-https HOST_IP="":
     #!powershell
-    $ip = "{{ HOST_IP }}"
-    if ([string]::IsNullOrWhiteSpace($ip)) {
-        $ip = Get-NetIPAddress -AddressFamily IPv4 |
-            Where-Object {
-                $_.IPAddress -ne '127.0.0.1' -and
-                ($_.PrefixOrigin -eq 'Dhcp' -or $_.PrefixOrigin -eq 'Manual')
-            } |
-            Select-Object -First 1 -ExpandProperty IPAddress
-    }
+    $forcedIp = "{{ HOST_IP }}"
 
-    if ([string]::IsNullOrWhiteSpace($ip)) {
-        Write-Host "[ERROR] Could not detect LAN IP. Pass it manually: just setup-lan-https 192.168.1.14" -ForegroundColor Red
-        exit 1
-    }
+    # Remove stale certs so mkcert always issues a fresh one covering current interfaces.
+    if (Test-Path exports/certs/lan-cert.pem) { Remove-Item exports/certs/lan-cert.pem -Force }
+    if (Test-Path exports/certs/lan-key.pem)  { Remove-Item exports/certs/lan-key.pem  -Force }
+    Write-Host "[OK] Removed existing cert files (if any)" -ForegroundColor DarkGray
 
     just install-mkcert
-    just generate-lan-cert $ip
-    Write-Host "[OK] LAN HTTPS setup complete for $ip" -ForegroundColor Green
+    if ([string]::IsNullOrWhiteSpace($forcedIp)) {
+        just generate-lan-cert
+    } else {
+        just generate-lan-cert $forcedIp
+    }
+    Write-Host "[OK] LAN HTTPS setup complete" -ForegroundColor Green
     Write-Host "Next: just test-web-local" -ForegroundColor Cyan
 
 # Open exports folder in file explorer
