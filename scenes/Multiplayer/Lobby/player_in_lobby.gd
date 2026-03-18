@@ -38,10 +38,6 @@ func _ready() -> void:
 		player_name_label.name = "PlayerNameLabel" # Ensure the label has the correct name in editor
 
 	# unsafe :D
-	# GDSync.expose_func(self.setup_player_display)
-	# GDSync.expose_func(self.set_player_name)
-	# GDSync.expose_func(self.set_client_id)
-	# GDSync.expose_func(self.set_player_color)
 	client_id = ConnectionManager.get_my_client_id()
 
 

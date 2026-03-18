@@ -48,7 +48,6 @@ var logger: ColorfulLogger
 #region ready()
 func _ready():
 	logger = CustomLogger.get_logger(self )
-	# signals.setup_logging(logger)
 	# Connect to GDSync signals here
 	GDSync.connected.connect(_on_gdsync_connected)
 	GDSync.connection_failed.connect(_on_gdsync_connection_failed)

@@ -51,6 +51,7 @@ class CardState:
 var is_host: bool = false
 var my_client_id: int = -1
 var game_state_synced: bool = false
+const BARRIER_SNAPSHOT_TIMEOUT_SEC := 1.5
 @onready var buffer_size = Settings.player_buffer_count
 @onready var restart_button: Button = $%RestartGameButton
 # Track which cards are in OTHER players' buffers
@@ -62,6 +63,10 @@ var barrier_manager: BarrierManager
 @export var barrier_lock_overlay: CanvasLayer
 @export var all_buffers_view: PanelContainer
 var interaction_locked: bool = false
+var barrier_snapshot_request_sequence: int = 0
+var pending_barrier_snapshot_request_id: int = -1
+var pending_barrier_snapshots: Dictionary = {} # player_id: snapshot
+var pending_barrier_snapshot_peers: Dictionary = {} # player_id: true
 
 
 ### Toggle elements elements that should not be visible when overlay is active
@@ -166,6 +171,8 @@ func setup_multiplayer_sync():
 
 	# Barrier synchronization functions
 	GDSync.expose_func(self.barrier_thread_reached)
+	GDSync.expose_func(self.barrier_request_buffer_snapshot)
+	GDSync.expose_func(self.barrier_receive_buffer_snapshot)
 	GDSync.expose_func(self.barrier_activate)
 	GDSync.expose_func(self.barrier_card_picked)
 	GDSync.expose_func(self.barrier_release)
@@ -773,38 +780,85 @@ func _initiate_barrier_processing():
 	if not is_host:
 		logger.log_info("Not host, skipping barrier processing initiation")
 		return
+	if pending_barrier_snapshot_request_id != -1:
+		logger.log_warning(
+			"Barrier snapshot collection already in progress, ignoring duplicate trigger"
+		)
+		return
 
-	# Collect all buffer snapshots
-	var snapshots: Array = []
+	var all_thread_ids = ConnectionManager.get_player_list().get_client_ids()
+	barrier_snapshot_request_sequence += 1
+	pending_barrier_snapshot_request_id = barrier_snapshot_request_sequence
+	pending_barrier_snapshots = {my_client_id: _get_my_buffer_snapshot()}
+	pending_barrier_snapshot_peers.clear()
 
-	# Add own buffer snapshot
-	var my_snapshot = _get_my_buffer_snapshot()
-	snapshots.append(my_snapshot)
-	logger.log_info("My buffer snapshot: ", my_snapshot)
+	logger.log_info(
+		"Starting authoritative barrier snapshot collection. Local snapshot: ",
+		pending_barrier_snapshots[my_client_id]
+	)
 
-	# For other threads' buffers, use cards_in_other_buffers tracking
-	var buffers_by_owner: Dictionary = {}
-	for card_value in cards_in_other_buffers:
-		var owner_id = cards_in_other_buffers[card_value]
-		if owner_id not in buffers_by_owner:
-			buffers_by_owner[owner_id] = []
-		buffers_by_owner[owner_id].append(card_value)
-
-	for owner_id in buffers_by_owner:
-		snapshots.append(
-			{"owner_id": owner_id, "card_values": buffers_by_owner[owner_id]}
+	for peer_id in all_thread_ids:
+		if peer_id == my_client_id:
+			continue
+		pending_barrier_snapshot_peers[peer_id] = true
+		GDSync.call_func_on(
+			peer_id,
+			self.barrier_request_buffer_snapshot,
+			[pending_barrier_snapshot_request_id, my_client_id]
 		)
 
-	logger.log_info("All snapshots: ", snapshots)
+	if pending_barrier_snapshot_peers.is_empty():
+		_finalize_barrier_snapshot_collection()
+		return
+
 	logger.log_info(
-		"Broadcasting barrier_activate with main_thread: ",
-		barrier_manager.main_thread_id
+		"Waiting for barrier buffer snapshots from players: ",
+		pending_barrier_snapshot_peers.keys()
 	)
-	GDSync.call_func(
-		self.barrier_activate, [barrier_manager.main_thread_id, snapshots]
+	_start_barrier_snapshot_timeout(pending_barrier_snapshot_request_id)
+
+
+func barrier_request_buffer_snapshot(request_id: int, requester_id: int):
+	"""Remote: send this client's current buffer order back to the host."""
+	var snapshot = _get_my_buffer_snapshot()
+	logger.log_info(
+		"Sending barrier buffer snapshot to host ",
+		requester_id,
+		": ",
+		snapshot
 	)
-	# Also update local state (GDSync.call_func only broadcasts to others, not to self)
-	barrier_activate(barrier_manager.main_thread_id, snapshots)
+	GDSync.call_func_on(
+		requester_id, self.barrier_receive_buffer_snapshot, [request_id, snapshot]
+	)
+
+
+func barrier_receive_buffer_snapshot(request_id: int, snapshot: Dictionary):
+	"""Host: receive authoritative buffer order from one client."""
+	if not is_host:
+		return
+	if request_id != pending_barrier_snapshot_request_id:
+		logger.log_warning(
+			"Ignoring stale barrier snapshot response for request ",
+			request_id
+		)
+		return
+
+	var owner_id = int(snapshot.get("owner_id", -1))
+	if owner_id == -1:
+		logger.log_warning("Received malformed barrier snapshot: ", snapshot)
+		return
+
+	pending_barrier_snapshots[owner_id] = snapshot
+	pending_barrier_snapshot_peers.erase(owner_id)
+	logger.log_info(
+		"Received barrier snapshot from player ",
+		owner_id,
+		". Remaining: ",
+		pending_barrier_snapshot_peers.keys()
+	)
+
+	if pending_barrier_snapshot_peers.is_empty():
+		_finalize_barrier_snapshot_collection()
 
 
 func barrier_activate(main_thread_id: int, buffer_snapshots: Array):
@@ -816,6 +870,7 @@ func barrier_activate(main_thread_id: int, buffer_snapshots: Array):
 		my_client_id
 	)
 	logger.log_info("Buffer snapshots: ", buffer_snapshots)
+	_rebuild_other_buffer_tracking_from_snapshots(buffer_snapshots)
 	barrier_manager.main_thread_id = main_thread_id
 	barrier_manager.activate_barrier()
 
@@ -966,6 +1021,7 @@ func _on_release_barrier_requested():
 func barrier_release():
 	"""All threads: barrier released, return to running state"""
 	logger.log_info("barrier_release received - releasing barrier")
+	_reset_pending_barrier_snapshot_collection()
 	barrier_manager.release_barrier()
 	_exit_barrier_mode()
 
@@ -1021,6 +1077,81 @@ func _get_my_buffer_snapshot() -> Dictionary:
 			card_values.append(slot.occupied_by.value)
 
 	return {"owner_id": my_client_id, "card_values": card_values}
+
+
+func _start_barrier_snapshot_timeout(request_id: int) -> void:
+	"""Complete barrier activation even if a snapshot reply goes missing."""
+	await get_tree().create_timer(BARRIER_SNAPSHOT_TIMEOUT_SEC).timeout
+
+	if request_id != pending_barrier_snapshot_request_id:
+		return
+	if pending_barrier_snapshot_peers.is_empty():
+		return
+
+	logger.log_warning(
+		"Timed out waiting for barrier snapshots from players: ",
+		pending_barrier_snapshot_peers.keys(),
+		". Falling back to tracked buffer ownership for the missing replies."
+	)
+	for peer_id in pending_barrier_snapshot_peers.keys():
+		pending_barrier_snapshots[peer_id] = _get_tracked_buffer_snapshot(peer_id)
+
+	_finalize_barrier_snapshot_collection()
+
+
+func _finalize_barrier_snapshot_collection() -> void:
+	"""Broadcast barrier activation with the freshest buffer order we have."""
+	var snapshots = _get_ordered_barrier_snapshots(pending_barrier_snapshots)
+	logger.log_info("All snapshots: ", snapshots)
+
+	_reset_pending_barrier_snapshot_collection()
+
+	logger.log_info(
+		"Broadcasting barrier_activate with main_thread: ",
+		barrier_manager.main_thread_id
+	)
+	GDSync.call_func(
+		self.barrier_activate, [barrier_manager.main_thread_id, snapshots]
+	)
+	# Also update local state (GDSync.call_func only broadcasts to others, not to self)
+	barrier_activate(barrier_manager.main_thread_id, snapshots)
+
+
+func _get_ordered_barrier_snapshots(snapshots_by_owner: Dictionary) -> Array:
+	var ordered_snapshots: Array = []
+	for player_id in ConnectionManager.get_player_list().get_client_ids():
+		if snapshots_by_owner.has(player_id):
+			ordered_snapshots.append(snapshots_by_owner[player_id])
+	return ordered_snapshots
+
+
+func _reset_pending_barrier_snapshot_collection() -> void:
+	pending_barrier_snapshot_request_id = -1
+	pending_barrier_snapshot_peers.clear()
+	pending_barrier_snapshots.clear()
+
+
+func _get_tracked_buffer_snapshot(owner_id: int) -> Dictionary:
+	var card_values: Array = []
+	for card_value in cards_in_other_buffers:
+		if cards_in_other_buffers[card_value] == owner_id:
+			card_values.append(card_value)
+
+	card_values.sort()
+	return {"owner_id": owner_id, "card_values": card_values}
+
+
+func _rebuild_other_buffer_tracking_from_snapshots(buffer_snapshots: Array) -> void:
+	"""Refresh local ownership tracking from authoritative barrier snapshots."""
+	cards_in_other_buffers.clear()
+
+	for snapshot in buffer_snapshots:
+		var owner_id = int(snapshot.get("owner_id", -1))
+		if owner_id == -1 or owner_id == my_client_id:
+			continue
+
+		for card_value in snapshot.get("card_values", []):
+			cards_in_other_buffers[card_value] = owner_id
 
 
 func _get_player_name(player_id: int) -> String:
