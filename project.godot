@@ -42,7 +42,6 @@ ConnectionManager="*res://scenes/Multiplayer/connection_manager.gd"
 
 window/size/viewport_width=1151
 window/size/viewport_height=649
-window/size/resizable=false
 window/stretch/mode="canvas_items"
 
 [dotnet]
