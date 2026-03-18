@@ -9,9 +9,9 @@ const CardScene: PackedScene = preload(
 var card_container: HBoxContainer = $VBoxContainer/ScrollContainer/CardContainer
 
 var owner_thread_id: int = -1
-var card_instances: Dictionary = {}  # card_value: Card
+var card_instances: Dictionary = {} # card_value: Card
 var scroll_container_ref: ScrollContainer = null
-@onready var logger = CustomLogger.get_logger(self)
+@onready var logger = CustomLogger.get_logger(self )
 
 
 func setup(
@@ -35,7 +35,7 @@ func add_card(card_value: int):
 	else:
 		(
 			logger
-			. log_warning(
+			.log_warning(
 				"ThreadBufferPanel: No scroll container reference provided for card, dragging may not work properly."
 			)
 		)
@@ -44,7 +44,7 @@ func add_card(card_value: int):
 	card.set_can_drag(true)
 
 	# Set card size (mini card)
-	card.custom_minimum_size = Vector2(60, 80)
+	card.custom_minimum_size = Vector2(60, 40)
 
 	# Set color
 	var style = StyleBoxFlat.new()

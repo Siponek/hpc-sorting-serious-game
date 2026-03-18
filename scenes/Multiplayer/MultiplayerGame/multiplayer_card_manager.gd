@@ -52,6 +52,7 @@ var is_host: bool = false
 var my_client_id: int = -1
 var game_state_synced: bool = false
 @onready var buffer_size = Settings.player_buffer_count
+@onready var restart_button: Button = $%RestartGameButton
 # Track which cards are in OTHER players' buffers
 var cards_in_other_buffers: Dictionary = {} # card_value: player_id
 
@@ -75,6 +76,7 @@ func _toggle_visibility_of_the_rest_for_overlay(_visible: bool):
 # To see if the syncing mechanism makes sense.
 # Perhaps we need to add signal on moving cards and then update the game state on every move?
 func _ready():
+	restart_button.hide()
 	is_host = ConnectionManager.am_i_host()
 	my_client_id = ConnectionManager.get_my_client_id()
 	var me := ConnectionManager.get_player_list().get_player(my_client_id)
