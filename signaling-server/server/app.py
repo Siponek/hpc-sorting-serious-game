@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import ssl
 import sys
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
 
 from aiohttp import web
@@ -160,11 +162,11 @@ def print_banner() -> None:
     """Print server startup banner."""
     print()
     print("=" * 60)
-    print("  Lobby Server (HTTP + SSE)")
+    print("  Lobby Server (HTTPS + SSE)")
     print("=" * 60)
     print()
     print(f"  Local IP:       {LOCAL_IP}:{PORT}")
-    print(f"  Full URL:       http://{LOCAL_IP}:{PORT}")
+    print(f"  Full URL:       https://{LOCAL_IP}:{PORT}")
     print()
     print("  HTTP API (recommended for web):")
     print("    POST /api/lobby/connect     - Get peer ID")
@@ -199,7 +201,26 @@ async def run_server() -> None:
     runner = web.AppRunner(app)
     await runner.setup()
 
-    site = web.TCPSite(runner, CONFIG.host, PORT)
+    # Load SSL certificates
+    ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+
+    # Path relative to app.py -> server -> signaling-server -> game root -> exports/certs
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    cert_path = base_dir / "exports" / "certs" / "lan-cert.pem"
+    key_path = base_dir / "exports" / "certs" / "lan-key.pem"
+
+    try:
+        ssl_context.load_cert_chain(certfile=str(cert_path), keyfile=str(key_path))
+    except Exception as e:
+        print(f"[SERVER] Failed to load SSL certificates: {e}")
+        print("[SERVER] Starting without SSL (HTTP only)")
+        ssl_context = None
+
+    if ssl_context:
+        site = web.TCPSite(runner, CONFIG.host, PORT, ssl_context=ssl_context)
+    else:
+        site = web.TCPSite(runner, CONFIG.host, PORT)
+
     await site.start()
 
     try:

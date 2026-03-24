@@ -18,7 +18,7 @@ Requirements:
     pip install aiohttp
 
 Then in Godot (via GDSync Web Patch), set:
-    var relay_server_url: String = "http://localhost:3000"
+    var relay_server_url: String = "https://localhost:3000"
 """
 
 import argparse

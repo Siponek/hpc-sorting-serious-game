@@ -50,7 +50,7 @@ var _pending_requests: Array[HTTPRequest] = []
 
 
 func _ready() -> void:
-	logger = CustomLogger.get_logger(self)
+	logger = CustomLogger.get_logger(self )
 	set_process(false)
 
 
@@ -149,7 +149,7 @@ func _handle_sse_event(event_type: String, data: Dictionary) -> void:
 			logger.log_error("Server error: " + code + " - " + message)
 			error_received.emit(code, message)
 		EVT_HEARTBEAT:
-			pass  # Just keep-alive, nothing to do
+			pass # Just keep-alive, nothing to do
 		_:
 			logger.log_warning("Unknown SSE event: " + event_type)
 
@@ -209,6 +209,9 @@ func connect_to_server(server_url: String) -> Error:
 
 func probe_server(server_url: String) -> Dictionary:
 	var http = HTTPRequest.new()
+	if http.has_method("set_tls_options"):
+		http.set_tls_options(TLSOptions.client_unsafe())
+	http.set_tls_options(TLSOptions.client_unsafe())
 	add_child(http)
 	_pending_requests.append(http)
 
@@ -282,8 +285,8 @@ func _start_sse_connection() -> Error:
 
 	logger.log_info("SSE connecting to " + host + ":" + str(port))
 
-	# Godot 4 requires TLSOptions object instead of boolean
-	var tls_options: TLSOptions = TLSOptions.client() if use_ssl else null
+	# Godot 4 requires TLSOptions object instead of boolean. Using client_unsafe() allows self-signed dev certs.
+	var tls_options: TLSOptions = TLSOptions.client_unsafe() if use_ssl else null
 	var err = _sse_client.connect_to_host(host, port, tls_options)
 	if err != OK:
 		logger.log_error("Failed to connect SSE: " + str(err))
@@ -523,6 +526,8 @@ func get_lobby_code() -> String:
 
 func _http_get(path: String) -> Dictionary:
 	var http = HTTPRequest.new()
+	if http.has_method("set_tls_options"):
+		http.set_tls_options(TLSOptions.client_unsafe())
 	add_child(http)
 	_pending_requests.append(http)
 
@@ -555,6 +560,8 @@ func _http_get(path: String) -> Dictionary:
 
 func _http_post(path: String, body: Dictionary) -> Dictionary:
 	var http = HTTPRequest.new()
+	if http.has_method("set_tls_options"):
+		http.set_tls_options(TLSOptions.client_unsafe())
 	add_child(http)
 	_pending_requests.append(http)
 
@@ -590,6 +597,8 @@ func _http_post(path: String, body: Dictionary) -> Dictionary:
 
 func _http_post_no_wait(path: String, body: Dictionary) -> void:
 	var http = HTTPRequest.new()
+	if http.has_method("set_tls_options"):
+		http.set_tls_options(TLSOptions.client_unsafe())
 	add_child(http)
 	_pending_requests.append(http)
 

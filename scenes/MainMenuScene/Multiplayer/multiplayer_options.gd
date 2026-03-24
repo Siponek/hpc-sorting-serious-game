@@ -4,10 +4,10 @@ const multiplayer_lobby_scene: PackedScene = preload(
 	ProjectFiles.Scenes.MULTIPLAYER_LOBBY_SCENE
 )
 var lobby_id_to_join: String = "wololo"
-var selected_lobby_id_from_list: String = ""  # To store ID from ItemList
-var _web_prompt_open: bool = false  # Guard against re-entrant prompt loop on web
-@onready var logger = CustomLogger.get_logger(self)
-@onready var lobby_start_name_input: LineEdit = $%NameServerLineEdit  # Get lobby name from UI
+var selected_lobby_id_from_list: String = "" # To store ID from ItemList
+var _web_prompt_open: bool = false # Guard against re-entrant prompt loop on web
+@onready var logger = CustomLogger.get_logger(self )
+@onready var lobby_start_name_input: LineEdit = $%NameServerLineEdit # Get lobby name from UI
 @onready var lobby_join_id_input: LineEdit = $%CodeFieldLineEdit
 @onready var lobby_list_ui: ItemList = $%LobbyList
 @onready var host_game_button: Button = $%HostGameButton
@@ -18,7 +18,7 @@ var _web_prompt_open: bool = false  # Guard against re-entrant prompt loop on we
 
 
 func _on_about_to_popup() -> void:
-	ConnectionManager.ensure_multiplayer_started()  # Ensure GDSync is active before showing the dialog
+	ConnectionManager.ensure_multiplayer_started() # Ensure GDSync is active before showing the dialog
 
 
 func _ready() -> void:
@@ -41,11 +41,11 @@ func _ready() -> void:
 	lobby_start_name_input.text_changed.connect(
 		func(text: String) -> void:
 			# Enable host button if lobby name is not empty
-			host_game_button.disabled = text.is_empty()
+			host_game_button.disabled=text.is_empty()
 	)
 	lobby_join_id_input.text_changed.connect(
 		func(text: String) -> void:
-			join_game_button.disabled = (
+			join_game_button.disabled=(
 				text.is_empty() and selected_lobby_id_from_list.is_empty()
 			)
 	)
@@ -61,7 +61,7 @@ func _ready() -> void:
 				func() -> void:
 					if _web_prompt_open:
 						return
-					_web_prompt_open = true
+					_web_prompt_open=true
 					# Force the entire GUI to drop focus BEFORE the prompt opens,
 					# so the browser cannot bounce focus back to this field.
 					get_viewport().gui_release_focus()
@@ -71,7 +71,7 @@ func _ready() -> void:
 						if field.placeholder_text
 						else "Enter value"
 					)
-					var result = JavaScriptBridge.eval(
+					var result=JavaScriptBridge.eval(
 						"window.prompt('%s', '%s')" % [label, safe_text]
 					)
 					# After prompt closes the browser re-focuses the canvas, which
@@ -80,32 +80,32 @@ func _ready() -> void:
 					get_viewport().gui_release_focus()
 					await get_tree().process_frame
 					await get_tree().process_frame
-					_web_prompt_open = false
+					_web_prompt_open=false
 					if result != null:
 						#ensure that thre result has a port if it's the IP field and doesn't already contain one
-						result = (
+						result=(
 							str(result).strip_edges() + ":3000"
 							if field == ip_field_input and not ":" in result
 							else str(result).strip_edges()
 						)
-						field.text = result
+						field.text=result
 						field.text_changed.emit(result)
 			)
 	# Get the latest lobbies
-	lobby_list_ui.clear()  # Clear old list
+	lobby_list_ui.clear() # Clear old list
 	ConnectionManager.get_discovered_lobbies()
-	join_game_button.disabled = true  # Disable join button until we have a lobby ID
-	lobby_start_name_input.text = lobby_id_to_join  # Set default lobby name input
+	join_game_button.disabled = true # Disable join button until we have a lobby ID
+	lobby_start_name_input.text = lobby_id_to_join # Set default lobby name input
 
 
 func _on_host_game_button_pressed() -> void:
 	var lobby_name_input = lobby_start_name_input.text
 	if lobby_name_input.is_empty():
-		lobby_name_input = lobby_id_to_join  # Fallback or default
+		lobby_name_input = lobby_id_to_join # Fallback or default
 	# ConnectionManager.ensure_multiplayer_started()
 	(
 		ConnectionManager
-		. start_hosting_lobby(
+		.start_hosting_lobby(
 			lobby_name_input,
 			# password =
 			"",
@@ -130,7 +130,7 @@ func _on_connection_manager_lobby_created(lobby_id: String):
 	# lobby_scene_instance.set_lobby_id(lobby_id) # The lobby scene can get this from ConnectionManager.get_current_lobby_id()
 
 	if get_parent() and get_parent().has_method("_open_instantiated_dialog"):
-		get_parent().dialog_open = false  # Manage this flag carefully
+		get_parent().dialog_open = false # Manage this flag carefully
 		get_parent()._open_instantiated_dialog(lobby_scene_instance)
 		# lobby_scene_instance.show() # _open_instantiated_dialog should handle showing
 	else:
@@ -150,7 +150,7 @@ func _on_connection_manager_lobby_creation_failed(
 	# Use the error_code to display a user-friendly message
 	# You can use your existing lobby_creation_failed logic here,
 	# but call it with the parameters from ConnectionManager's signal.
-	lobby_creation_failed(lobby_name, error_message)  # Assuming this method shows a Toast or error message
+	lobby_creation_failed(lobby_name, error_message) # Assuming this method shows a Toast or error message
 
 
 func _on_join_game_button_pressed() -> void:
@@ -160,7 +160,7 @@ func _on_join_game_button_pressed() -> void:
 		lobby_id_to_attempt_join = selected_lobby_id_from_list
 		(
 			ToastParty
-			. show(
+			.show(
 				{
 					"text":
 					"Joining selected lobby: " + lobby_id_to_attempt_join,
@@ -172,7 +172,7 @@ func _on_join_game_button_pressed() -> void:
 		lobby_id_to_attempt_join = lobby_join_id_input.text
 		(
 			ToastParty
-			. show(
+			.show(
 				{
 					"text":
 					"Joining lobby by code: " + lobby_id_to_attempt_join,
@@ -183,7 +183,7 @@ func _on_join_game_button_pressed() -> void:
 	else:
 		(
 			ToastParty
-			. show(
+			.show(
 				{
 					"text": "Please select a lobby or enter a code to join.",
 					"bgcolor": Color(Color.ORANGE_RED, 0.65),
@@ -218,9 +218,9 @@ func _on_refresh_lobbies_button_pressed() -> void:
 		}
 	)
 	ConnectionManager.find_lobbies()
-	lobby_list_ui.clear()  # Clear old list while waiting for new one
-	selected_lobby_id_from_list = ""  # Reset selection
-	join_game_button.disabled = true  # Disable join until new selection or code entry
+	lobby_list_ui.clear() # Clear old list while waiting for new one
+	selected_lobby_id_from_list = "" # Reset selection
+	join_game_button.disabled = true # Disable join until new selection or code entry
 
 
 func _on_connection_manager_lobbies_updated(lobbies: Array):
@@ -231,8 +231,8 @@ func _on_connection_manager_lobbies_updated(lobbies: Array):
 		}
 	)
 	lobby_list_ui.clear()
-	selected_lobby_id_from_list = ""  # Reset selection
-	join_game_button.disabled = true  # Disable join until new selection or code entry
+	selected_lobby_id_from_list = "" # Reset selection
+	join_game_button.disabled = true # Disable join until new selection or code entry
 
 	if lobbies.is_empty():
 		lobby_list_ui.add_item("No lobbies found.")
@@ -257,7 +257,7 @@ func _on_connection_manager_lobbies_updated(lobbies: Array):
 			]
 		)
 		var item_idx = lobby_list_ui.add_item(display_text, null, true)
-		lobby_list_ui.set_item_metadata(item_idx, lobby_name)  # Store the actual ID
+		lobby_list_ui.set_item_metadata(item_idx, lobby_name) # Store the actual ID
 
 
 func _on_lobby_list_item_selected(index: int):
@@ -268,7 +268,7 @@ func _on_lobby_list_item_selected(index: int):
 		return
 
 	selected_lobby_id_from_list = lobby_list_ui.get_item_metadata(index)
-	lobby_join_id_input.text = ""  # Clear code field if a list item is selected
+	lobby_join_id_input.text = "" # Clear code field if a list item is selected
 	logger.log_info(
 		"Selected lobby ID from list: ", selected_lobby_id_from_list
 	)
@@ -318,8 +318,8 @@ func _on_submit_ip_button_pressed() -> void:
 		)
 		return
 
-	# Build full URL with http://
-	var full_url = "http://" + server_url
+	# Build full URL with https://
+	var full_url = "https://" + server_url
 	var gdsync = get_node_or_null("/root/GDSync")
 	# Access GDSync's LocalServer and verify the server before confirming success
 	if (

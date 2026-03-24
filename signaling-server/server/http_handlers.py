@@ -46,7 +46,7 @@ async def handle_host(request: web.Request) -> web.Response:
     print(f"[HOST] Room created: {room.code} (channel: {channel}, lobby: {lobby_name})")
 
     host = request.host.split(":")[0]
-    ws_url = f"ws://{host}:{PORT}/ws/{room.code}"
+    ws_url = f"wss://{host}:{PORT}/ws/{room.code}"
 
     return web.json_response(
         {
@@ -170,7 +170,7 @@ async def handle_join(request: web.Request) -> web.Response:
     print(f"[JOIN] Joining room: {room.code} (lobby: {room.lobby_name or 'N/A'})")
 
     host = request.host.split(":")[0]
-    ws_url = f"ws://{host}:{PORT}/ws/{room.code}"
+    ws_url = f"wss://{host}:{PORT}/ws/{room.code}"
 
     return web.json_response(
         {
@@ -244,7 +244,7 @@ async def handle_root(_request: web.Request) -> web.Response:
             "status": "ok",
             "message": "Signaling server is running. This is not the game page.",
             "try_api": "/api/server/info",
-            "game_page_example": f"http://{LOCAL_IP}:8000",
+            "game_page_example": f"https://{LOCAL_IP}:8000",
         }
     )
 

@@ -617,7 +617,7 @@ async def handle_server_info(request: web.Request) -> web.Response:
             "version": "1.0",
             "ip": LOCAL_IP,
             "port": PORT,
-            "url": f"http://{LOCAL_IP}:{PORT}",
+            "url": f"https://{LOCAL_IP}:{PORT}",
         }
     )
 
