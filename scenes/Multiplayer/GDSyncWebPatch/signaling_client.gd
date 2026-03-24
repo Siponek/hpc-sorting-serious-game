@@ -207,6 +207,56 @@ func connect_to_server(server_url: String) -> Error:
 	return OK
 
 
+func probe_server(server_url: String) -> Dictionary:
+	var http = HTTPRequest.new()
+	add_child(http)
+	_pending_requests.append(http)
+
+	var url = server_url.rstrip("/") + "/api/server/info"
+	var err = http.request(url, [], HTTPClient.METHOD_GET)
+	if err != OK:
+		logger.log_error("Server probe request failed: " + str(err))
+		_cleanup_request(http)
+		return {
+			"success": false,
+			"message": "Could not send request to server",
+		}
+
+	var response = await http.request_completed
+	_cleanup_request(http)
+
+	var result_code = response[0]
+	var response_code = response[1]
+	var body = response[3]
+
+	if result_code != HTTPRequest.RESULT_SUCCESS:
+		logger.log_error("Server probe transport error: " + str(result_code))
+		return {
+			"success": false,
+			"message": "Server did not respond",
+		}
+
+	if response_code != 200:
+		logger.log_warning("Server probe response code: " + str(response_code))
+		return {
+			"success": false,
+			"message": "Server responded with HTTP %d" % response_code,
+		}
+
+	var json_str = body.get_string_from_utf8()
+	var data = JSON.parse_string(json_str)
+	if not (data is Dictionary):
+		return {
+			"success": false,
+			"message": "Server returned invalid response",
+		}
+
+	return {
+		"success": true,
+		"server_info": data,
+	}
+
+
 func _start_sse_connection() -> Error:
 	_sse_client = HTTPClient.new()
 
@@ -286,7 +336,7 @@ func _start_sse_connection() -> Error:
 	return OK
 
 
-## Disconnect from the server
+## Disconnect from the server. Connection will resume when next multiplayer action is taken (e.g. create/join lobby).
 func disconnect_from_server() -> void:
 	if not _is_connected:
 		return

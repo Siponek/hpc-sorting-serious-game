@@ -40,7 +40,7 @@ var my_current_client: Client = null
 # Signaling client (HTTP + SSE based)
 var _signaling: SignalingClient = null
 
-@onready var logger = CustomLogger.get_logger(self )
+@onready var logger = CustomLogger.get_logger(self)
 
 
 # Client class (mirrors original)
@@ -59,7 +59,7 @@ class Client:
 
 	func construct_lobby_targets(clients: Dictionary) -> void:
 		lobby_targets = clients.values()
-		lobby_targets.erase(self )
+		lobby_targets.erase(self)
 
 	func collect_player_data() -> Dictionary:
 		var data: Dictionary = player_data.duplicate()
@@ -86,7 +86,7 @@ func _ready() -> void:
 	logger.log_info("LocalServerSignaling initialized (HTTP mode).")
 	my_current_client = Client.new()
 	my_current_client.valid = true
-	my_current_client.client_id = 1 # Will be updated when connected
+	my_current_client.client_id = 1  # Will be updated when connected
 
 
 func _connect_signaling_signals() -> void:
@@ -577,7 +577,7 @@ func _process_host() -> void:
 			var packet_base64 = Marshalls.raw_to_base64(pkt)
 			(
 				logger
-				.log_debug(
+				. log_debug(
 					(
 						"HOST sending RELIABLE to %d: bytes=%d, base64_len=%d, requests=%d"
 						% [
@@ -855,7 +855,7 @@ func _process_incoming_packet_as_host(
 				_process_client_request_locally(request, from)
 			else:
 				# Request is for other client(s) - just forward it
-				_broadcast_request(request, from, true) # Always reliable over HTTP
+				_broadcast_request(request, from, true)  # Always reliable over HTTP
 
 
 ## Process a CLIENT_REQUEST locally on the host (when the request targets the host)
@@ -972,7 +972,7 @@ func _put_request(request: Array, client: Client, reliable: bool) -> void:
 
 
 func _send_message(
-	message: int, client: Client, value=null, value2=null, value3=null
+	message: int, client: Client, value = null, value2 = null, value3 = null
 ) -> void:
 	if client == null:
 		return
@@ -1246,6 +1246,7 @@ func set_signaling_server(url: String) -> void:
 		logger.log_warning("Ignoring empty signaling server URL")
 		return
 
+	# Return if this is the same server (avoid unnecessary disconnect/reconnect)
 	if normalized_url == signaling_server_url:
 		return
 
@@ -1259,12 +1260,88 @@ func set_signaling_server(url: String) -> void:
 
 	# If already connected, disconnect so the next operation reconnects to the new URL.
 	if _signaling and _signaling.is_connected_to_server():
-		logger.log_info("Disconnecting from current signaling server to apply new URL")
+		logger.log_info(
+			"Disconnecting from current signaling server to apply new URL"
+		)
 		_signaling.disconnect_from_server()
 
 
+func verify_and_connect_signaling_server(url: String) -> Dictionary:
+	var normalized_url := url.strip_edges().rstrip("/")
+	if normalized_url.is_empty():
+		return {
+			"success": false,
+			"message": "Server URL cannot be empty",
+		}
+
+	if current_room_code != "":
+		logger.log_warning("Cannot change signaling server while in a lobby")
+		return {
+			"success": false,
+			"message": "Leave the current lobby before changing server",
+		}
+
+	if _signaling == null:
+		return {
+			"success": false,
+			"message": "Signaling client is not initialized yet",
+		}
+
+	var previous_url := signaling_server_url
+	var was_connected := _signaling and _signaling.is_connected_to_server()
+	var is_same_server := normalized_url == signaling_server_url
+
+	var probe_result = await _signaling.probe_server(normalized_url)
+	if not probe_result.get("success", false):
+		return probe_result
+
+	if is_same_server and was_connected:
+		return {
+			"success": true,
+			"server_info": probe_result.get("server_info", {}),
+			"message": "Already connected to signaling server",
+		}
+
+	if was_connected:
+		await _signaling.disconnect_from_server()
+
+	signaling_server_url = normalized_url
+	logger.log_info("Verified signaling server URL: " + signaling_server_url)
+
+	var connect_result = await _signaling.connect_to_server(
+		signaling_server_url
+	)
+	if connect_result != OK and connect_result != ERR_ALREADY_IN_USE:
+		logger.log_error(
+			(
+				"Verified server responded, but signaling connection failed: "
+				+ str(connect_result)
+			)
+		)
+
+		signaling_server_url = previous_url
+
+		if was_connected and not previous_url.is_empty():
+			logger.log_warning(
+				"Reconnecting to previous signaling server after failed switch"
+			)
+			await _signaling.connect_to_server(previous_url)
+
+		return {
+			"success": false,
+			"server_info": probe_result.get("server_info", {}),
+			"message": "Server responded, but signaling connection failed",
+		}
+
+	return {
+		"success": true,
+		"server_info": probe_result.get("server_info", {}),
+		"message": "Connected to signaling server",
+	}
+
+
 func perform_local_scan() -> void:
-	pass # Not needed - signaling server handles discovery
+	pass  # Not needed - signaling server handles discovery
 
 
 func get_lobby_dictionary(with_data: bool = false) -> Dictionary:
